@@ -2,7 +2,7 @@ import {firestore} from "firebase-admin";
 import Timestamp = firestore.Timestamp;
 
 export interface TicketPayment {
-    id?: string;
+    id: string;
     paymentIntentId: string;
     transferId: string;
     eventId: string;

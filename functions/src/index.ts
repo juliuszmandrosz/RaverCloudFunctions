@@ -64,6 +64,14 @@ exports.createTicketPaymentSheet =
                 .createTicketPaymentSheet(data, context)
         })
 
+exports.createVipPaymentSheet =
+    functions.https
+        .onCall(async (data, context) => {
+            return (
+                await import('./stripe-functions/create-vip-payment-sheet/create-vip-payment-sheet'))
+                .createVipPaymentSheet(data, context)
+        })
+
 
 exports.getVipPrice =
     functions.https
@@ -141,6 +149,14 @@ exports.addTicketPayment =
                 .addTicketPayment(data, context)
         })
 
+exports.addVipPayment =
+    functions.https
+        .onCall(async (data, context) => {
+            return (
+                await import('./firestore-functions/add-vip-payment/add-vip-payment'))
+                .addVipPayment(data, context)
+        })
+
 exports.returnTicket =
     functions.https
         .onCall(async (data, context) => {
@@ -148,3 +164,5 @@ exports.returnTicket =
                 await import('./stripe-functions/return-ticket/return-ticket'))
                 .returnTicket(data, context)
         })
+
+
