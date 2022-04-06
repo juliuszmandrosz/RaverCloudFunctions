@@ -3,8 +3,8 @@ export interface Event {
     eventName: string;
     clubId: string;
     clubName: string;
-    eventStartDateTime: Date;
-    eventEndDateTime: Date;
+    eventStartDateTime: number;
+    eventEndDateTime: number;
     attending: number;
     minAge: number;
     price: number;

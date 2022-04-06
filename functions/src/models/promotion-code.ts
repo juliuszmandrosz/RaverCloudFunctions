@@ -1,11 +1,11 @@
 import {firestore} from "firebase-admin";
-import FieldValue = firestore.FieldValue;
+import Timestamp = firestore.Timestamp;
 
 export interface PromotionCode {
     code: string;
     amountOff: number;
     currency: string;
-    expirationDateTime: FieldValue,
+    expirationDateTime: Timestamp,
     isValid: boolean,
     maxRedemptions: number;
     timesRedeemed: number;

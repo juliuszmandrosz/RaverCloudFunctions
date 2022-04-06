@@ -4,7 +4,6 @@ import {firebaseAuth, firestoreDatabase} from "../../../modules/firebase-admin-m
 import {partners, selectors} from "../../../constants/collections";
 import {Selector} from "../../../models/selector";
 import {setSelectorClaim} from "../../../auth-functions/set-claim/set-selector-claim";
-import {Partner} from "../../../models/partner";
 
 
 export async function addSelector(
@@ -29,28 +28,24 @@ export async function addSelector(
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-
     const partnerId = context.auth.uid;
     const partnerDocRef = firestoreDatabase().collection(partners).doc(partnerId);
-    const partnerDoc = await partnerDocRef.get();
-    const clubId = (partnerDoc.data() as Partner).clubId;
 
     const selector = await firebaseAuth().createUser({
         email: selectorEmail,
         password: selectorPassword
     });
 
-    await partnerDocRef.collection(selectors).doc(selector.uid).set({
-            clubId,
-            email: selectorEmail,
-        } as Selector
-    );
+    await partnerDocRef
+        .collection(selectors).doc(selector.uid).set({
+                email: selectorEmail,
+            } as Selector);
 
-    await firestoreDatabase().collection(selectors).doc(selector.uid).set({
-        clubId,
-        partnerId,
-        email: selectorEmail,
-    } as Selector)
+    await firestoreDatabase()
+        .collection(selectors).doc(selector.uid).set({
+            partnerId,
+            email: selectorEmail,
+        } as Selector);
 
     await setSelectorClaim({email: selectorEmail});
 }

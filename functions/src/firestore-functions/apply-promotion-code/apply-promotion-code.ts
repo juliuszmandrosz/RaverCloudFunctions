@@ -8,7 +8,7 @@ import {throwInvalidPromotionCodeError} from "../../errors/throw-invalid-promoti
 
 export async function applyPromotionCode(
     data: ApplyPromotionCodeRequest
-): Promise<void> {
+): Promise<PromotionCode> {
     const promotionCode = data?.promotionCode;
     const userId = data?.userId;
 
@@ -22,8 +22,7 @@ export async function applyPromotionCode(
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-
-    await firestoreDatabase().runTransaction(async (t) => {
+    return firestoreDatabase().runTransaction(async (t) => {
         const promotionCodeRef = firestoreDatabase()
             .collection(users)
             .doc(userId)
@@ -52,5 +51,7 @@ export async function applyPromotionCode(
                 isValid: isStillValid
             } as PromotionCode
         );
+
+        return code;
     });
 }

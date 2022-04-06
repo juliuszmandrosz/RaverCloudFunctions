@@ -1,5 +1,5 @@
 import {firestore} from "firebase-admin";
-import FieldValue = firestore.FieldValue;
+import Timestamp = firestore.Timestamp;
 
 export interface Ticket {
     id: string;
@@ -7,7 +7,7 @@ export interface Ticket {
     ticketPaymentId: string;
     clubName: string;
     eventName: string;
-    eventDateTime: FieldValue;
+    eventDateTime: Timestamp;
     price: number;
     currency: string;
     isVip: boolean;
