@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "algoliasearch": "^4.13.0",
+    "firebase-admin": "^10.0.2",
+    "firebase-functions": "^3.20.0",
+    "stripe": "^8.215.0"
+  }
+}
