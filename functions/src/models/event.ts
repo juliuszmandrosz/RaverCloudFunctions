@@ -1,3 +1,5 @@
+import {TicketPool} from "./ticket-pool";
+
 export interface Event {
     id: string;
     eventName: string;
@@ -11,10 +13,11 @@ export interface Event {
     currency: string;
     allowedOutfit: string;
     musicalGenres: string[];
-    location: Map<string, number>;
+    _geoloc: Map<string, number>;
     urlLinks: Map<string, string>;
     cityId: string;
     isConcert: boolean;
+    ticketPools: TicketPool[]
     artistName?: string;
     description?: string;
     photos?: string[];
