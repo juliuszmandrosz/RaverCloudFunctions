@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import {newClub, newEvent, newTicketPayment} from './constants/collections';
+import {newClub, newEvent} from './constants/collections';
 
 export const env = functions.config();
 
@@ -74,15 +74,6 @@ exports.getVipPrice =
         })
 
 
-exports.onTicketPaymentAdded = functions.firestore
-    .document(newTicketPayment)
-    .onCreate(async (snapshot, context) => {
-        await (
-            await import('./firebase-triggers/on-ticket-payment-added'))
-            .onTicketPaymentAdded(snapshot, context)
-    })
-
-
 exports.checkUserClaim =
     functions.https
         .onCall(async (data, context) => {
@@ -122,7 +113,7 @@ exports.addPartner =
     functions.https
         .onCall(async (data, context) => {
             return (
-                await import('./firestore-functions/add-account/add-partner'))
+                await import('./firestore-functions/add-account/add-partner/add-partner'))
                 .addPartner(data, context)
         })
 
@@ -142,3 +133,18 @@ exports.onAccountDeleted =
             .onAccountDeleted(user, context)
     })
 
+exports.addTicketPayment =
+    functions.https
+        .onCall(async (data, context) => {
+            return (
+                await import('./firestore-functions/add-ticket-payment/add-ticket-payment'))
+                .addTicketPayment(data, context)
+        })
+
+exports.returnTicket =
+    functions.https
+        .onCall(async (data, context) => {
+            return (
+                await import('./stripe-functions/return-ticket/return-ticket'))
+                .returnTicket(data, context)
+        })

@@ -1,6 +1,5 @@
 export const stripeCustomers = 'stripeCustomers';
 export const stripeConnectedAccounts = 'stripeConnectedAccounts';
-export const clubs = 'clubs';
 export const events = 'events';
 export const tickets = 'tickets';
 export const promotionCodes = 'promotionCodes';
@@ -12,3 +11,4 @@ export const partners = 'partners';
 export const selectors = 'selectors';
 export const ticketPayments = 'ticketPayments';
 export const newTicketPayment = 'stripeCustomers/{userId}/ticketPayments/{paymentId}'
+export const clubs = 'clubs';
