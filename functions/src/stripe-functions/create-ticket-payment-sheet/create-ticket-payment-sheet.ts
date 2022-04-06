@@ -1,24 +1,22 @@
 import * as functions from 'firebase-functions'
-import {events, stripeCustomers} from '../../constants/collections';
-import {apiVersion} from '../../constants/stripe-constants';
-import {firestoreDatabase} from '../../modules/firebase-admin-module';
-import {stripe} from '../../modules/stripe-module';
 import {CreateTicketPaymentSheetRequest} from './create-ticket-payment-sheet-request';
-import {CreateTicketPaymentSheetResponse} from './create-ticket-payment-sheet-response';
 import {getVipPrice} from '../../firestore-functions/get-vip-price/get-vip-price';
-import {StripeCustomer} from "../../models/stripe-customer";
 import {Event} from "../../models/event";
 import {getPromotionCode} from "../../firestore-functions/get-promotion-code/get-promotion-code";
-import {throwInvalidEventError} from '../../errors/throw-invalid-event-error';
+import {getEventData} from "../../firestore-functions/get-data/get-event-data";
+import {createPaymentSheetForUser} from "../create-payment-sheet-for-user/create-payment-sheet-for-user";
+import {
+    CreatePaymentSheetForUserResponse
+} from "../create-payment-sheet-for-user/create-payment-sheet-for-user-response";
+import {throwUnauthenticatedError} from "../../errors/throw-unauthenticated-error";
 
 
 export async function createTicketPaymentSheet(
     data: CreateTicketPaymentSheetRequest,
     context: functions.https.CallableContext
-): Promise<CreateTicketPaymentSheetResponse> {
+): Promise<CreatePaymentSheetForUserResponse> {
     if (!context.auth) {
-        const message = 'The function must be called while authenticated.';
-        throw new functions.https.HttpsError('failed-precondition', message);
+        throwUnauthenticatedError();
     }
 
     const ticketPaymentId = data?.ticketPaymentId;
@@ -34,77 +32,19 @@ export async function createTicketPaymentSheet(
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-    const eventDoc = await firestoreDatabase().collection(events).doc(eventId).get();
-
-    if (!eventDoc.exists) {
-        throwInvalidEventError();
-    }
-
-    const event = eventDoc.data() as Event;
-    event.id = eventDoc.id;
-    const customerId = await getStripeCustomerId(context);
+    const event = await getEventData(eventId);
     const isVip = data?.isVip ?? false;
     const promotionCode = data?.promotionCode;
 
-
-    const ephemeralKey = await stripe.ephemeralKeys.create(
-        {customer: customerId},
-        {apiVersion: apiVersion}
-    );
-
-    if (!ephemeralKey.secret) {
-        const message = 'Error creating ephemeral key';
-        throw new functions.https.HttpsError('internal', message);
-    }
-
     const amount = await getAmount(event, isVip, context, promotionCode);
-    const userEmail = context.auth.token.email!;
-    const paymentIntent = await createPaymentIntent(
-        event, amount, customerId, userEmail, ticketPaymentId);
 
-    if (!paymentIntent.client_secret) {
-        const message = 'Error creating payment intent';
-        throw new functions.https.HttpsError('internal', message);
-    }
-
-    return {
-        customerId,
-        paymentIntentSecret: paymentIntent.client_secret,
-        ephemeralKeySecret: ephemeralKey.secret,
-        paymentIntentId: paymentIntent.id,
-    }
-}
-
-async function getStripeCustomerId(context: functions.https.CallableContext): Promise<string> {
-    const customer = await firestoreDatabase()
-        .collection(stripeCustomers)
-        .doc(context.auth!.uid)
-        .get();
-
-    return (customer.data() as StripeCustomer).customerId;
-}
-
-
-async function createPaymentIntent(
-    event: Event,
-    amount: number,
-    customerId: string,
-    userEmail: string,
-    ticketPaymentId: string,
-) {
-    const paymentMethodTypes = getPaymentMethodTypes(event);
-
-    return stripe.paymentIntents.create({
-        amount: amount,
-        currency: event.currency,
-        customer: customerId,
-        payment_method_types: paymentMethodTypes,
+    return createPaymentSheetForUser({
+        amount,
+        paymentId: ticketPaymentId,
         description: event.eventName,
-        receipt_email: userEmail,
-        transfer_group: ticketPaymentId,
-        // TODO - change
-        on_behalf_of: 'acct_1KhdCYRidFmpr8Rx',
-    });
+        partnerId: event.clubId,
+        currency: event.currency,
+    }, context);
 }
 
 async function getAmount(
@@ -132,18 +72,10 @@ async function getAmount(
         amount += vipPrice;
     }
 
+    // TODO - add currency support
     return amount * 100;
 }
 
-
-function getPaymentMethodTypes(event: Event) {
-    const currency = event.currency.toUpperCase();
-    if (currency == 'PLN' || currency == 'EUR') {
-        return ['card', 'p24'];
-    }
-
-    return ['card'];
-}
 
 
 

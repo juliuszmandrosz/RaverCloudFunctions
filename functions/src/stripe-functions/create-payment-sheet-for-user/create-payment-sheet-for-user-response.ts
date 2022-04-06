@@ -1,4 +1,4 @@
-export interface CreateTicketPaymentSheetResponse {
+export interface CreatePaymentSheetForUserResponse {
     paymentIntentSecret: string;
     ephemeralKeySecret: string;
     customerId: string;
