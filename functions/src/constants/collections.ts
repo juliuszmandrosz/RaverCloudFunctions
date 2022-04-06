@@ -1,0 +1,10 @@
+export const stripeCustomers = 'stripeCustomers';
+export const clubs = 'clubs';
+export const events = 'events';
+export const tickets = 'tickets';
+export const newEvent = 'events/{eventId}';
+export const newClub = 'clubs/{clubId}';
+export const promotionCodes = 'promotionCodes';
+export const users = 'users';
+export const ticketPayments = 'ticketPayments';
+export const newTicketPayment = 'stripeCustomers/{userId}/ticketPayments/{paymentId}'
