@@ -107,22 +107,14 @@ exports.addSelector = functions.https.onCall(async (data, context) => {
     ).addSelector(data, context);
 });
 
-exports.onAccountDeleted = functions.auth.user().onDelete(async (user, context) => {
-    await (await import('./firebase-triggers/on-account-deleted')).onAccountDeleted(user, context);
-});
+exports.addSelector =
+    functions.https
+        .onCall(async (data, context) => {
+            return (
+                await import('./firestore-functions/add-account/add-selector/add-selector'))
+                .addSelector(data, context)
+        })
 
-exports.addTicketPayment = functions.https.onCall(async (data, context) => {
-    return (
-        await import('./firestore-functions/add-ticket-payment/add-ticket-payment')
-    ).addTicketPayment(data, context);
-});
-
-exports.addVipPayment = functions.https.onCall(async (data, context) => {
-    return (await import('./firestore-functions/add-vip-payment/add-vip-payment')).addVipPayment(
-        data,
-        context
-    );
-});
 
 exports.returnTicket = functions.https.onCall(async (data, context) => {
     return (await import('./stripe-functions/return-ticket/return-ticket')).returnTicket(
@@ -154,4 +146,21 @@ exports.checkIfAccountNotExists = functions.https.onCall(async (data, context) =
     return (
         await import('./auth-functions/check-account/check-if-account-not-exists')
     ).checkIfAccountNotExists(data, context);
+});
+exports.onPaymentIntentSucceeded = functions.https.onRequest(async (request, response) => {
+    await (
+        await import('./stripe-webhooks/on-payment-intent-succeeded')
+    ).onPaymentIntentSucceeded(request, response);
+});
+
+exports.onPaymentIntentRequiresAction = functions.https.onRequest(async (request, response) => {
+    await (
+        await import('./stripe-webhooks/on-payment-intent-requires-action')
+    ).onPaymentIntentRequiresAction(request, response);
+});
+
+exports.cancelTicketReservation = functions.https.onRequest(async (request, response) => {
+    await (
+        await import('./firestore-functions/cancel-ticket-reservation/cancel-ticket-reservation')
+    ).cancelTicketReservation(request, response);
 });

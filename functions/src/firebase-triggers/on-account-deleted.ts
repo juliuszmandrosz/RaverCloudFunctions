@@ -9,7 +9,6 @@ import {
     selectors,
     stripeConnectedAccounts,
     stripeCustomers,
-    ticketPayments,
     tickets,
     users,
 } from '../constants/collections';
@@ -74,7 +73,6 @@ async function removePartner(partnerId: string) {
 
     const partnerSelectorsQuery = partnerRef.collection(selectors).limit(500);
 
-    // TODO - change
     const selectorsQuery = firestoreDatabase()
         .collection(selectors)
         .where('partnerId', '==', partnerDoc.id)
@@ -96,10 +94,6 @@ async function removeStripeCustomer(userId: string) {
     const customer = stripeCustomerDoc.data() as StripeCustomer;
     await stripe.customers.del(customer.customerId);
 
-    const ticketPaymentsQuery = stripeCustomerRef.collection(ticketPayments).limit(500);
-
-    await deleteQueryBatch(ticketPaymentsQuery);
-
     await stripeCustomerRef.delete();
 }
 
@@ -109,10 +103,10 @@ async function removeSelector(selectorId: string) {
 
     if (!selectorDoc.exists) return;
 
-    const clubId = (selectorDoc.data() as Selector).clubId;
+    const partnerId = (selectorDoc.data() as Selector).clubId!;
     const partnerSelectorRef = firestoreDatabase()
         .collection(partners)
-        .doc(clubId!)
+        .doc(partnerId)
         .collection(selectors)
         .doc(selectorId);
 

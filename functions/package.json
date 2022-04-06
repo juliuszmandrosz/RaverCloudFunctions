@@ -14,15 +14,18 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@google-cloud/tasks": "^2.5.0",
     "algoliasearch": "^4.13.0",
     "firebase-admin": "^10.0.2",
     "firebase-functions": "^3.20.0",
     "moment": "^2.29.3",
     "prettier": "^2.6.2",
     "randomstring": "^1.2.2",
-    "stripe": "^8.215.0"
+    "stripe": "^8.215.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@types/uuid": "^8.3.4",
     "@types/randomstring": "^1.1.8",
     "@typescript-eslint/eslint-plugin": "^5.18.0",
     "@typescript-eslint/parser": "^5.18.0",
