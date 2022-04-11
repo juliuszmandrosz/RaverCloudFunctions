@@ -64,15 +64,6 @@ exports.createTicketPaymentSheet =
                 .createTicketPaymentSheet(data, context)
         })
 
-exports.onUserCreated =
-    functions.auth
-        .user()
-        .onCreate(async (user, context) => {
-            await (
-                await import('./firebase-triggers/on-user-created'))
-                .onUserCreated(user, context)
-        })
-
 
 exports.getVipPrice =
     functions.https
@@ -92,5 +83,62 @@ exports.onTicketPaymentAdded = functions.firestore
     })
 
 
+exports.checkUserClaim =
+    functions.https
+        .onCall(async (data, context) => {
+            return (
+                await import('./auth-functions/check-claim/check-user-claim'))
+                .checkUserClaim(data, context)
+        })
 
+
+exports.checkPartnerClaim =
+    functions.https
+        .onCall(async (data, context) => {
+            return (
+                await import('./auth-functions/check-claim/check-partner-claim'))
+                .checkPartnerClaim(data, context)
+        })
+
+
+exports.checkSelectorClaim =
+    functions.https
+        .onCall(async (data, context) => {
+            return (
+                await import('./auth-functions/check-claim/check-selector-claim'))
+                .checkSelectorClaim(data, context)
+        })
+
+
+exports.addUser =
+    functions.https
+        .onCall(async (data, context) => {
+            return (
+                await import('./firestore-functions/add-account/add-user'))
+                .addUser(data, context)
+        })
+
+exports.addPartner =
+    functions.https
+        .onCall(async (data, context) => {
+            return (
+                await import('./firestore-functions/add-account/add-partner'))
+                .addPartner(data, context)
+        })
+
+exports.addSelector =
+    functions.https
+        .onCall(async (data, context) => {
+            return (
+                await import('./firestore-functions/add-account/add-selector/add-selector'))
+                .addSelector(data, context)
+        })
+
+
+exports.onAccountDeleted =
+    functions.auth.user().onDelete(async (user, context) => {
+        await (
+            await import('./firebase-triggers/on-account-deleted'))
+            .onAccountDeleted(user, context)
+    })
 
