@@ -15,13 +15,14 @@ export async function getVipPrice(
 ): Promise<number> {
     const eventId = data?.eventId;
     const ticketId = data?.ticketId;
+    const eventPrice = data?.eventPrice;
 
-    if (!eventId && !ticketId) {
-        const message = 'The function must be called with event id or ticket id.';
+    if (!eventId && !ticketId && !eventPrice) {
+        const message = 'The function must be called with event id or ticket id or event price';
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-    const price = await getOriginalPrice(eventId, ticketId);
+    const price = eventPrice ?? await getOriginalPrice(eventId, ticketId);
     const multiplier = await getVipPriceMultiplier();
     const maxPrice = await getVipMaxPrice();
     return price <= maxPrice ? price * (multiplier - 1) : maxPrice;
