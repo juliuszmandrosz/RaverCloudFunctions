@@ -1,16 +1,15 @@
 import {firestore} from "firebase-admin";
-import FieldValue = firestore.FieldValue;
+import Timestamp = firestore.Timestamp;
 
 export interface TicketPayment {
-    id: string;
+    id?: string;
     paymentIntentId: string;
+    transferId: string;
     eventId: string;
+    eventDateTime: Timestamp,
+    paymentDateTime: Timestamp;
     price: number;
     currency: string;
-    eventName: string;
-    clubName: string;
-    paymentDateTime: FieldValue;
-    eventDateTime: FieldValue;
     isVip: boolean;
     promotionCode?: string;
 }
