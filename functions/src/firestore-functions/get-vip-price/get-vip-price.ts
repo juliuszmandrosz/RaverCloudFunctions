@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import {events, tickets} from "../../constants/collections";
+import {events, tickets, users} from "../../constants/collections";
 import {vipMaxPrice, vipPriceMultiplier} from "../../constants/remote-config-params";
 import {firestoreDatabase} from "../../modules/firebase-admin-module";
 import {getParameterFromRemoteConfig} from "../../utils/remote-config-utils";
@@ -7,33 +7,42 @@ import {GetVipPriceRequest} from "./get-vip-price-request";
 import {Event} from "../../models/event";
 import {Ticket} from "../../models/ticket";
 import {throwInvalidEventError} from "../../errors/throw-invalid-event-error";
+import {throwUnauthenticatedError} from "../../errors/throw-unauthenticated-error";
 
 
 export async function getVipPrice(
     data: GetVipPriceRequest,
-    _?: functions.https.CallableContext
+    context?: functions.https.CallableContext
 ): Promise<number> {
     const eventId = data?.eventId;
     const ticketId = data?.ticketId;
     const eventPrice = data?.eventPrice;
+    const userId = context?.auth?.uid;
+
+    if (ticketId && !userId) {
+        throwUnauthenticatedError();
+    }
 
     if (!eventId && !ticketId && !eventPrice) {
         const message = 'The function must be called with event id or ticket id or event price';
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-    const price = eventPrice ?? await getOriginalPrice(eventId, ticketId);
+    const price = eventPrice ?? await getOriginalPrice(eventId, ticketId, userId);
     const multiplier = await getVipPriceMultiplier();
     const maxPrice = await getVipMaxPrice();
     return price <= maxPrice ? price * (multiplier - 1) : maxPrice;
 }
 
-async function getOriginalPrice(eventId?: string, ticketId?: string) {
-    return eventId ? getEventPrice(eventId) : getTicketPrice(ticketId!);
+async function getOriginalPrice(eventId?: string, ticketId?: string, userId?: string) {
+    return eventId ? getEventPrice(eventId) : getTicketPrice(ticketId!, userId!);
 }
 
 async function getEventPrice(eventId: string) {
-    const eventDoc = await firestoreDatabase().collection(events).doc(eventId).get();
+    const eventDoc = await firestoreDatabase()
+        .collection(events).doc(eventId)
+        .get();
+
     if (!eventDoc.exists) {
         throwInvalidEventError();
     }
@@ -41,8 +50,12 @@ async function getEventPrice(eventId: string) {
     return event.price;
 }
 
-async function getTicketPrice(ticketId: string) {
-    const doc = await firestoreDatabase().collection(tickets).doc(ticketId).get();
+async function getTicketPrice(ticketId: string, userId: string) {
+    const doc = await firestoreDatabase()
+        .collection(users).doc(userId)
+        .collection(tickets).doc(ticketId)
+        .get();
+
     if (!doc.exists) {
         const message = 'Ticket with given id does not exists.';
         throw new functions.https.HttpsError('not-found', message);
