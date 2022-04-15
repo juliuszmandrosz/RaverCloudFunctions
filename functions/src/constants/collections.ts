@@ -11,4 +11,4 @@ export const users = 'users';
 export const partners = 'partners';
 export const selectors = 'selectors';
 export const ticketPayments = 'ticketPayments';
-export const newTicketPayment = 'stripeCustomers/{userId}/ticketPayments/{paymentId}'
+export const vipPayments = 'vipPayments';
