@@ -4,17 +4,15 @@ import {throwUnauthenticatedError} from "../../errors/throw-unauthenticated-erro
 import {applyPromotionCode} from "../apply-promotion-code/apply-promotion-code";
 import {stripe} from "../../modules/stripe-module";
 import {firestoreDatabase} from "../../modules/firebase-admin-module";
-import {events, stripeConnectedAccounts, stripeCustomers, ticketPayments} from "../../constants/collections";
-import {getParameterFromRemoteConfig} from "../../utils/remote-config-utils";
-import {feeAmount} from "../../constants/remote-config-params";
-import {throwInvalidEventError} from "../../errors/throw-invalid-event-error";
-import {Event} from "../../models/event";
+import {stripeCustomers, ticketPayments} from "../../constants/collections";
 import {TicketPayment} from "../../models/ticket-payment";
 import {firestore} from "firebase-admin";
 import Timestamp = firestore.Timestamp;
-import {StripeConnectedAccount} from "../../models/stripe-connected-account";
 import * as moment from "moment";
 import {getVipPrice} from "../get-vip-price/get-vip-price";
+import {getConnectedAccountData} from "../get-data/get-connected-account-data";
+import {getEventData} from "../get-data/get-event-data";
+import {getFee} from "../../utils/get-fee";
 
 
 export async function addTicketPayment(
@@ -43,7 +41,7 @@ export async function addTicketPayment(
     const transferAmount = await getTransferAmount(event.price, vipPrice);
     const paymentAmount = getPaymentAmount(event.price, vipPrice, promotionCodeAmountOff);
 
-    const eventTimestamp = Timestamp.fromDate(moment(event.eventStartDateTime).toDate());
+    const eventDateTime = Timestamp.fromDate(moment(event.eventStartDateTime).toDate());
 
     const transfer = await stripe.transfers.create({
         amount: transferAmount,
@@ -60,11 +58,11 @@ export async function addTicketPayment(
             promotionCode,
             eventId,
             isVip,
+            eventDateTime,
             transferId: transfer.id,
             currency: event.currency,
             price: paymentAmount,
             paymentDateTime: Timestamp.now(),
-            eventDateTime: eventTimestamp,
         } as TicketPayment);
 }
 
@@ -88,11 +86,6 @@ function getPaymentAmount(eventPrice: number, vipPrice: number, promotionCodeAmo
 }
 
 
-async function getFee(price: number) {
-    const fee = await getParameterFromRemoteConfig(feeAmount);
-    return price * parseFloat(fee);
-}
-
 async function applyCode(promotionCode: string, userId: string): Promise<number> {
     const code = await applyPromotionCode({
         promotionCode,
@@ -100,30 +93,6 @@ async function applyCode(promotionCode: string, userId: string): Promise<number>
     });
 
     return code.amountOff;
-}
-
-
-async function getEventData(eventId: string) {
-    const eventDoc = await firestoreDatabase().collection(events).doc(eventId).get();
-
-    if (!eventDoc.exists) {
-        throwInvalidEventError();
-    }
-
-    return eventDoc.data() as Event;
-}
-
-async function getConnectedAccountData(clubId: string) {
-    const connectedAccountDoc = await firestoreDatabase()
-        .collection(stripeConnectedAccounts).doc(clubId)
-        .get();
-
-    if (!connectedAccountDoc.exists) {
-        const message = 'Connected account with given id does not exists';
-        throw new functions.https.HttpsError('invalid-argument', message);
-    }
-
-    return connectedAccountDoc.data() as StripeConnectedAccount;
 }
 
 
