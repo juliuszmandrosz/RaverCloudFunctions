@@ -4,6 +4,7 @@ import Timestamp = firestore.Timestamp;
 export interface Ticket {
     id: string;
     eventId: string;
+    clubId: string;
     ticketPaymentId: string;
     clubName: string;
     eventName: string;
