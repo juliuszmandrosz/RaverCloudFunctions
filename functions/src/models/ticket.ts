@@ -6,6 +6,7 @@ export interface Ticket {
     eventId: string;
     clubId: string;
     ticketPaymentId: string;
+    vipPaymentId: string;
     clubName: string;
     eventName: string;
     eventDateTime: Timestamp;

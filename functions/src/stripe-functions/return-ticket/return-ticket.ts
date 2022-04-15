@@ -1,13 +1,14 @@
 import * as functions from 'firebase-functions'
 import {ReturnTicketRequest} from "./return-ticket-request";
 import {firestoreDatabase} from "../../modules/firebase-admin-module";
-import {stripeCustomers, ticketPayments, tickets, users} from "../../constants/collections";
+import {stripeCustomers, ticketPayments, tickets, users, vipPayments} from "../../constants/collections";
 import {TicketPayment} from "../../models/ticket-payment";
 import * as moment from "moment";
 import {FunctionsErrorDetails} from "../../errors/functions-error-details";
 import {stripe} from "../../modules/stripe-module";
 import {throwUnauthenticatedError} from "../../errors/throw-unauthenticated-error";
-
+import {getTicketData} from "../../firestore-functions/get-data/get-ticket-data";
+import {VipPayment} from "../../models/vip-payment";
 
 export async function returnTicket(
     data: ReturnTicketRequest,
@@ -17,13 +18,7 @@ export async function returnTicket(
         throwUnauthenticatedError();
     }
 
-    const ticketPaymentId = data?.ticketPaymentId;
     const ticketId = data?.ticketId;
-
-    if (!ticketPaymentId) {
-        const message = 'The function must be called with ticket payment id';
-        throw new functions.https.HttpsError('invalid-argument', message);
-    }
 
     if (!ticketId) {
         const message = 'The function must be called with ticket id';
@@ -31,21 +26,23 @@ export async function returnTicket(
     }
 
     const userId = context.auth!.uid;
-
-    await checkIfTicketExists(userId, ticketId);
-
-    const ticketPayment = await getTicketPaymentData(userId, ticketPaymentId);
-
-    const eventDateTime = moment(ticketPayment.eventDateTime.toMillis());
+    const ticket = await getTicketData(userId, ticketId);
+    const eventDateTime = moment(ticket.eventDateTime.toMillis());
 
     if (eventDateTime.isBefore(moment().add(1, 'day'))) {
-        const message = 'Time to return the ticket has expired';
+        const message = 'Time to return ticket has expired';
         const details: FunctionsErrorDetails = 'return-time-expired';
         throw new functions.https.HttpsError('deadline-exceeded', message, details);
     }
 
-    await stripe.transfers.createReversal(ticketPayment.transferId);
-    await stripe.refunds.create({payment_intent: ticketPayment.paymentIntentId});
+    const ticketPayment = await getTicketPaymentData(userId, ticket.ticketPaymentId);
+    const vipPayment = ticket.vipPaymentId ? await getVipPaymentData(userId, ticket.vipPaymentId) : null;
+
+    await refundTicketPayment(ticketPayment);
+
+    if (vipPayment) {
+        await refundVipPayment(vipPayment);
+    }
 
     await deleteTicket(userId, ticketId);
 }
@@ -64,16 +61,18 @@ async function getTicketPaymentData(userId: string, ticketPaymentId: string) {
     return ticketPaymentDoc.data() as TicketPayment;
 }
 
-async function checkIfTicketExists(userId: string, ticketId: string) {
-    const ticketDoc = await firestoreDatabase()
-        .collection(users).doc(userId)
-        .collection(tickets).doc(ticketId)
+async function getVipPaymentData(userId: string, vipPaymentId: string) {
+    const vipPaymentDoc = await firestoreDatabase()
+        .collection(stripeCustomers).doc(userId)
+        .collection(vipPayments).doc(vipPaymentId)
         .get();
 
-    if (!ticketDoc.exists) {
-        const message = 'Ticket with given id does not exists';
+    if (!vipPaymentDoc.exists) {
+        const message = 'Vip payment with given id does not exists';
         throw new functions.https.HttpsError('not-found', message);
     }
+
+    return vipPaymentDoc.data() as VipPayment;
 }
 
 async function deleteTicket(userId: string, ticketId: string) {
@@ -84,3 +83,12 @@ async function deleteTicket(userId: string, ticketId: string) {
 }
 
 
+async function refundTicketPayment(ticketPayment: TicketPayment) {
+    await stripe.transfers.createReversal(ticketPayment.transferId);
+    await stripe.refunds.create({payment_intent: ticketPayment.paymentIntentId});
+}
+
+async function refundVipPayment(vipPayment: VipPayment) {
+    await stripe.transfers.createReversal(vipPayment.transferId);
+    await stripe.refunds.create({payment_intent: vipPayment.paymentIntentId});
+}
