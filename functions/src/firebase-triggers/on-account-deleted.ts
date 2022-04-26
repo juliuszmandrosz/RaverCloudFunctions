@@ -96,10 +96,6 @@ async function removeStripeCustomer(userId: string) {
     const customer = stripeCustomerDoc.data() as StripeCustomer;
     await stripe.customers.del(customer.customerId);
 
-    const ticketPaymentsQuery = stripeCustomerRef.collection(ticketPayments).limit(500);
-
-    await deleteQueryBatch(ticketPaymentsQuery);
-
     await stripeCustomerRef.delete();
 }
 

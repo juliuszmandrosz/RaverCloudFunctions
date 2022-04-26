@@ -1,13 +1,13 @@
-import * as functions from 'firebase-functions'
-import {stripeCustomers} from '../../constants/collections';
-import {apiVersion} from '../../constants/stripe-constants';
-import {firestoreDatabase} from '../../modules/firebase-admin-module';
-import {stripe} from '../../modules/stripe-module';
-import {StripeCustomer} from "../../models/stripe-customer";
-import {getConnectedAccountData} from "../../firestore-functions/get-data/get-connected-account-data";
-import {CreatePaymentSheetForUserRequest} from "./create-payment-sheet-for-user-request";
-import {CreatePaymentSheetForUserResponse} from "./create-payment-sheet-for-user-response";
-import {throwUnauthenticatedError} from "../../errors/throw-unauthenticated-error";
+import * as functions from 'firebase-functions';
+import { stripeCustomers } from '../../constants/collections';
+import { apiVersion } from '../../constants/stripe-constants';
+import { firestoreDatabase } from '../../modules/firebase-admin-module';
+import { stripe } from '../../modules/stripe-module';
+import { StripeCustomer } from '../../models/stripe-customer';
+import { tryGetConnectedAccountData } from '../../firestore-functions/get-data/get-connected-account-data';
+import { CreatePaymentSheetForUserRequest } from './create-payment-sheet-for-user-request';
+import { CreatePaymentSheetForUserResponse } from './create-payment-sheet-for-user-response';
+import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
 
 export async function createPaymentSheetForUser(
     data: CreatePaymentSheetForUserRequest,
@@ -20,17 +20,16 @@ export async function createPaymentSheetForUser(
     checkIfRequestIsValid(data);
 
     const amount = data?.amount;
-    const paymentId = data?.paymentId;
+    const transferGroupId = data?.transferGroupId;
     const description = data?.description;
     const currency = data?.currency;
     const partnerId = data?.partnerId;
     const customerId = await getStripeCustomerId(context);
     const userEmail = context.auth!.token.email!;
 
-
     const ephemeralKey = await stripe.ephemeralKeys.create(
-        {customer: customerId},
-        {apiVersion: apiVersion}
+        { customer: customerId },
+        { apiVersion: apiVersion }
     );
 
     if (!ephemeralKey.secret) {
@@ -39,16 +38,17 @@ export async function createPaymentSheetForUser(
     }
 
     const paymentMethodTypes = getPaymentMethodTypes(currency);
-    const connectedAccount = await getConnectedAccountData(partnerId);
+    const connectedAccount = await tryGetConnectedAccountData(partnerId);
+    const paymentIntentAmount = getPaymentIntentAmount(amount);
 
     const paymentIntent = await stripe.paymentIntents.create({
-        amount,
         currency,
         description,
+        amount: paymentIntentAmount,
         customer: customerId,
         payment_method_types: paymentMethodTypes,
         receipt_email: userEmail,
-        transfer_group: paymentId,
+        transfer_group: transferGroupId,
         on_behalf_of: connectedAccount.connectedAccountId,
     });
 
@@ -62,7 +62,7 @@ export async function createPaymentSheetForUser(
         paymentIntentSecret: paymentIntent.client_secret,
         ephemeralKeySecret: ephemeralKey.secret,
         paymentIntentId: paymentIntent.id,
-    }
+    };
 }
 
 async function getStripeCustomerId(context: functions.https.CallableContext): Promise<string> {
@@ -74,7 +74,6 @@ async function getStripeCustomerId(context: functions.https.CallableContext): Pr
     return (customer.data() as StripeCustomer).customerId;
 }
 
-
 function getPaymentMethodTypes(currency: string) {
     if (currency.toUpperCase() == 'PLN' || currency.toUpperCase() == 'EUR') {
         return ['card', 'p24'];
@@ -83,6 +82,10 @@ function getPaymentMethodTypes(currency: string) {
     return ['card'];
 }
 
+function getPaymentIntentAmount(amount: number) {
+    // TODO - add currency support
+    return amount * 100;
+}
 
 function checkIfRequestIsValid(request: CreatePaymentSheetForUserRequest) {
     if (!request.amount) {
@@ -90,8 +93,8 @@ function checkIfRequestIsValid(request: CreatePaymentSheetForUserRequest) {
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-    if (!request.paymentId) {
-        const message = 'The function must be called with payment id';
+    if (!request.transferGroupId) {
+        const message = 'The function must be called with transfer group id';
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
@@ -110,4 +113,3 @@ function checkIfRequestIsValid(request: CreatePaymentSheetForUserRequest) {
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 }
-
