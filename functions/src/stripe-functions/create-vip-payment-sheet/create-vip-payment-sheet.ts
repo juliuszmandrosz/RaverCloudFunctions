@@ -1,16 +1,17 @@
-import * as functions from 'firebase-functions'
-import {getVipPrice} from '../../firestore-functions/get-vip-price/get-vip-price';
-import {getPromotionCode} from "../../firestore-functions/get-promotion-code/get-promotion-code";
-import {CreateVipPaymentSheetRequest} from "./create-vip-payment-sheet-request";
-import {createPaymentSheetForUser} from "../create-payment-sheet-for-user/create-payment-sheet-for-user";
-import {
-    CreatePaymentSheetForUserResponse
-} from "../create-payment-sheet-for-user/create-payment-sheet-for-user-response";
-import {throwUnauthenticatedError} from "../../errors/throw-unauthenticated-error";
-import {Ticket} from "../../models/ticket";
-import {FunctionsErrorDetails} from "../../errors/functions-error-details";
-import {getTicketData} from "../../firestore-functions/get-data/get-ticket-data";
-
+import * as functions from 'firebase-functions';
+import { getVipPrice } from '../../firestore-functions/get-vip-price/get-vip-price';
+import { getPromotionCode } from '../../firestore-functions/get-promotion-code/get-promotion-code';
+import { CreateVipPaymentSheetRequest } from './create-vip-payment-sheet-request';
+import { createPaymentSheetForUser } from '../create-payment-sheet-for-user/create-payment-sheet-for-user';
+import { CreatePaymentSheetForUserResponse } from '../create-payment-sheet-for-user/create-payment-sheet-for-user-response';
+import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
+import { Ticket } from '../../models/ticket';
+import { FunctionsErrorDetails } from '../../errors/functions-error-details';
+import { tryGetTicketData } from '../../firestore-functions/get-data/get-ticket-data';
+import { v1 } from 'uuid';
+import { VipPaymentSession } from '../../models/vip-payment-session';
+import { firestoreDatabase } from '../../modules/firebase-admin-module';
+import { vipPaymentSessions } from '../../constants/collections';
 
 export async function createVipPaymentSheet(
     data: CreateVipPaymentSheetRequest,
@@ -20,22 +21,16 @@ export async function createVipPaymentSheet(
         throwUnauthenticatedError();
     }
 
-    const vipPaymentId = data?.vipPaymentId;
     const ticketId = data?.ticketId;
     const promotionCode = data?.promotionCode;
     const userId = context.auth!.uid;
-
-    if (!vipPaymentId) {
-        const message = 'The function must be called with payment id';
-        throw new functions.https.HttpsError('invalid-argument', message);
-    }
 
     if (!ticketId) {
         const message = 'The function must be called with ticket id';
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-    const ticket = await getTicketData(userId, ticketId);
+    const ticket = await tryGetTicketData(userId, ticketId);
 
     if (ticket.isVip) {
         const message = 'Given ticket already has the vip status';
@@ -45,28 +40,47 @@ export async function createVipPaymentSheet(
 
     const amount = await getAmount(ticket, context, promotionCode);
 
-    return createPaymentSheetForUser({
-        paymentId: vipPaymentId,
-        amount,
-        currency: ticket.currency,
-        description: ticket.eventName,
-        partnerId: ticket.clubId,
-    }, context);
-}
+    const transferGroupId = v1();
 
+    const paymentSheet = await createPaymentSheetForUser(
+        {
+            transferGroupId,
+            amount,
+            currency: ticket.currency,
+            description: ticket.eventName,
+            partnerId: ticket.clubId,
+        },
+        context
+    );
+
+    await firestoreDatabase()
+        .collection(vipPaymentSessions)
+        .doc(paymentSheet.paymentIntentId)
+        .set({
+            transferGroupId,
+            userId,
+            ticketId,
+            promotionCode,
+            amount,
+            status: 'requires_payment_method',
+        } as VipPaymentSession);
+
+    return paymentSheet;
+}
 
 async function getAmount(
     ticket: Ticket,
     context: functions.https.CallableContext,
-    promotionCode?: string,
+    promotionCode?: string
 ) {
     let amount = await getVipPrice({
-        eventId: ticket.eventId
+        eventId: ticket.eventId,
     });
 
     if (promotionCode) {
-        const result = await getPromotionCode({
-                promotionCode: promotionCode
+        const result = await getPromotionCode(
+            {
+                promotionCode: promotionCode,
             },
             context
         );
@@ -74,6 +88,5 @@ async function getAmount(
         amount -= result.amountOff;
     }
 
-    // TODO - add currency support
-    return amount * 100;
+    return amount;
 }

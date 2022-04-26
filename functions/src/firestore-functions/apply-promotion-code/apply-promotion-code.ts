@@ -1,14 +1,12 @@
-import * as functions from "firebase-functions";
-import {promotionCodes, users} from "../../constants/collections";
-import {firestoreDatabase} from "../../modules/firebase-admin-module";
-import {ApplyPromotionCodeRequest} from "./apply-promotion-code-request";
-import {PromotionCode} from "../../models/promotion-code";
-import {throwExpiredPromotionCodeError} from "../../errors/throw-expired-promotion-code-error";
-import {throwInvalidPromotionCodeError} from "../../errors/throw-invalid-promotion-code-error";
+import * as functions from 'firebase-functions';
+import { promotionCodes, users } from '../../constants/collections';
+import { firestoreDatabase } from '../../modules/firebase-admin-module';
+import { ApplyPromotionCodeRequest } from './apply-promotion-code-request';
+import { PromotionCode } from '../../models/promotion-code';
+import { throwExpiredPromotionCodeError } from '../../errors/throw-expired-promotion-code-error';
+import { throwInvalidPromotionCodeError } from '../../errors/throw-invalid-promotion-code-error';
 
-export async function applyPromotionCode(
-    data: ApplyPromotionCodeRequest
-): Promise<PromotionCode> {
+export async function applyPromotionCode(data: ApplyPromotionCodeRequest): Promise<PromotionCode> {
     const promotionCode = data?.promotionCode;
     const userId = data?.userId;
 
@@ -41,16 +39,13 @@ export async function applyPromotionCode(
             throwExpiredPromotionCodeError();
         }
 
-
         const currentRedemptions = code.timesRedeemed + 1;
         const isStillValid = currentRedemptions < code.maxRedemptions;
 
-        t.update(
-            promotionCodeRef, {
-                timesRedeemed: currentRedemptions,
-                isValid: isStillValid
-            } as PromotionCode
-        );
+        t.update(promotionCodeRef, {
+            timesRedeemed: currentRedemptions,
+            isValid: isStillValid,
+        } as PromotionCode);
 
         return code;
     });

@@ -1,7 +1,8 @@
-import Stripe from "stripe";
-import {env} from "../index";
-import {apiVersion} from "../constants/stripe-constants";
+import Stripe from 'stripe';
+import { apiVersion } from '../constants/stripe-constants';
+import { getFunctionsConfig } from '../utils/get-functions-config';
 
-export const stripe = new Stripe(env.stripe.testkey, {
-    apiVersion: apiVersion
+const config = getFunctionsConfig().stripe;
+export const stripe = new Stripe(config.test_key, {
+    apiVersion: apiVersion,
 });
