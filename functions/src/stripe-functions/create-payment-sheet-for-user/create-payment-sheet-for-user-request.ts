@@ -1,6 +1,6 @@
 export interface CreatePaymentSheetForUserRequest {
-    paymentId: string;
-    amount: number,
+    transferGroupId: string;
+    amount: number;
     description: string;
     partnerId: string;
     currency: string;

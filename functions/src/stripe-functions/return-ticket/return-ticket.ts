@@ -1,14 +1,17 @@
-import * as functions from 'firebase-functions'
-import {ReturnTicketRequest} from "./return-ticket-request";
-import {firestoreDatabase} from "../../modules/firebase-admin-module";
-import {stripeCustomers, ticketPayments, tickets, users, vipPayments} from "../../constants/collections";
-import {TicketPayment} from "../../models/ticket-payment";
-import * as moment from "moment";
-import {FunctionsErrorDetails} from "../../errors/functions-error-details";
-import {stripe} from "../../modules/stripe-module";
-import {throwUnauthenticatedError} from "../../errors/throw-unauthenticated-error";
-import {getTicketData} from "../../firestore-functions/get-data/get-ticket-data";
-import {VipPayment} from "../../models/vip-payment";
+import * as functions from 'firebase-functions';
+import { ReturnTicketRequest } from './return-ticket-request';
+import { firestoreDatabase } from '../../modules/firebase-admin-module';
+import { tickets, users } from '../../constants/collections';
+import * as moment from 'moment';
+import { FunctionsErrorDetails } from '../../errors/functions-error-details';
+import { stripe } from '../../modules/stripe-module';
+import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
+import { tryGetTicketData } from '../../firestore-functions/get-data/get-ticket-data';
+import { VipPaymentSession } from '../../models/vip-payment-session';
+import { TicketPaymentSession } from '../../models/ticket-payment-session';
+import { tryGetTicketPaymentSessionData } from '../../firestore-functions/get-data/get-ticket-payment-session-data';
+import { tryGetVipPaymentSession } from '../../firestore-functions/get-data/get-vip-payment-session.data';
+import { updateEventOnTicketReturn } from '../../firestore-functions/update-event/update-event-on-ticket-return';
 
 export async function returnTicket(
     data: ReturnTicketRequest,
@@ -26,7 +29,7 @@ export async function returnTicket(
     }
 
     const userId = context.auth!.uid;
-    const ticket = await getTicketData(userId, ticketId);
+    const ticket = await tryGetTicketData(userId, ticketId);
     const eventDateTime = moment(ticket.eventDateTime.toMillis());
 
     if (eventDateTime.isBefore(moment().add(1, 'day'))) {
@@ -35,8 +38,10 @@ export async function returnTicket(
         throw new functions.https.HttpsError('deadline-exceeded', message, details);
     }
 
-    const ticketPayment = await getTicketPaymentData(userId, ticket.ticketPaymentId);
-    const vipPayment = ticket.vipPaymentId ? await getVipPaymentData(userId, ticket.vipPaymentId) : null;
+    const ticketPayment = await tryGetTicketPaymentSessionData(ticket.ticketPaymentId);
+    const vipPayment = ticket.vipPaymentId
+        ? await tryGetVipPaymentSession(ticket.vipPaymentId)
+        : null;
 
     await refundTicketPayment(ticketPayment);
 
@@ -45,50 +50,25 @@ export async function returnTicket(
     }
 
     await deleteTicket(userId, ticketId);
-}
 
-async function getTicketPaymentData(userId: string, ticketPaymentId: string) {
-    const ticketPaymentDoc = await firestoreDatabase()
-        .collection(stripeCustomers).doc(userId)
-        .collection(ticketPayments).doc(ticketPaymentId)
-        .get();
-
-    if (!ticketPaymentDoc.exists) {
-        const message = 'Ticket payment with given id does not exists';
-        throw new functions.https.HttpsError('not-found', message);
-    }
-
-    return ticketPaymentDoc.data() as TicketPayment;
-}
-
-async function getVipPaymentData(userId: string, vipPaymentId: string) {
-    const vipPaymentDoc = await firestoreDatabase()
-        .collection(stripeCustomers).doc(userId)
-        .collection(vipPayments).doc(vipPaymentId)
-        .get();
-
-    if (!vipPaymentDoc.exists) {
-        const message = 'Vip payment with given id does not exists';
-        throw new functions.https.HttpsError('not-found', message);
-    }
-
-    return vipPaymentDoc.data() as VipPayment;
+    await updateEventOnTicketReturn(ticket.eventId, ticket.isVip);
 }
 
 async function deleteTicket(userId: string, ticketId: string) {
     await firestoreDatabase()
-        .collection(users).doc(userId)
-        .collection(tickets).doc(ticketId)
+        .collection(users)
+        .doc(userId)
+        .collection(tickets)
+        .doc(ticketId)
         .delete();
 }
 
-
-async function refundTicketPayment(ticketPayment: TicketPayment) {
-    await stripe.transfers.createReversal(ticketPayment.transferId);
-    await stripe.refunds.create({payment_intent: ticketPayment.paymentIntentId});
+async function refundTicketPayment(ticketPaymentSession: TicketPaymentSession) {
+    await stripe.transfers.createReversal(ticketPaymentSession.transferId!);
+    await stripe.refunds.create({ payment_intent: ticketPaymentSession.id });
 }
 
-async function refundVipPayment(vipPayment: VipPayment) {
-    await stripe.transfers.createReversal(vipPayment.transferId);
-    await stripe.refunds.create({payment_intent: vipPayment.paymentIntentId});
+async function refundVipPayment(vipPaymentSession: VipPaymentSession) {
+    await stripe.transfers.createReversal(vipPaymentSession.transferId!);
+    await stripe.refunds.create({ payment_intent: vipPaymentSession.id });
 }
