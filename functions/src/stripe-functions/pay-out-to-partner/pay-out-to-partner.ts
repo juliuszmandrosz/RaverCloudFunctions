@@ -1,0 +1,60 @@
+import * as functions from 'firebase-functions';
+import { PayOutToPartnerRequest } from './pay-out-to-partner-request';
+import { stripe } from '../../modules/stripe-module';
+import { getEventTicketsOrReturnNotFound } from '../../firestore-functions/get-data/get-event-tickets-data';
+import { firestoreDatabase } from '../../modules/firebase-admin-module';
+import { partners, payouts } from '../../constants/collections';
+import { Payout } from '../../models/payout';
+import { firestore } from 'firebase-admin';
+import Timestamp = firestore.Timestamp;
+import { getConnectedAccountDataOrReturnNotFound } from '../../firestore-functions/get-data/get-connected-account-data';
+
+export async function payOutToPartner(
+    request: functions.https.Request,
+    response: functions.Response
+): Promise<void> {
+    const payoutToConnectedAccountRequest = request.body as PayOutToPartnerRequest;
+
+    const event = payoutToConnectedAccountRequest.event;
+
+    const eventTickets = await getEventTicketsOrReturnNotFound(event.clubId, event.id, response);
+
+    if (!eventTickets) return;
+
+    const clubIncome = eventTickets.ticketSales.clubIncome;
+
+    if (!clubIncome) {
+        response.send(200);
+        return;
+    }
+
+    const connectedAccount = await getConnectedAccountDataOrReturnNotFound(event.clubId, response);
+
+    if (!connectedAccount) return;
+
+    const payout = await stripe.payouts.create(
+        {
+            amount: getPayoutAmount(clubIncome),
+            currency: eventTickets.ticketSales.currency,
+        },
+        { stripeAccount: connectedAccount.connectedAccountId }
+    );
+
+    await firestoreDatabase()
+        .collection(partners)
+        .doc(event.clubId)
+        .collection(payouts)
+        .doc(payout.id)
+        .set({
+            amount: clubIncome,
+            currency: eventTickets.ticketSales.currency,
+            payoutDateTime: Timestamp.now(),
+        } as Payout);
+
+    response.send();
+}
+
+function getPayoutAmount(clubIncome: number) {
+    // TODO - add currency support
+    return clubIncome * 100;
+}
