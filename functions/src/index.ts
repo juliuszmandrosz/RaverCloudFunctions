@@ -130,3 +130,9 @@ exports.cancelTicketReservation = functions.https.onRequest(async (request, resp
         await import('./firestore-functions/cancel-ticket-reservation/cancel-ticket-reservation')
     ).cancelTicketReservation(request, response);
 });
+
+exports.payOutToPartner = functions.https.onRequest(async (request, response) => {
+    await (
+        await import('./stripe-functions/pay-out-to-partner/pay-out-to-partner')
+    ).payOutToPartner(request, response);
+});
