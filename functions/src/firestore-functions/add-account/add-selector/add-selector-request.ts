@@ -1,4 +1,4 @@
 export interface AddSelectorRequest {
-    email: string,
-    password: string,
+    email: string;
+    accessCode: string;
 }

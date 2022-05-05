@@ -1,10 +1,10 @@
-import * as functions from "firebase-functions";
-import {AddSelectorRequest} from "./add-selector-request";
-import {firebaseAuth, firestoreDatabase} from "../../../modules/firebase-admin-module";
-import {partners, selectors} from "../../../constants/collections";
-import {Selector} from "../../../models/selector";
-import {setSelectorClaim} from "../../../auth-functions/set-claim/set-selector-claim";
-
+import * as functions from 'firebase-functions';
+import { AddSelectorRequest } from './add-selector-request';
+import { firestoreDatabase } from '../../../modules/firebase-admin-module';
+import { selectors } from '../../../constants/collections';
+import { Selector } from '../../../models/selector';
+import { setSelectorClaim } from '../../../auth-functions/set-claim/set-selector-claim';
+import { useSelectorAccessCode } from '../../use-selector-access-code/use-selector-access-code';
 
 export async function addSelector(
     data: AddSelectorRequest,
@@ -16,37 +16,24 @@ export async function addSelector(
     }
 
     const selectorEmail = data?.email;
-    const selectorPassword = data?.password;
+    const accessCode = data?.accessCode;
 
     if (!selectorEmail) {
         const message = 'The function must be called with selector email.';
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-    if (!selectorPassword) {
-        const message = 'The function must be called with selector password.';
+    if (!accessCode) {
+        const message = 'The function must be called with access code.';
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-    const partnerId = context.auth.uid;
-    const partnerDocRef = firestoreDatabase().collection(partners).doc(partnerId);
+    const accessCodeData = await useSelectorAccessCode({ accessCode }, context);
 
-    const selector = await firebaseAuth().createUser({
-        email: selectorEmail,
-        password: selectorPassword
-    });
+    const selectorId = context.auth.uid;
+    const selector: Selector = { clubId: accessCodeData.partnerId, email: selectorEmail };
 
-    await partnerDocRef
-        .collection(selectors).doc(selector.uid).set({
-                email: selectorEmail,
-            } as Selector);
+    await firestoreDatabase().collection(selectors).doc(selectorId).set(selector);
 
-    await firestoreDatabase()
-        .collection(selectors).doc(selector.uid).set({
-            partnerId,
-            email: selectorEmail,
-        } as Selector);
-
-    await setSelectorClaim({email: selectorEmail});
+    await setSelectorClaim({ email: selectorEmail });
 }
-
