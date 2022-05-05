@@ -1,4 +1,4 @@
-import {CustomClaims} from "./custom-claims";
+import { CustomClaims } from './custom-claims';
 
 export interface Account {
     id: string;
