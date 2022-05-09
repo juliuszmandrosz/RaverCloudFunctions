@@ -15,4 +15,5 @@ export interface TicketPaymentSession {
     promotionCode?: string;
     transferId?: string;
     paymentDateTime?: Timestamp;
+    ticketId: string;
 }

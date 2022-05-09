@@ -7,6 +7,7 @@ export interface VipPaymentSession {
     id: string;
     transferGroupId: string;
     ticketId: string;
+    eventId: string;
     userId: string;
     amount: number;
     status: Stripe.PaymentIntent.Status;

@@ -15,6 +15,8 @@ export interface Event {
     urlLinks: Map<string, string>;
     cityId: string;
     isConcert: boolean;
+    isCanceled: boolean;
+    isCurrentlyPostponing: boolean;
     artistName?: string;
     description?: string;
     photos?: string[];
