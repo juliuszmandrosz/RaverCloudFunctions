@@ -63,6 +63,7 @@ export async function createVipPaymentSheet(
             promotionCode,
             amount,
             status: 'requires_payment_method',
+            eventId: ticket.eventId,
         } as VipPaymentSession);
 
     return paymentSheet;
