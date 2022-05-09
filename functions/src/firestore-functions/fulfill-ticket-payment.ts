@@ -47,15 +47,6 @@ export async function fulfillTicketPayment(
         description: event.eventName,
     });
 
-    await firestoreDatabase()
-        .collection(ticketPaymentSessions)
-        .doc(ticketPaymentSession.id)
-        .update({
-            transferId: transfer.id,
-            status: 'succeeded',
-            paymentDateTime: Timestamp.now(),
-        } as TicketPaymentSession);
-
     const ticket: Ticket = {
         id: v1(),
         eventId: event.id,
@@ -69,6 +60,16 @@ export async function fulfillTicketPayment(
         eventName: event.eventName,
         isExpired: false,
     };
+
+    await firestoreDatabase()
+        .collection(ticketPaymentSessions)
+        .doc(ticketPaymentSession.id)
+        .update({
+            transferId: transfer.id,
+            status: 'succeeded',
+            paymentDateTime: Timestamp.now(),
+            ticketId: ticket.id,
+        } as TicketPaymentSession);
 
     await firestoreDatabase()
         .collection(users)
