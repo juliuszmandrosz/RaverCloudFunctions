@@ -1,12 +1,12 @@
-import * as functions from "firebase-functions";
-import {throwUnauthenticatedError} from "../../../errors/throw-unauthenticated-error";
-import {firestoreDatabase} from "../../../modules/firebase-admin-module";
-import {partners, stripeConnectedAccounts} from "../../../constants/collections";
-import {setPartnerClaim} from "../../../auth-functions/set-claim/set-partner-claim";
-import {Partner} from "../../../models/partner";
-import {StripeConnectedAccount} from "../../../models/stripe-connected-account";
-import {AddPartnerRequest} from "./add-partner-request";
-
+import * as functions from 'firebase-functions';
+import { throwUnauthenticatedError } from '../../../errors/throw-unauthenticated-error';
+import { firestoreDatabase } from '../../../modules/firebase-admin-module';
+import { partners, stripeConnectedAccounts } from '../../../constants/collections';
+import { setPartnerClaim } from '../../../auth-functions/set-claim/set-partner-claim';
+import { Partner } from '../../../models/partner';
+import { StripeConnectedAccount } from '../../../models/stripe-connected-account';
+import { AddPartnerRequest } from './add-partner-request';
+import { addStripeCustomer } from '../../../stripe-functions/add-stripe-customer/add-stripe-customer';
 
 export async function addPartner(
     data: AddPartnerRequest,
@@ -33,13 +33,16 @@ export async function addPartner(
         throw new functions.https.HttpsError('already-exists', message);
     }
 
-    await setPartnerClaim({email});
+    await setPartnerClaim({ email });
 
-    await partnerDocRef.set({email} as Partner);
+    await partnerDocRef.set({ email } as Partner);
 
     await firestoreDatabase()
-        .collection(stripeConnectedAccounts).doc(partnerId).set({
-            connectedAccountId
+        .collection(stripeConnectedAccounts)
+        .doc(partnerId)
+        .set({
+            connectedAccountId,
         } as StripeConnectedAccount);
-}
 
+    await addStripeCustomer({ userId: partnerId, userEmail: email });
+}
