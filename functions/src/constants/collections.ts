@@ -4,6 +4,7 @@ export const clubs = 'clubs';
 export const events = 'events';
 export const tickets = 'tickets';
 export const eventTickets = 'eventTickets';
+export const eventCosts = 'eventCosts';
 export const promotionCodes = 'promotionCodes';
 export const rewards = 'rewards';
 export const newEvent = 'events/{eventId}';
