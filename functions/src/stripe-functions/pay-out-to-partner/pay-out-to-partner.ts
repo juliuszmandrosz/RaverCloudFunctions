@@ -8,6 +8,7 @@ import { Payout } from '../../models/payout';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 import { getConnectedAccountDataOrReturnNotFound } from '../../firestore-functions/get-data/get-connected-account-data';
+import { getEventCostsOrReturnNotFound } from '../../firestore-functions/get-data/get-event-costs-data';
 
 export async function payOutToPartner(
     request: functions.https.Request,
@@ -32,9 +33,13 @@ export async function payOutToPartner(
 
     if (!connectedAccount) return;
 
+    const eventCosts = await getEventCostsOrReturnNotFound(event.clubId, event.id, response);
+
+    if (!eventCosts) return;
+
     const payout = await stripe.payouts.create(
         {
-            amount: getPayoutAmount(clubIncome),
+            amount: getPayoutAmount(clubIncome, eventCosts.eventPostponementBalance),
             currency: eventTickets.ticketSales.currency,
         },
         { stripeAccount: connectedAccount.connectedAccountId }
@@ -54,7 +59,7 @@ export async function payOutToPartner(
     response.send();
 }
 
-function getPayoutAmount(clubIncome: number) {
+function getPayoutAmount(clubIncome: number, eventPostponementBalance: number) {
     // TODO - add currency support
-    return clubIncome * 100;
+    return (clubIncome + eventPostponementBalance) * 100;
 }
