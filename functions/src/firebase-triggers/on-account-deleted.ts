@@ -13,11 +13,9 @@ import {
     tickets,
     users,
 } from '../constants/collections';
-import { firestore } from 'firebase-admin';
-import DocumentData = firestore.DocumentData;
-import { QueryDocumentSnapshot } from 'firebase-functions/lib/providers/firestore';
 import { StripeConnectedAccount } from '../models/stripe-connected-account';
 import { Selector } from '../models/selector';
+import { deleteQueryBatch } from '../utils/delete-query-batch';
 
 export async function onAccountDeleted(
     event: functions.auth.UserRecord,
@@ -114,24 +112,4 @@ async function removeSelector(selectorId: string) {
 
     await selectorRef.delete();
     await partnerSelectorRef.delete();
-}
-
-async function deleteQueryBatch(query: DocumentData) {
-    const snapshot: DocumentData = await query.get();
-
-    const batchSize = snapshot.size;
-
-    if (batchSize === 0) return;
-
-    const batch = firestoreDatabase().batch();
-
-    snapshot.docs.forEach((doc: QueryDocumentSnapshot) => {
-        batch.delete(doc.ref);
-    });
-
-    await batch.commit();
-
-    process.nextTick(() => {
-        deleteQueryBatch(query);
-    });
 }

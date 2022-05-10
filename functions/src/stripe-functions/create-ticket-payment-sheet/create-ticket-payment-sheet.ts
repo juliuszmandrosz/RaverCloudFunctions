@@ -1,6 +1,5 @@
 import * as functions from 'firebase-functions';
 import { CreateTicketPaymentSheetRequest } from './create-ticket-payment-sheet-request';
-import { getVipPrice } from '../../firestore-functions/get-vip-price/get-vip-price';
 import { getPromotionCode } from '../../firestore-functions/get-promotion-code/get-promotion-code';
 import { createPaymentSheetForUser } from '../create-payment-sheet-for-user/create-payment-sheet-for-user';
 import { CreatePaymentSheetForUserResponse } from '../create-payment-sheet-for-user/create-payment-sheet-for-user-response';
@@ -27,9 +26,18 @@ export async function createTicketPaymentSheet(
     const promotionCode = data?.promotionCode;
     const userId = context.auth!.uid;
 
-    const event = await updateEventOnTicketPayment(eventId, isVip);
+    const updateEventResponse = await updateEventOnTicketPayment(eventId, isVip);
 
-    const amount = await getAmount(event.price, isVip, context, promotionCode);
+    const event = updateEventResponse.eventBeforeUpdate;
+    const vipPrice = updateEventResponse.vipPriceBeforeUpdate;
+
+    const amount = await getAmount({
+        eventPrice: event.price,
+        vipPrice,
+        isVip,
+        context,
+        promotionCode,
+    });
 
     const transferGroupId = v1();
 
@@ -66,12 +74,15 @@ export async function createTicketPaymentSheet(
     return paymentSheet;
 }
 
-async function getAmount(
-    eventPrice: number,
-    isVip: boolean,
-    context: functions.https.CallableContext,
-    promotionCode?: string
-) {
+interface GetAmountParams {
+    eventPrice: number;
+    vipPrice: number;
+    isVip: boolean;
+    context: functions.https.CallableContext;
+    promotionCode?: string;
+}
+
+async function getAmount({ eventPrice, vipPrice, isVip, context, promotionCode }: GetAmountParams) {
     if (promotionCode) {
         const result = await getPromotionCode(
             {
@@ -84,9 +95,6 @@ async function getAmount(
     }
 
     if (isVip) {
-        const vipPrice = await getVipPrice({
-            eventPrice: eventPrice,
-        });
         eventPrice += vipPrice;
     }
 

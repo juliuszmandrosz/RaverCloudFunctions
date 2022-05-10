@@ -1,39 +1,58 @@
 import { Event } from '../../models/event';
 import { EventTickets } from '../../models/event-tickets';
 import { TicketPool } from '../../models/ticket-pool';
-import { getClubIncome } from '../../utils/get-club-income';
 import { getEventTicketsDocRef, tryGetEventTicketsData } from '../get-data/get-event-tickets-data';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
-import { getTotalRevenue } from '../../utils/get-total-revenue';
+import { getTotalRevenue } from '../../utils/event-tickets-utils/get-total-revenue';
+import { getClubIncome } from '../../utils/event-tickets-utils/get-club-income';
+import { getCurrentOrLastPool } from '../../utils/event-tickets-utils/get-current-or-last-pool';
 
-/// Return event tickets after update
+interface UpdateEventTicketsOnTicketPaymentResponse {
+    eventTicketsAfterUpdate: EventTickets;
+    vipPriceBeforeUpdate: number;
+}
+
+interface UpdateTicketSalesParams {
+    tickets: EventTickets;
+    eventPrice: number;
+    vipPrice: number;
+    isVip: boolean;
+}
+
 export async function updateEventTicketsOnTicketPayment(
     event: Event,
     isVip: boolean
-): Promise<EventTickets> {
+): Promise<UpdateEventTicketsOnTicketPaymentResponse> {
     return firestoreDatabase().runTransaction(async (transaction) => {
         const eventTicketsDocRef = getEventTicketsDocRef(event.clubId, event.id);
         const tickets = await tryGetEventTicketsData(event.clubId, event.id, transaction);
+        const vipPrice = getCurrentOrLastPool(tickets.ticketPools).vipPrice;
 
-        await updateTicketSales(tickets, event.price, isVip);
+        await updateTicketSales({ tickets, isVip, vipPrice, eventPrice: event.price });
 
         await updateTicketPools(tickets);
 
         transaction.update(eventTicketsDocRef, tickets);
 
-        return tickets;
+        return { eventTicketsAfterUpdate: tickets, vipPriceBeforeUpdate: vipPrice };
     });
 }
 
-async function updateTicketSales(tickets: EventTickets, eventPrice: number, isVip: boolean) {
+async function updateTicketSales({
+    tickets,
+    eventPrice,
+    vipPrice,
+    isVip,
+}: UpdateTicketSalesParams) {
     const ticketSales = tickets.ticketSales;
 
     ticketSales.ticketsSold++;
+
     if (isVip) {
         ticketSales.vipsSold++;
     }
 
-    const totalRevenue = await getTotalRevenue(eventPrice, isVip);
+    const totalRevenue = await getTotalRevenue({ isVip, vipPrice, eventPrice });
 
     ticketSales.totalRevenue += totalRevenue;
     ticketSales.clubIncome += await getClubIncome(totalRevenue);
@@ -42,8 +61,7 @@ async function updateTicketSales(tickets: EventTickets, eventPrice: number, isVi
 async function updateTicketPools(tickets: EventTickets) {
     const ticketPools = tickets.ticketPools;
 
-    const currentPool = ticketPools.find((pool) => pool.isCurrent)!;
-
+    const currentPool = getCurrentOrLastPool(ticketPools);
     currentPool.ticketsSold++;
 
     const isCurrentPoolSoldOut = currentPool.ticketsSold === currentPool.ticketQuantity;

@@ -4,10 +4,10 @@ import { tryGetConnectedAccountData } from '../../firestore-functions/get-data/g
 import { CreatePaymentSheetForUserRequest } from './create-payment-sheet-for-user-request';
 import { CreatePaymentSheetForUserResponse } from './create-payment-sheet-for-user-response';
 import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
-import { getStripeCustomerIdFromContext } from '../../utils/get-stripe-customer-id-from-context';
-import { tryCreateEphemeralKey } from '../../utils/try-create-ephemeral-key';
-import { getPaymentMethodTypes } from '../../utils/get-payment-method-types';
-import { getPaymentIntentAmount } from '../../utils/get-payment-intent-amount';
+import { getPaymentIntentAmount } from '../../utils/stripe-utils/get-payment-intent-amount';
+import { getPaymentMethodTypes } from '../../utils/stripe-utils/get-payment-method-types';
+import { tryCreateEphemeralKey } from '../../utils/stripe-utils/try-create-ephemeral-key';
+import { getStripeCustomerIdFromContext } from '../../utils/stripe-utils/get-stripe-customer-id-from-context';
 
 export async function createPaymentSheetForUser(
     data: CreatePaymentSheetForUserRequest,

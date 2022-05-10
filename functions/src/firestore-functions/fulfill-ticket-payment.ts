@@ -1,24 +1,29 @@
-import {tasksClient} from '../modules/cloud-tasks-module';
-import {stripe} from '../modules/stripe-module';
-import {firestoreDatabase} from '../modules/firebase-admin-module';
-import {ticketPaymentSessions, tickets, users} from '../constants/collections';
-import {Ticket} from '../models/ticket';
-import {TicketPaymentSession} from '../models/ticket-payment-session';
-import {applyPromotionCode} from './apply-promotion-code/apply-promotion-code';
+import { tasksClient } from '../modules/cloud-tasks-module';
+import { stripe } from '../modules/stripe-module';
+import { firestoreDatabase } from '../modules/firebase-admin-module';
+import { ticketPaymentSessions, tickets, users } from '../constants/collections';
+import { Ticket } from '../models/ticket';
+import { TicketPaymentSession } from '../models/ticket-payment-session';
+import { applyPromotionCode } from './apply-promotion-code/apply-promotion-code';
 import * as functions from 'firebase-functions';
-import {firestore} from 'firebase-admin';
+import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
-import {v1} from 'uuid';
-import {getTransferAmount} from '../utils/get-transfer-amount';
-import {getEventDataOrReturnNotFound} from './get-data/get-event-data';
-import {getConnectedAccountDataOrReturnNotFound} from './get-data/get-connected-account-data';
-import {updateEventCostsOnUserPayment} from "./update-event-costs/update-event-costs-on-user-payment";
+import { v1 } from 'uuid';
+import { getEventDataOrReturnNotFound } from './get-data/get-event-data';
+import { getConnectedAccountDataOrReturnNotFound } from './get-data/get-connected-account-data';
+import { updateEventCostsOnUserPayment } from './update-event-costs/update-event-costs-on-user-payment';
+import { getTicketPaymentSessionDataOrUndefined } from './get-data/get-ticket-payment-session-data';
+import { getTransferAmount } from '../utils/stripe-utils/get-transfer-amount';
 
 export async function fulfillTicketPayment(
-    ticketPaymentSession: TicketPaymentSession,
+    paymentSessionId: string,
     response: functions.Response
 ): Promise<Ticket | undefined> {
-    await tasksClient.deleteTask({name: ticketPaymentSession.cancelTicketReservationTaskId});
+    const ticketPaymentSession = await getTicketPaymentSessionDataOrUndefined(paymentSessionId);
+
+    if (!ticketPaymentSession) return;
+
+    await tasksClient.deleteTask({ name: ticketPaymentSession.cancelTicketReservationTaskId });
 
     const event = await getEventDataOrReturnNotFound(ticketPaymentSession.eventId, response);
 
@@ -30,9 +35,9 @@ export async function fulfillTicketPayment(
 
     const promotionCodeAmountOff = ticketPaymentSession.promotionCode
         ? await applyPromotionCode({
-            promotionCode: ticketPaymentSession.promotionCode,
-            userId: ticketPaymentSession.userId,
-        }).then((code) => code.amountOff)
+              promotionCode: ticketPaymentSession.promotionCode,
+              userId: ticketPaymentSession.userId,
+          }).then((code) => code.amountOff)
         : 0;
 
     const transferAmount = await getTransferAmount(
@@ -94,7 +99,7 @@ export async function fulfillTicketPayment(
         paymentSessionId: ticketPaymentSession.id,
         eventId: event.id,
         clubId: event.clubId,
-        response
+        response,
     });
 
     return ticket;

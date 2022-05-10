@@ -6,8 +6,8 @@ import {
     getEventTicketsOrReturnNotFound,
 } from '../get-data/get-event-tickets-data';
 import * as functions from 'firebase-functions';
-import { reduceTicketSales } from './reduce-ticket-sales';
-import { revertTicketPools } from './revert-ticket-pools';
+import { reduceTicketSalesBySingleTransaction } from '../../utils/event-tickets-utils/reduce-ticket-sales-by-single-transaction';
+import { revertSingleTicketFromPools } from '../../utils/event-tickets-utils/revert-single-ticket-from-pools';
 
 /// Return event tickets after update or undefined
 export async function updateEventTicketsOnCancelReservation(
@@ -26,9 +26,9 @@ export async function updateEventTicketsOnCancelReservation(
 
         if (!tickets) return;
 
-        await reduceTicketSales(tickets, event.price, isVip);
+        await reduceTicketSalesBySingleTransaction(tickets, event.price, isVip);
 
-        await revertTicketPools(tickets);
+        await revertSingleTicketFromPools(tickets);
 
         transaction.update(eventTicketsDocRef, tickets);
 

@@ -65,13 +65,6 @@ exports.createEventCancelationPaymentSheet = functions.https.onCall(async (data,
     ).createEventCancelationPaymentSheet(data, context);
 });
 
-exports.getVipPrice = functions.https.onCall(async (data, context) => {
-    return (await import('./firestore-functions/get-vip-price/get-vip-price')).getVipPrice(
-        data,
-        context
-    );
-});
-
 exports.checkUserClaim = functions.https.onCall(async (data, context) => {
     return (await import('./auth-functions/check-claim/check-user-claim')).checkUserClaim(
         data,

@@ -1,22 +1,27 @@
-import {VipPaymentSession} from '../models/vip-payment-session';
+import { VipPaymentSession } from '../models/vip-payment-session';
 import * as functions from 'firebase-functions';
-import {applyPromotionCode} from './apply-promotion-code/apply-promotion-code';
-import {getConnectedAccountDataOrReturnNotFound} from './get-data/get-connected-account-data';
-import {stripe} from '../modules/stripe-module';
-import {firestoreDatabase} from '../modules/firebase-admin-module';
-import {vipPaymentSessions} from '../constants/collections';
-import {firestore} from 'firebase-admin';
+import { applyPromotionCode } from './apply-promotion-code/apply-promotion-code';
+import { getConnectedAccountDataOrReturnNotFound } from './get-data/get-connected-account-data';
+import { stripe } from '../modules/stripe-module';
+import { firestoreDatabase } from '../modules/firebase-admin-module';
+import { vipPaymentSessions } from '../constants/collections';
+import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
-import {getTransferAmount} from '../utils/get-transfer-amount';
-import {Ticket} from '../models/ticket';
-import {updateTicketSalesOnVipPayment} from './update-ticket-sales-on-vip-payment';
-import {getTicketDataOrReturnNotFound, getTicketDocRef} from './get-data/get-ticket-data';
-import {updateEventCostsOnUserPayment} from "./update-event-costs/update-event-costs-on-user-payment";
+import { Ticket } from '../models/ticket';
+import { updateTicketSalesOnVipPayment } from './update-ticket-sales-on-vip-payment';
+import { getTicketDataOrReturnNotFound, getTicketDocRef } from './get-data/get-ticket-data';
+import { updateEventCostsOnUserPayment } from './update-event-costs/update-event-costs-on-user-payment';
+import { getVipPaymentSessionDataOrUndefined } from './get-data/get-vip-payment-session.data';
+import { getTransferAmount } from '../utils/stripe-utils/get-transfer-amount';
 
 export async function fulfillVipPayment(
-    vipPaymentSession: VipPaymentSession,
+    paymentSessionId: string,
     response: functions.Response
 ): Promise<Ticket | undefined> {
+    const vipPaymentSession = await getVipPaymentSessionDataOrUndefined(paymentSessionId);
+
+    if (!vipPaymentSession) return;
+
     const ticket = await firestoreDatabase().runTransaction(async (transaction) => {
         const ticketDocRef = getTicketDocRef(vipPaymentSession.userId, vipPaymentSession.ticketId);
 
@@ -42,9 +47,9 @@ export async function fulfillVipPayment(
 
     const promotionCodeAmountOff = vipPaymentSession.promotionCode
         ? await applyPromotionCode({
-            promotionCode: vipPaymentSession.promotionCode,
-            userId: vipPaymentSession.userId,
-        }).then((code) => code.amountOff)
+              promotionCode: vipPaymentSession.promotionCode,
+              userId: vipPaymentSession.userId,
+          }).then((code) => code.amountOff)
         : 0;
 
     const transferAmount = await getTransferAmount(
@@ -79,7 +84,7 @@ export async function fulfillVipPayment(
         paymentSessionId: vipPaymentSession.id,
         eventId: ticket.eventId,
         clubId: ticket.clubId,
-        response
+        response,
     });
 
     return ticket;

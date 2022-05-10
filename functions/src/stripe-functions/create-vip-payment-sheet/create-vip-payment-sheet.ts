@@ -1,5 +1,4 @@
 import * as functions from 'firebase-functions';
-import { getVipPrice } from '../../firestore-functions/get-vip-price/get-vip-price';
 import { getPromotionCode } from '../../firestore-functions/get-promotion-code/get-promotion-code';
 import { CreateVipPaymentSheetRequest } from './create-vip-payment-sheet-request';
 import { createPaymentSheetForUser } from '../create-payment-sheet-for-user/create-payment-sheet-for-user';
@@ -12,6 +11,7 @@ import { v1 } from 'uuid';
 import { VipPaymentSession } from '../../models/vip-payment-session';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { vipPaymentSessions } from '../../constants/collections';
+import { getVipPrice } from '../../firestore-functions/get-vip-price/get-vip-price';
 
 export async function createVipPaymentSheet(
     data: CreateVipPaymentSheetRequest,
@@ -76,6 +76,7 @@ async function getAmount(
 ) {
     let amount = await getVipPrice({
         eventId: ticket.eventId,
+        clubId: ticket.clubId,
     });
 
     if (promotionCode) {
