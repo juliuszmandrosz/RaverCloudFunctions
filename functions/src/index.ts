@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import {newClub, newEvent} from './constants/collections';
+import { newClub, newEvent } from './constants/collections';
 
 export const env = functions.config();
 
@@ -51,6 +51,20 @@ exports.createTicketPaymentSheet = functions.https.onCall(async (data, context) 
     ).createTicketPaymentSheet(data, context);
 });
 
+exports.createVipPaymentSheet = functions.https.onCall(async (data, context) => {
+    return (
+        await import('./stripe-functions/create-vip-payment-sheet/create-vip-payment-sheet')
+    ).createVipPaymentSheet(data, context);
+});
+
+exports.createEventCancelationPaymentSheet = functions.https.onCall(async (data, context) => {
+    return (
+        await import(
+            './stripe-functions/create-event-cancelation-payment-sheet/create-event-cancelation-payment-sheet'
+        )
+    ).createEventCancelationPaymentSheet(data, context);
+});
+
 exports.getVipPrice = functions.https.onCall(async (data, context) => {
     return (await import('./firestore-functions/get-vip-price/get-vip-price')).getVipPrice(
         data,
@@ -65,22 +79,11 @@ exports.checkUserClaim = functions.https.onCall(async (data, context) => {
     );
 });
 
-exports.onAccountDeleted = functions.auth.user().onDelete(async (user, context) => {
-    await (await import('./firebase-triggers/on-account-deleted')).onAccountDeleted(user, context);
-});
-
-exports.generateAccessCodeForSelector = functions.https.onCall(async (data, context) => {
-    return (
-        await import(
-            './firestore-functions/generate-access-code-for-selector/generate-access-code-for-selector'
-            )
-    ).generateAccessCodeForSelector(data, context);
-});
-
-exports.checkSelectorAccessCode = functions.https.onCall(async (data, context) => {
-    return (
-        await import('./firestore-functions/check-selector-access-code/check-selector-access-code')
-    ).checkSelectorAccessCode(data, context);
+exports.checkPartnerClaim = functions.https.onCall(async (data, context) => {
+    return (await import('./auth-functions/check-claim/check-partner-claim')).checkPartnerClaim(
+        data,
+        context
+    );
 });
 
 exports.checkSelectorClaim = functions.https.onCall(async (data, context) => {
@@ -111,19 +114,6 @@ exports.onAccountDeleted = functions.auth.user().onDelete(async (user, context) 
     await (await import('./firebase-triggers/on-account-deleted')).onAccountDeleted(user, context);
 });
 
-exports.addTicketPayment = functions.https.onCall(async (data, context) => {
-    return (
-        await import('./firestore-functions/add-ticket-payment/add-ticket-payment')
-    ).addTicketPayment(data, context);
-});
-
-exports.addVipPayment = functions.https.onCall(async (data, context) => {
-    return (await import('./firestore-functions/add-vip-payment/add-vip-payment')).addVipPayment(
-        data,
-        context
-    );
-});
-
 exports.returnTicket = functions.https.onCall(async (data, context) => {
     return (await import('./stripe-functions/return-ticket/return-ticket')).returnTicket(
         data,
@@ -131,46 +121,32 @@ exports.returnTicket = functions.https.onCall(async (data, context) => {
     );
 });
 
-exports.createVipPaymentSheet = functions.https.onCall(async (data, context) => {
-    return (
-        await import('./stripe-functions/create-vip-payment-sheet/create-vip-payment-sheet')
-    ).createVipPaymentSheet(data, context);
+exports.onPaymentIntentSucceeded = functions.https.onRequest(async (request, response) => {
+    await (
+        await import('./stripe-webhooks/on-payment-intent-succeeded')
+    ).onPaymentIntentSucceeded(request, response);
 });
 
-exports.checkPartnerClaim = functions.https.onCall(async (data, context) => {
-    return (await import('./auth-functions/check-claim/check-partner-claim')).checkPartnerClaim(
-        data,
-        context
-    );
+exports.onPaymentIntentRequiresAction = functions.https.onRequest(async (request, response) => {
+    await (
+        await import('./stripe-webhooks/on-payment-intent-requires-action')
+    ).onPaymentIntentRequiresAction(request, response);
 });
 
-exports.checkIfAccountExists = functions.https.onCall(async (data, context) => {
-    return (
-        await import('./auth-functions/check-account/check-if-account-exists')
-    ).checkIfAccountExists(data, context);
-});
-
-exports.checkIfAccountNotExists = functions.https.onCall(async (data, context) => {
-    return (
-        await import('./auth-functions/check-account/check-if-account-not-exists')
-    ).checkIfAccountNotExists(data, context);
-});
-
-
-exports.useSelectorAccessCode = functions.https.onCall(async (data, context) => {
-    return (
-        await import('./firestore-functions/use-selector-access-code/use-selector-access-code')
-    ).useSelectorAccessCode(data, context);
-});
-
-exports.checkPartnerAccessCode = functions.https.onCall(async (data, context) => {
-    return (
-        await import('./firestore-functions/check-partner-access-code/check-partner-access-code')
-    ).checkPartnerAccessCode(data, context);
+exports.cancelTicketReservation = functions.https.onRequest(async (request, response) => {
+    await (
+        await import('./firestore-functions/cancel-ticket-reservation/cancel-ticket-reservation')
+    ).cancelTicketReservation(request, response);
 });
 
 exports.payOutToPartner = functions.https.onRequest(async (request, response) => {
     await (
         await import('./stripe-functions/pay-out-to-partner/pay-out-to-partner')
     ).payOutToPartner(request, response);
+});
+
+exports.cancelEventCancelation = functions.https.onRequest(async (request, response) => {
+    await (
+        await import('./firestore-functions/cancel-event-cancelation/cancel-event-cancelation')
+    ).cancelEventCancelation(request, response);
 });

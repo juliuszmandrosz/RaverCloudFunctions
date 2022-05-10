@@ -14,4 +14,5 @@ export const partners = 'partners';
 export const selectors = 'selectors';
 export const ticketPaymentSessions = 'ticketPaymentSessions';
 export const vipPaymentSessions = 'vipPaymentSessions';
+export const cancelEventPaymentSessions = 'cancelEventPaymentSessions';
 export const payouts = 'payouts';

@@ -9,6 +9,6 @@ export interface CancelEventPaymentSession {
     eventId: string;
     amount: number;
     status: Stripe.PaymentIntent.Status;
-    cancelEventTaskId?: string;
+    cancelEventCancelationTaskId: string;
     paymentDateTime?: Timestamp;
 }

@@ -8,12 +8,12 @@ export interface TicketPaymentSession {
     transferGroupId: string;
     userId: string;
     eventId: string;
+    ticketId: string;
     amount: number;
     status: Stripe.PaymentIntent.Status;
     isVip: boolean;
-    cancelTicketReservationTaskId?: string;
+    cancelTicketReservationTaskId: string;
     promotionCode?: string;
     transferId?: string;
     paymentDateTime?: Timestamp;
-    ticketId: string;
 }
