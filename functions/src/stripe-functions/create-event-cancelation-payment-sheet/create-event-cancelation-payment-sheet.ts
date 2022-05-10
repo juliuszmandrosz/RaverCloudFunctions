@@ -8,9 +8,10 @@ import { checkPartnerClaim } from '../../auth-functions/check-claim/check-partne
 import { tryGetEventCostsData } from '../../firestore-functions/get-data/get-event-costs-data';
 import { Event } from '../../models/event';
 import { createPaymentSheetForPartner } from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner';
-import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
 import { CancelEventPaymentSession } from '../../models/cancel-event-payment-session';
 import { createCancelEventCancelationTask } from '../../cloud-tasks/create-cancel-event-cancelation-task/create-cancel-event-cancelation-task';
+import { updateEventOnCreateEventCancelationPaymentSheet } from '../../firestore-functions/update-event/update-event-on-create-event-cancelation-payment-sheet';
+import { cancelUsersTicketPaymentSessions } from './cancel-users-ticket-payment-sessions';
 
 export async function createEventCancelationPaymentSheet(
     data: CreateEventCancelationPaymentSheetRequest,
@@ -33,7 +34,15 @@ export async function createEventCancelationPaymentSheet(
         .update({ isCanceled: true } as Event);
 
     const eventCosts = await tryGetEventCostsData(partnerId, eventId);
-    const event = await tryGetEventData(eventId);
+
+    const cancelSessionsResponse = await cancelUsersTicketPaymentSessions(eventId);
+
+    const event = await updateEventOnCreateEventCancelationPaymentSheet({
+        eventId,
+        canceledTicketSessionsQuantity: cancelSessionsResponse.canceledTicketSessionsQuantity,
+        canceledFunds: cancelSessionsResponse.canceledFunds,
+        canceledVipSessionsQuantity: cancelSessionsResponse.canceledVipSessionsQuantity,
+    });
 
     const paymentSheet = await createPaymentSheetForPartner(
         {
