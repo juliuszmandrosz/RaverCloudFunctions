@@ -6,10 +6,16 @@ import { createCancelTicketReservationTask } from '../cloud-tasks/create-cancel-
 import { firestoreDatabase } from '../modules/firebase-admin-module';
 import { TicketPaymentSession } from '../models/ticket-payment-session';
 import {
-    getTicketPaymentSessionDataOrReturnNotFound,
+    getTicketPaymentSessionDataOrUndefined,
     getTicketPaymentSessionDocRef,
 } from '../firestore-functions/get-data/get-ticket-payment-session-data';
 import { getFunctionsConfig } from '../utils/get-functions-config';
+import {
+    getCancelEventPaymentSessionDataOrUndefined,
+    getCancelEventPaymentSessionDocRef,
+} from '../firestore-functions/get-data/get-cancel-event-payment-session';
+import { createCancelEventCancelationTask } from '../cloud-tasks/create-cancel-event-cancelation-task/create-cancel-event-cancelation-task';
+import { CancelEventPaymentSession } from '../models/cancel-event-payment-session';
 
 export async function onPaymentIntentRequiresAction(
     request: functions.https.Request,
@@ -22,12 +28,19 @@ export async function onPaymentIntentRequiresAction(
 
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
-    await firestoreDatabase().runTransaction(async (transaction) => {
-        const ticketPaymentDocRef = getTicketPaymentSessionDocRef(paymentIntent.id);
+    await runTransactionForTicketPayment(paymentIntent.id);
 
-        const ticketPaymentSession = await getTicketPaymentSessionDataOrReturnNotFound(
-            paymentIntent.id,
-            response,
+    await runTransactionForCancelEventPayment(paymentIntent.id);
+
+    response.send();
+}
+
+async function runTransactionForTicketPayment(paymentIntentId: string) {
+    await firestoreDatabase().runTransaction(async (transaction) => {
+        const ticketPaymentDocRef = getTicketPaymentSessionDocRef(paymentIntentId);
+
+        const ticketPaymentSession = await getTicketPaymentSessionDataOrUndefined(
+            paymentIntentId,
             transaction
         );
 
@@ -47,6 +60,31 @@ export async function onPaymentIntentRequiresAction(
             } as TicketPaymentSession);
         }
     });
+}
 
-    response.send();
+async function runTransactionForCancelEventPayment(paymentIntentId: string) {
+    await firestoreDatabase().runTransaction(async (transaction) => {
+        const cancelEventPaymentDocRef = getCancelEventPaymentSessionDocRef(paymentIntentId);
+
+        const cancelEventPaymentSession = await getCancelEventPaymentSessionDataOrUndefined(
+            paymentIntentId,
+            transaction
+        );
+
+        if (cancelEventPaymentSession) {
+            await tasksClient.deleteTask({
+                name: cancelEventPaymentSession.cancelEventCancelationTaskId,
+            });
+
+            const cancelEventCancelationTaskId = await createCancelEventCancelationTask({
+                cancelEventPaymentSessionId: cancelEventPaymentSession.id,
+                expirationTimeInSeconds: 900,
+            });
+
+            transaction.update(cancelEventPaymentDocRef, {
+                status: 'requires_action',
+                cancelEventCancelationTaskId,
+            } as CancelEventPaymentSession);
+        }
+    });
 }
