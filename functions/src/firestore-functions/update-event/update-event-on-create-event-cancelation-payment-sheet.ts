@@ -6,17 +6,17 @@ import { getCurrentOrLastPool } from '../../utils/event-tickets-utils/get-curren
 
 interface UpdateEventOnCreateEventCancelationPaymentSheetParams {
     eventId: string;
-    ticketsSold: number;
-    vipsSold: number;
-    totalRevenue: number;
+    canceledTicketSessionsQuantity: number;
+    canceledVipSessionsQuantity: number;
+    canceledFunds: number;
 }
 
 /// Returns event before update
 export async function updateEventOnCreateEventCancelationPaymentSheet({
     eventId,
-    ticketsSold,
-    vipsSold,
-    totalRevenue,
+    canceledTicketSessionsQuantity,
+    canceledVipSessionsQuantity,
+    canceledFunds,
 }: UpdateEventOnCreateEventCancelationPaymentSheetParams): Promise<Event> {
     return firestoreDatabase().runTransaction(async (transaction) => {
         const eventDocRef = getEventDocRef(eventId);
@@ -24,16 +24,16 @@ export async function updateEventOnCreateEventCancelationPaymentSheet({
         const event = await tryGetEventData(eventId, transaction);
 
         const eventTickets = await updateEventTicketsOnCreateEventCancelationPaymentSheet({
-            ticketsSold,
-            vipsSold,
-            totalRevenue,
+            canceledTicketSessionsQuantity,
+            canceledVipSessionsQuantity,
+            canceledFunds,
             event,
         });
 
         const currentPoolPrice = getCurrentOrLastPool(eventTickets.ticketPools).ticketPrice;
 
         transaction.update(eventDocRef, {
-            attending: event.attending - ticketsSold,
+            attending: event.attending - canceledTicketSessionsQuantity,
             price: currentPoolPrice,
         } as Event);
 
