@@ -21,6 +21,19 @@ export async function tryGetVipPaymentSession(
     return createVipPaymentSessionData(vipPaymentSessionDoc, vipPaymentSessionId);
 }
 
+export async function getVipPaymentSessionDataOrUndefined(
+    vipPaymentSessionId: string,
+    transaction?: Transaction
+) {
+    const vipPaymentSessionDoc = await getVipPaymentSessionDoc(vipPaymentSessionId, transaction);
+
+    if (!vipPaymentSessionDoc.exists) {
+        return;
+    }
+
+    return createVipPaymentSessionData(vipPaymentSessionDoc, vipPaymentSessionId);
+}
+
 export async function getVipPaymentSessionDataOrReturnNotFound(
     vipPaymentSessionId: string,
     response: functions.Response,

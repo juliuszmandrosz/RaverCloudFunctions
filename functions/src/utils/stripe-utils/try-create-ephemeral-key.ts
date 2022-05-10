@@ -1,6 +1,6 @@
-import { stripe } from '../modules/stripe-module';
-import { apiVersion } from '../constants/stripe-constants';
 import * as functions from 'firebase-functions';
+import { apiVersion } from '../../constants/stripe-constants';
+import { stripe } from '../../modules/stripe-module';
 
 /// Returns ephemeral key secret
 export async function tryCreateEphemeralKey(customerId: string): Promise<string> {

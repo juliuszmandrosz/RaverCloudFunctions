@@ -1,5 +1,4 @@
 import * as functions from 'firebase-functions';
-import { tryConstructStripeEvent } from '../utils/try-construct-stripe-event';
 import { Stripe } from 'stripe';
 import { tasksClient } from '../modules/cloud-tasks-module';
 import { createCancelTicketReservationTask } from '../cloud-tasks/create-cancel-ticket-reservation-task/create-cancel-ticket-reservation-task';
@@ -16,6 +15,7 @@ import {
 } from '../firestore-functions/get-data/get-cancel-event-payment-session';
 import { createCancelEventCancelationTask } from '../cloud-tasks/create-cancel-event-cancelation-task/create-cancel-event-cancelation-task';
 import { CancelEventPaymentSession } from '../models/cancel-event-payment-session';
+import { tryConstructStripeEvent } from '../utils/stripe-utils/try-construct-stripe-event';
 
 export async function onPaymentIntentRequiresAction(
     request: functions.https.Request,
