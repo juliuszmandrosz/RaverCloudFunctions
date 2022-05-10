@@ -1,6 +1,6 @@
 import { Stripe } from 'stripe';
-import { stripe } from '../modules/stripe-module';
 import * as functions from 'firebase-functions';
+import { stripe } from '../../modules/stripe-module';
 
 export function tryConstructStripeEvent(
     request: functions.https.Request,

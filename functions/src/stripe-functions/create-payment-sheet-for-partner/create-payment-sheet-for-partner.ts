@@ -1,12 +1,12 @@
 import * as functions from 'firebase-functions';
-import {stripe} from '../../modules/stripe-module';
-import {CreatePaymentSheetForPartnerRequest} from './create-payment-sheet-for-partner-request';
-import {CreatePaymentSheetForPartnerResponse} from './create-payment-sheet-for-partner-response';
-import {throwUnauthenticatedError} from '../../errors/throw-unauthenticated-error';
-import {getStripeCustomerIdFromContext} from '../../utils/get-stripe-customer-id-from-context';
-import {getPaymentMethodTypes} from '../../utils/get-payment-method-types';
-import {getPaymentIntentAmount} from '../../utils/get-payment-intent-amount';
-import {tryCreateEphemeralKey} from '../../utils/try-create-ephemeral-key';
+import { stripe } from '../../modules/stripe-module';
+import { CreatePaymentSheetForPartnerRequest } from './create-payment-sheet-for-partner-request';
+import { CreatePaymentSheetForPartnerResponse } from './create-payment-sheet-for-partner-response';
+import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
+import { getStripeCustomerIdFromContext } from '../../utils/stripe-utils/get-stripe-customer-id-from-context';
+import { tryCreateEphemeralKey } from '../../utils/stripe-utils/try-create-ephemeral-key';
+import { getPaymentMethodTypes } from '../../utils/stripe-utils/get-payment-method-types';
+import { getPaymentIntentAmount } from '../../utils/stripe-utils/get-payment-intent-amount';
 
 export async function createPaymentSheetForPartner(
     data: CreatePaymentSheetForPartnerRequest,
@@ -49,7 +49,6 @@ export async function createPaymentSheetForPartner(
         paymentIntentId: paymentIntent.id,
     };
 }
-
 
 function checkIfRequestIsValid(request: CreatePaymentSheetForPartnerRequest) {
     if (!request.amount) {

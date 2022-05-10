@@ -1,51 +1,28 @@
-import * as functions from "firebase-functions";
-import {events} from "../../constants/collections";
-import {vipMaxPrice, vipPriceMultiplier} from "../../constants/remote-config-params";
-import {firestoreDatabase} from "../../modules/firebase-admin-module";
-import {getParameterFromRemoteConfig} from "../../utils/remote-config-utils";
-import {GetVipPriceRequest} from "./get-vip-price-request";
-import {Event} from "../../models/event";
-import {throwInvalidEventError} from "../../errors/throw-invalid-event-error";
+import * as functions from 'firebase-functions';
+import { GetVipPriceRequest } from './get-vip-price-request';
+import { tryGetEventTicketsData } from '../get-data/get-event-tickets-data';
 
-
-export async function getVipPrice(
-    data: GetVipPriceRequest,
-    _?: functions.https.CallableContext
-): Promise<number> {
+export async function getVipPrice(data: GetVipPriceRequest): Promise<number> {
     const eventId = data?.eventId;
-    const eventPrice = data?.eventPrice;
+    const clubId = data?.clubId;
 
-    if (!eventId && !eventPrice) {
-        const message = 'The function must be called with event id or event price';
+    if (!eventId) {
+        const message = 'The function must be called with event id';
+        throw new functions.https.HttpsError('invalid-argument', message);
+    }
+    if (!clubId) {
+        const message = 'The function must be called with club id';
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-    const price = eventPrice ?? await getEventPrice(eventId!)
-    const multiplier = await getVipPriceMultiplier();
-    const maxPrice = await getVipMaxPrice();
-    return price <= maxPrice ? price * (multiplier - 1) : maxPrice;
-}
+    const eventTickets = await tryGetEventTicketsData(clubId, eventId);
 
+    const currentPool = eventTickets.ticketPools.find((pool) => pool.isCurrent);
 
-async function getEventPrice(eventId: string) {
-    const eventDoc = await firestoreDatabase()
-        .collection(events).doc(eventId)
-        .get();
-
-    if (!eventDoc.exists) {
-        throwInvalidEventError();
+    if (!currentPool) {
+        const message = 'The sale of tickets for the event has ended';
+        throw new functions.https.HttpsError('resource-exhausted', message);
     }
-    const event = eventDoc.data() as Event;
-    return event.price;
-}
 
-
-async function getVipPriceMultiplier() {
-    const multiplier = await getParameterFromRemoteConfig(vipPriceMultiplier);
-    return parseInt(multiplier);
-}
-
-async function getVipMaxPrice() {
-    const maxPrice = await getParameterFromRemoteConfig(vipMaxPrice);
-    return parseInt(maxPrice);
+    return currentPool.vipPrice;
 }

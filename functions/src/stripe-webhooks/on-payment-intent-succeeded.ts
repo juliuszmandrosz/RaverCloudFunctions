@@ -1,12 +1,10 @@
 import * as functions from 'firebase-functions';
-import { tryConstructStripeEvent } from '../utils/try-construct-stripe-event';
 import { Stripe } from 'stripe';
+import { getFunctionsConfig } from '../utils/get-functions-config';
 import { fulfillTicketPayment } from '../firestore-functions/fulfill-ticket-payment';
 import { fulfillVipPayment } from '../firestore-functions/fulfill-vip-payment';
-import { getTicketPaymentSessionDataOrUndefined } from '../firestore-functions/get-data/get-ticket-payment-session-data';
-import { getVipPaymentSessionDataOrReturnNotFound } from '../firestore-functions/get-data/get-vip-payment-session.data';
-import { getFunctionsConfig } from '../utils/get-functions-config';
-import { VipPaymentSession } from '../models/vip-payment-session';
+import { fulfillEventCancelationPayment } from '../firestore-functions/fulfill-event-cancelation-payment';
+import { tryConstructStripeEvent } from '../utils/stripe-utils/try-construct-stripe-event';
 
 export async function onPaymentIntentSucceeded(
     request: functions.https.Request,
@@ -19,31 +17,11 @@ export async function onPaymentIntentSucceeded(
 
     const paymentIntent = stripeEvent.data.object as Stripe.PaymentIntent;
 
-    const ticketPaymentSession = await getTicketPaymentSessionDataOrUndefined(paymentIntent.id);
+    await fulfillTicketPayment(paymentIntent.id, response);
 
-    let vipPaymentSession: VipPaymentSession | undefined;
+    await fulfillVipPayment(paymentIntent.id, response);
 
-    if (!ticketPaymentSession) {
-        vipPaymentSession = await getVipPaymentSessionDataOrReturnNotFound(
-            paymentIntent.id,
-            response
-        );
-    }
-
-    if (!ticketPaymentSession && !vipPaymentSession) return;
-
-    if (ticketPaymentSession) {
-        const ticket = await fulfillTicketPayment(ticketPaymentSession, response);
-
-        if (ticket) response.send();
-
-        return;
-    }
-
-    if (vipPaymentSession) {
-        const ticket = await fulfillVipPayment(vipPaymentSession, response);
-        if (!ticket) return;
-    }
+    await fulfillEventCancelationPayment(paymentIntent.id, response);
 
     response.send();
 }

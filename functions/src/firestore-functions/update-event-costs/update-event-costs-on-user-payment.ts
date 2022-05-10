@@ -1,33 +1,30 @@
-/// Return event costs after update
-import * as functions from 'firebase-functions';
-import {EventCosts} from "../../models/event-costs";
-import {firestoreDatabase} from "../../modules/firebase-admin-module";
+import { EventCosts } from '../../models/event-costs';
+import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import {
     getEventCostsDocRef,
     getEventCostsOrReturnNotFound,
-} from "../get-data/get-event-costs-data";
-import {getStripeFeeOrReturnNotFound} from "../../utils/get-stripe-fee";
-
-interface UpdateEventCostsOnUserPaymentParams {
-    eventId: string;
-    clubId: string;
-    paymentSessionId: string;
-    response: functions.Response;
-}
+} from '../get-data/get-event-costs-data';
+import { UpdateEventCostsRequest } from './update-event-costs-request';
+import { getStripeFeeOrReturnNotFound } from '../../utils/stripe-utils/get-stripe-fee';
 
 /// Returns events costs after update or undefined
 export async function updateEventCostsOnUserPayment(
-    params: UpdateEventCostsOnUserPaymentParams
+    params: UpdateEventCostsRequest
 ): Promise<EventCosts | undefined> {
     return firestoreDatabase().runTransaction(async (transaction) => {
         const eventCostsDocRef = getEventCostsDocRef(params.clubId, params.eventId);
-        const eventCosts = await getEventCostsOrReturnNotFound(params.clubId, params.eventId, params.response, transaction);
+        const eventCosts = await getEventCostsOrReturnNotFound(
+            params.clubId,
+            params.eventId,
+            params.response,
+            transaction
+        );
 
         if (!eventCosts) return;
 
         const stripeFee = await getStripeFeeOrReturnNotFound({
             paymentSessionId: params.paymentSessionId,
-            response: params.response
+            response: params.response,
         });
 
         if (!stripeFee) return;
@@ -39,9 +36,3 @@ export async function updateEventCostsOnUserPayment(
         return eventCosts;
     });
 }
-
-
-
-
-
-
