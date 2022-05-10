@@ -57,6 +57,14 @@ exports.createVipPaymentSheet = functions.https.onCall(async (data, context) => 
     ).createVipPaymentSheet(data, context);
 });
 
+exports.createEventCancelationPaymentSheet = functions.https.onCall(async (data, context) => {
+    return (
+        await import(
+            './stripe-functions/create-event-cancelation-payment-sheet/create-event-cancelation-payment-sheet'
+        )
+    ).createEventCancelationPaymentSheet(data, context);
+});
+
 exports.getVipPrice = functions.https.onCall(async (data, context) => {
     return (await import('./firestore-functions/get-vip-price/get-vip-price')).getVipPrice(
         data,
@@ -135,4 +143,10 @@ exports.payOutToPartner = functions.https.onRequest(async (request, response) =>
     await (
         await import('./stripe-functions/pay-out-to-partner/pay-out-to-partner')
     ).payOutToPartner(request, response);
+});
+
+exports.cancelEventCancelation = functions.https.onRequest(async (request, response) => {
+    await (
+        await import('./firestore-functions/cancel-event-cancelation/cancel-event-cancelation')
+    ).cancelEventCancelation(request, response);
 });

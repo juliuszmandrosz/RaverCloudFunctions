@@ -1,13 +1,13 @@
 import * as functions from 'firebase-functions';
-import { stripeCustomers } from '../../constants/collections';
-import { apiVersion } from '../../constants/stripe-constants';
-import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { stripe } from '../../modules/stripe-module';
-import { StripeCustomer } from '../../models/stripe-customer';
 import { tryGetConnectedAccountData } from '../../firestore-functions/get-data/get-connected-account-data';
 import { CreatePaymentSheetForUserRequest } from './create-payment-sheet-for-user-request';
 import { CreatePaymentSheetForUserResponse } from './create-payment-sheet-for-user-response';
 import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
+import { getStripeCustomerIdFromContext } from '../../utils/get-stripe-customer-id-from-context';
+import { tryCreateEphemeralKey } from '../../utils/try-create-ephemeral-key';
+import { getPaymentMethodTypes } from '../../utils/get-payment-method-types';
+import { getPaymentIntentAmount } from '../../utils/get-payment-intent-amount';
 
 export async function createPaymentSheetForUser(
     data: CreatePaymentSheetForUserRequest,
@@ -24,21 +24,13 @@ export async function createPaymentSheetForUser(
     const description = data?.description;
     const currency = data?.currency;
     const partnerId = data?.partnerId;
-    const customerId = await getStripeCustomerId(context);
     const userEmail = context.auth!.token.email!;
 
-    const ephemeralKey = await stripe.ephemeralKeys.create(
-        { customer: customerId },
-        { apiVersion: apiVersion }
-    );
-
-    if (!ephemeralKey.secret) {
-        const message = 'Error creating ephemeral key';
-        throw new functions.https.HttpsError('internal', message);
-    }
-
-    const paymentMethodTypes = getPaymentMethodTypes(currency);
+    const customerId = await getStripeCustomerIdFromContext(context);
     const connectedAccount = await tryGetConnectedAccountData(partnerId);
+
+    const ephemeralKeySecret = await tryCreateEphemeralKey(customerId);
+    const paymentMethodTypes = getPaymentMethodTypes(currency);
     const paymentIntentAmount = getPaymentIntentAmount(amount);
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -59,32 +51,10 @@ export async function createPaymentSheetForUser(
 
     return {
         customerId,
+        ephemeralKeySecret,
         paymentIntentSecret: paymentIntent.client_secret,
-        ephemeralKeySecret: ephemeralKey.secret,
         paymentIntentId: paymentIntent.id,
     };
-}
-
-async function getStripeCustomerId(context: functions.https.CallableContext): Promise<string> {
-    const customer = await firestoreDatabase()
-        .collection(stripeCustomers)
-        .doc(context.auth!.uid)
-        .get();
-
-    return (customer.data() as StripeCustomer).customerId;
-}
-
-function getPaymentMethodTypes(currency: string) {
-    if (currency.toUpperCase() == 'PLN' || currency.toUpperCase() == 'EUR') {
-        return ['card', 'p24'];
-    }
-
-    return ['card'];
-}
-
-function getPaymentIntentAmount(amount: number) {
-    // TODO - add currency support
-    return amount * 100;
 }
 
 function checkIfRequestIsValid(request: CreatePaymentSheetForUserRequest) {
