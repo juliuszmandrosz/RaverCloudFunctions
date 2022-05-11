@@ -7,11 +7,6 @@ import { getTotalRevenue } from '../../utils/event-tickets-utils/get-total-reven
 import { getClubIncome } from '../../utils/event-tickets-utils/get-club-income';
 import { getCurrentOrLastPool } from '../../utils/event-tickets-utils/get-current-or-last-pool';
 
-interface UpdateEventTicketsOnTicketPaymentResponse {
-    eventTicketsAfterUpdate: EventTickets;
-    vipPriceBeforeUpdate: number;
-}
-
 interface UpdateTicketSalesParams {
     tickets: EventTickets;
     eventPrice: number;
@@ -19,10 +14,11 @@ interface UpdateTicketSalesParams {
     isVip: boolean;
 }
 
+/// Returns event tickets after update
 export async function updateEventTicketsOnTicketPayment(
     event: Event,
     isVip: boolean
-): Promise<UpdateEventTicketsOnTicketPaymentResponse> {
+): Promise<EventTickets> {
     return firestoreDatabase().runTransaction(async (transaction) => {
         const eventTicketsDocRef = getEventTicketsDocRef(event.clubId, event.id);
         const tickets = await tryGetEventTicketsData(event.clubId, event.id, transaction);
@@ -34,7 +30,7 @@ export async function updateEventTicketsOnTicketPayment(
 
         transaction.update(eventTicketsDocRef, tickets);
 
-        return { eventTicketsAfterUpdate: tickets, vipPriceBeforeUpdate: vipPrice };
+        return tickets;
     });
 }
 

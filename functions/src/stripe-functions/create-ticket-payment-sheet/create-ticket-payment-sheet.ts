@@ -10,6 +10,10 @@ import { createCancelTicketReservationTask } from '../../cloud-tasks/create-canc
 import { v1 } from 'uuid';
 import { updateEventOnTicketPayment } from '../../firestore-functions/update-event/update-event-on-ticket-payment';
 import { getTicketPaymentSheetAmount } from './get-ticket-payment-sheet-amount';
+import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
+import { throwEventCanceledError } from '../../errors/throw-event-canceled-error';
+import { throwEventPostponedError } from '../../errors/throw-event-postponed-errors';
+import { getVipPrice } from '../../firestore-functions/get-vip-price/get-vip-price';
 
 export async function createTicketPaymentSheet(
     data: CreateTicketPaymentSheetRequest,
@@ -26,10 +30,19 @@ export async function createTicketPaymentSheet(
     const promotionCode = data?.promotionCode;
     const userId = context.auth!.uid;
 
-    const updateEventResponse = await updateEventOnTicketPayment(eventId, isVip);
+    const event = await tryGetEventData(eventId);
 
-    const event = updateEventResponse.eventBeforeUpdate;
-    const vipPrice = updateEventResponse.vipPriceBeforeUpdate;
+    if (event.isCanceled) {
+        throwEventCanceledError();
+    }
+
+    if (event.isCurrentlyPostponing) {
+        throwEventPostponedError();
+    }
+
+    const vipPrice = await getVipPrice({ clubId: event.clubId, eventId });
+
+    await updateEventOnTicketPayment(eventId, isVip);
 
     const amount = await getTicketPaymentSheetAmount({
         eventPrice: event.price,
