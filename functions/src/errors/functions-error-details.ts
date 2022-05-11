@@ -6,4 +6,6 @@ export type FunctionsErrorDetails =
     | 'ticket-already-has-vip'
     | 'invalid-access-code'
     | 'event-canceled'
-    | 'event-postponed';
+    | 'event-postponed'
+    | 'cancel-time-expired'
+    | 'postpone-time-expired';
