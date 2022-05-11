@@ -3,4 +3,7 @@ export type FunctionsErrorDetails =
     | 'expired-promotion-code'
     | 'invalid-event'
     | 'return-time-expired'
-    | 'ticket-already-has-vip';
+    | 'ticket-already-has-vip'
+    | 'event-canceled'
+    | 'event-postponed';
+

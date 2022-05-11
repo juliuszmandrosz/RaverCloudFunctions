@@ -12,6 +12,9 @@ import { VipPaymentSession } from '../../models/vip-payment-session';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { vipPaymentSessions } from '../../constants/collections';
 import { getVipPrice } from '../../firestore-functions/get-vip-price/get-vip-price';
+import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
+import { throwEventCanceledError } from '../../errors/throw-event-canceled-error';
+import { throwEventPostponedError } from '../../errors/throw-event-postponed-errors';
 
 export async function createVipPaymentSheet(
     data: CreateVipPaymentSheetRequest,
@@ -36,6 +39,16 @@ export async function createVipPaymentSheet(
         const message = 'Given ticket already has the vip status';
         const details: FunctionsErrorDetails = 'ticket-already-has-vip';
         throw new functions.https.HttpsError('resource-exhausted', message, details);
+    }
+
+    const event = await tryGetEventData(ticket.eventId);
+
+    if (event.isCanceled) {
+        throwEventCanceledError();
+    }
+
+    if (event.isCurrentlyPostponing) {
+        throwEventPostponedError();
     }
 
     const amount = await getAmount(ticket, context, promotionCode);
