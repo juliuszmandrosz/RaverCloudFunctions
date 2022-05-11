@@ -13,6 +13,9 @@ import { createCancelEventCancelationTask } from '../../cloud-tasks/create-cance
 import { updateEventOnCreateEventCancelationPaymentSheet } from '../../firestore-functions/update-event/update-event-on-create-event-cancelation-payment-sheet';
 import { cancelUsersTicketPaymentSessions } from './cancel-users-ticket-payment-sessions';
 import { cancelUsersVipPaymentSessions } from './cancel-users-vip-payment-sessions';
+import * as moment from 'moment';
+import { FunctionsErrorDetails } from '../../errors/functions-error-details';
+import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
 
 export async function createEventCancelationPaymentSheet(
     data: CreateEventCancelationPaymentSheetRequest,
@@ -29,6 +32,15 @@ export async function createEventCancelationPaymentSheet(
 
     await checkPartnerClaim({ email: context.auth?.token.email! });
 
+    const event = await tryGetEventData(eventId);
+    const eventStartDateTime = moment(event.eventStartDateTime);
+
+    if (eventStartDateTime.isBefore(moment().add(1, 'day'))) {
+        const message = 'Time to cancel event has expired';
+        const details: FunctionsErrorDetails = 'cancel-time-expired';
+        throw new functions.https.HttpsError('deadline-exceeded', message, details);
+    }
+
     await firestoreDatabase()
         .collection(events)
         .doc(eventId)
@@ -40,7 +52,7 @@ export async function createEventCancelationPaymentSheet(
 
     await cancelUsersVipPaymentSessions(eventId);
 
-    const event = await updateEventOnCreateEventCancelationPaymentSheet({
+    await updateEventOnCreateEventCancelationPaymentSheet({
         eventId,
         canceledTicketSessionsQuantity:
             cancelTicketsSessionsResponse.canceledTicketSessionsQuantity,
