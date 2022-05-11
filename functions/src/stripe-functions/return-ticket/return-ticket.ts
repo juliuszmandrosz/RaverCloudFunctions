@@ -1,17 +1,15 @@
 import * as functions from 'firebase-functions';
 import { ReturnTicketRequest } from './return-ticket-request';
-import { firestoreDatabase } from '../../modules/firebase-admin-module';
-import { tickets, users } from '../../constants/collections';
 import * as moment from 'moment';
 import { FunctionsErrorDetails } from '../../errors/functions-error-details';
-import { stripe } from '../../modules/stripe-module';
 import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
 import { tryGetTicketData } from '../../firestore-functions/get-data/get-ticket-data';
-import { VipPaymentSession } from '../../models/vip-payment-session';
-import { TicketPaymentSession } from '../../models/ticket-payment-session';
 import { tryGetTicketPaymentSessionData } from '../../firestore-functions/get-data/get-ticket-payment-session-data';
 import { tryGetVipPaymentSession } from '../../firestore-functions/get-data/get-vip-payment-session.data';
 import { updateEventOnTicketReturn } from '../../firestore-functions/update-event/update-event-on-ticket-return';
+import { refundPayment } from '../refund-payment/refund-payment';
+import { firestoreDatabase } from '../../modules/firebase-admin-module';
+import { tickets, users } from '../../constants/collections';
 
 export async function returnTicket(
     data: ReturnTicketRequest,
@@ -43,10 +41,16 @@ export async function returnTicket(
         ? await tryGetVipPaymentSession(ticket.vipPaymentId)
         : null;
 
-    await refundTicketPayment(ticketPayment);
+    await refundPayment({
+        paymentIntentId: ticketPayment.id,
+        transferId: ticketPayment.transferId!,
+    });
 
     if (vipPayment) {
-        await refundVipPayment(vipPayment);
+        await refundPayment({
+            paymentIntentId: vipPayment.id,
+            transferId: vipPayment.transferId!,
+        });
     }
 
     await deleteTicket(userId, ticketId);
@@ -61,14 +65,4 @@ async function deleteTicket(userId: string, ticketId: string) {
         .collection(tickets)
         .doc(ticketId)
         .delete();
-}
-
-async function refundTicketPayment(ticketPaymentSession: TicketPaymentSession) {
-    await stripe.transfers.createReversal(ticketPaymentSession.transferId!);
-    await stripe.refunds.create({ payment_intent: ticketPaymentSession.id });
-}
-
-async function refundVipPayment(vipPaymentSession: VipPaymentSession) {
-    await stripe.transfers.createReversal(vipPaymentSession.transferId!);
-    await stripe.refunds.create({ payment_intent: vipPaymentSession.id });
 }
