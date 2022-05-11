@@ -12,6 +12,7 @@ import { CancelEventPaymentSession } from '../../models/cancel-event-payment-ses
 import { createCancelEventCancelationTask } from '../../cloud-tasks/create-cancel-event-cancelation-task/create-cancel-event-cancelation-task';
 import { updateEventOnCreateEventCancelationPaymentSheet } from '../../firestore-functions/update-event/update-event-on-create-event-cancelation-payment-sheet';
 import { cancelUsersTicketPaymentSessions } from './cancel-users-ticket-payment-sessions';
+import { cancelUsersVipPaymentSessions } from './cancel-users-vip-payment-sessions';
 
 export async function createEventCancelationPaymentSheet(
     data: CreateEventCancelationPaymentSheetRequest,
@@ -35,13 +36,16 @@ export async function createEventCancelationPaymentSheet(
 
     const eventCosts = await tryGetEventCostsData(partnerId, eventId);
 
-    const cancelSessionsResponse = await cancelUsersTicketPaymentSessions(eventId);
+    const cancelTicketsSessionsResponse = await cancelUsersTicketPaymentSessions(eventId);
+
+    await cancelUsersVipPaymentSessions(eventId);
 
     const event = await updateEventOnCreateEventCancelationPaymentSheet({
         eventId,
-        canceledTicketSessionsQuantity: cancelSessionsResponse.canceledTicketSessionsQuantity,
-        canceledFunds: cancelSessionsResponse.canceledFunds,
-        canceledVipSessionsQuantity: cancelSessionsResponse.canceledVipSessionsQuantity,
+        canceledTicketSessionsQuantity:
+            cancelTicketsSessionsResponse.canceledTicketSessionsQuantity,
+        canceledFunds: cancelTicketsSessionsResponse.canceledFunds,
+        canceledVipSessionsQuantity: cancelTicketsSessionsResponse.canceledVipSessionsQuantity,
     });
 
     const paymentSheet = await createPaymentSheetForPartner(
