@@ -1,6 +1,5 @@
 import * as functions from 'firebase-functions';
 import { CreateTicketPaymentSheetRequest } from './create-ticket-payment-sheet-request';
-import { getPromotionCode } from '../../firestore-functions/get-promotion-code/get-promotion-code';
 import { createPaymentSheetForUser } from '../create-payment-sheet-for-user/create-payment-sheet-for-user';
 import { CreatePaymentSheetForUserResponse } from '../create-payment-sheet-for-user/create-payment-sheet-for-user-response';
 import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
@@ -10,6 +9,7 @@ import { TicketPaymentSession } from '../../models/ticket-payment-session';
 import { createCancelTicketReservationTask } from '../../cloud-tasks/create-cancel-ticket-reservation-task/create-cancel-ticket-reservation-task';
 import { v1 } from 'uuid';
 import { updateEventOnTicketPayment } from '../../firestore-functions/update-event/update-event-on-ticket-payment';
+import { getTicketPaymentSheetAmount } from './get-ticket-payment-sheet-amount';
 
 export async function createTicketPaymentSheet(
     data: CreateTicketPaymentSheetRequest,
@@ -31,7 +31,7 @@ export async function createTicketPaymentSheet(
     const event = updateEventResponse.eventBeforeUpdate;
     const vipPrice = updateEventResponse.vipPriceBeforeUpdate;
 
-    const amount = await getAmount({
+    const amount = await getTicketPaymentSheetAmount({
         eventPrice: event.price,
         vipPrice,
         isVip,
@@ -72,33 +72,6 @@ export async function createTicketPaymentSheet(
         } as TicketPaymentSession);
 
     return paymentSheet;
-}
-
-interface GetAmountParams {
-    eventPrice: number;
-    vipPrice: number;
-    isVip: boolean;
-    context: functions.https.CallableContext;
-    promotionCode?: string;
-}
-
-async function getAmount({ eventPrice, vipPrice, isVip, context, promotionCode }: GetAmountParams) {
-    if (promotionCode) {
-        const result = await getPromotionCode(
-            {
-                promotionCode: promotionCode,
-            },
-            context
-        );
-        // TODO - add currency support for codes
-        eventPrice -= result.amountOff;
-    }
-
-    if (isVip) {
-        eventPrice += vipPrice;
-    }
-
-    return eventPrice;
 }
 
 function checkIfRequestIsValid(request: CreateTicketPaymentSheetRequest) {
