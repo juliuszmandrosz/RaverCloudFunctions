@@ -1,6 +1,5 @@
 import { Stripe } from 'stripe';
 import * as functions from 'firebase-functions';
-import { getPaymentIntentAmount } from './get-payment-intent-amount';
 import { stripe } from '../../modules/stripe-module';
 
 interface GetStripeFeeParams {
@@ -21,5 +20,5 @@ export async function getStripeFeeOrReturnNotFound(params: GetStripeFeeParams) {
         return;
     }
 
-    return getPaymentIntentAmount(stripeFee.amount);
+    return stripeFee.amount / 100;
 }
