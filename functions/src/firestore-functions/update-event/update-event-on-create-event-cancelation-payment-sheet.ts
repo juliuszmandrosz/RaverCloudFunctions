@@ -11,13 +11,12 @@ interface UpdateEventOnCreateEventCancelationPaymentSheetParams {
     canceledFunds: number;
 }
 
-/// Returns event before update
 export async function updateEventOnCreateEventCancelationPaymentSheet({
     eventId,
     canceledTicketSessionsQuantity,
     canceledVipSessionsQuantity,
     canceledFunds,
-}: UpdateEventOnCreateEventCancelationPaymentSheetParams): Promise<Event> {
+}: UpdateEventOnCreateEventCancelationPaymentSheetParams): Promise<void> {
     return firestoreDatabase().runTransaction(async (transaction) => {
         const eventDocRef = getEventDocRef(eventId);
 
@@ -36,7 +35,5 @@ export async function updateEventOnCreateEventCancelationPaymentSheet({
             attending: event.attending - canceledTicketSessionsQuantity,
             price: currentPoolPrice,
         } as Event);
-
-        return event;
     });
 }
