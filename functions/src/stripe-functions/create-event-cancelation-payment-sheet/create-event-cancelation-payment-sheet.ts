@@ -70,7 +70,10 @@ export async function createEventCancelationPaymentSheet(
             context
         );
     } catch (e) {
-        if (e instanceof Stripe.errors.StripeError && e.code === 'amount_too_small') {
+        if (
+            e instanceof Stripe.errors.StripeError &&
+            (e.code === 'amount_too_small' || e.code === 'parameter_invalid_integer')
+        ) {
             await refundTicketsForUsers(event.id);
 
             await getEventCostsDocRef(event.clubId, event.id).update({
