@@ -13,5 +13,7 @@ export interface Ticket {
     currency: string;
     isVip: boolean;
     isExpired: boolean;
+    isEventCanceled: boolean;
+    isReturnable: boolean;
     vipPaymentId?: string;
 }
