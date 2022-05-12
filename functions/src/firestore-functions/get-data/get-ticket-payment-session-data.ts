@@ -18,7 +18,7 @@ export async function tryGetTicketPaymentSessionData(
         throw new functions.https.HttpsError('not-found', errorMessage);
     }
 
-    return createTicketPaymentSessionData(ticketPaymentDoc, ticketPaymentSessionId);
+    return getTicketPaymentSessionResult(ticketPaymentDoc, ticketPaymentSessionId);
 }
 
 export async function getTicketPaymentSessionDataOrReturnNotFound(
@@ -33,7 +33,7 @@ export async function getTicketPaymentSessionDataOrReturnNotFound(
         return;
     }
 
-    return createTicketPaymentSessionData(ticketPaymentDoc, ticketPaymentSessionId);
+    return getTicketPaymentSessionResult(ticketPaymentDoc, ticketPaymentSessionId);
 }
 
 export async function getTicketPaymentSessionDataOrUndefined(
@@ -46,11 +46,21 @@ export async function getTicketPaymentSessionDataOrUndefined(
         return;
     }
 
-    return createTicketPaymentSessionData(ticketPaymentDoc, ticketPaymentSessionId);
+    return getTicketPaymentSessionResult(ticketPaymentDoc, ticketPaymentSessionId);
 }
 
 export function getTicketPaymentSessionDocRef(ticketPaymentSessionId: string) {
     return firestoreDatabase().collection(ticketPaymentSessions).doc(ticketPaymentSessionId);
+}
+
+export function getTicketPaymentSessionResult(
+    ticketPaymentSessionDoc: DocumentSnapshot,
+    ticketPaymentSessionId: string
+) {
+    const ticketPaymentSession = ticketPaymentSessionDoc.data() as TicketPaymentSession;
+    ticketPaymentSession.id = ticketPaymentSessionId;
+
+    return ticketPaymentSession;
 }
 
 async function getTicketPaymentSessionDoc(
@@ -61,14 +71,4 @@ async function getTicketPaymentSessionDoc(
     return transaction
         ? transaction.get(ticketPaymentSessionDocRef)
         : ticketPaymentSessionDocRef.get();
-}
-
-function createTicketPaymentSessionData(
-    ticketPaymentSessionDoc: DocumentSnapshot,
-    ticketPaymentSessionId: string
-) {
-    const ticketPaymentSession = ticketPaymentSessionDoc.data() as TicketPaymentSession;
-    ticketPaymentSession.id = ticketPaymentSessionId;
-
-    return ticketPaymentSession;
 }
