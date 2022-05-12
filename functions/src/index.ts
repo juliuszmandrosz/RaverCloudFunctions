@@ -138,8 +138,22 @@ exports.payOutToPartner = functions.https.onRequest(async (request, response) =>
     ).payOutToPartner(request, response);
 });
 
-exports.cancelEventCancelation = functions.https.onRequest(async (request, response) => {
-    await (
-        await import('./firestore-functions/cancel-event-cancelation/cancel-event-cancelation')
-    ).cancelEventCancelation(request, response);
-});
+exports.cancelEventCancelationOnCloudTaskCallback = functions.https.onRequest(
+    async (request, response) => {
+        await (
+            await import(
+                './firestore-functions/cancel-event-cancelation/cancel-event-cancelation-on-cloud-task-callback'
+            )
+        ).cancelEventCancelationOnCloudTaskCallback(request, response);
+    }
+);
+
+exports.cancelEventCancelationOnClosingPaymentSheet = functions.https.onCall(
+    async (data, context) => {
+        return (
+            await import(
+                './firestore-functions/cancel-event-cancelation/cancel-event-cancelation-on-closing-payment-sheet'
+            )
+        ).cancelEventCancelationOnClosingPaymentSheet(data, context);
+    }
+);

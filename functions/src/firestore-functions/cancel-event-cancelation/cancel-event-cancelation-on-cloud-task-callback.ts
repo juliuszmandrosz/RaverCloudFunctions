@@ -10,7 +10,7 @@ import { CancelEventPaymentSession } from '../../models/cancel-event-payment-ses
 import { events } from '../../constants/collections';
 import { Event } from '../../models/event';
 
-export async function cancelEventCancelation(
+export async function cancelEventCancelationOnCloudTaskCallback(
     request: functions.https.Request,
     response: functions.Response
 ): Promise<void> {
