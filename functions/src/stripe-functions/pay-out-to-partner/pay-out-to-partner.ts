@@ -39,7 +39,7 @@ export async function payOutToPartner(
 
     const payout = await stripe.payouts.create(
         {
-            amount: getPayoutAmount(clubIncome, eventCosts.eventPostponementBalance),
+            amount: getPayoutAmount(clubIncome, eventCosts.eventPostponeBalance),
             currency: eventTickets.ticketSales.currency,
         },
         { stripeAccount: connectedAccount.connectedAccountId }
