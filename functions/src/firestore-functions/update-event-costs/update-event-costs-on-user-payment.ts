@@ -4,12 +4,19 @@ import {
     getEventCostsDocRef,
     getEventCostsOrReturnNotFound,
 } from '../get-data/get-event-costs-data';
-import { UpdateEventCostsRequest } from './update-event-costs-request';
 import { getStripeFeeOrReturnNotFound } from '../../utils/stripe-utils/get-stripe-fee';
+import * as functions from 'firebase-functions';
+
+export interface UpdateEventCostsOnUserPaymentParams {
+    eventId: string;
+    clubId: string;
+    paymentSessionId: string;
+    response: functions.Response;
+}
 
 /// Returns events costs after update or undefined
 export async function updateEventCostsOnUserPayment(
-    params: UpdateEventCostsRequest
+    params: UpdateEventCostsOnUserPaymentParams
 ): Promise<EventCosts | undefined> {
     return firestoreDatabase().runTransaction(async (transaction) => {
         const eventCostsDocRef = getEventCostsDocRef(params.clubId, params.eventId);
