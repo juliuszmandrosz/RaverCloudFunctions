@@ -18,7 +18,7 @@ export async function tryGetVipPaymentSession(
         throw new functions.https.HttpsError('not-found', errorMessage);
     }
 
-    return createVipPaymentSessionData(vipPaymentSessionDoc, vipPaymentSessionId);
+    return getVipPaymentSessionResult(vipPaymentSessionDoc, vipPaymentSessionId);
 }
 
 export async function getVipPaymentSessionDataOrUndefined(
@@ -31,7 +31,7 @@ export async function getVipPaymentSessionDataOrUndefined(
         return;
     }
 
-    return createVipPaymentSessionData(vipPaymentSessionDoc, vipPaymentSessionId);
+    return getVipPaymentSessionResult(vipPaymentSessionDoc, vipPaymentSessionId);
 }
 
 export async function getVipPaymentSessionDataOrReturnNotFound(
@@ -46,19 +46,14 @@ export async function getVipPaymentSessionDataOrReturnNotFound(
         return;
     }
 
-    return createVipPaymentSessionData(vipPaymentSessionDoc, vipPaymentSessionId);
+    return getVipPaymentSessionResult(vipPaymentSessionDoc, vipPaymentSessionId);
 }
 
 export function getVipPaymentSessionDocRef(vipPaymentSessionId: string) {
     return firestoreDatabase().collection(vipPaymentSessions).doc(vipPaymentSessionId);
 }
 
-async function getVipPaymentSessionDoc(vipPaymentSessionId: string, transaction?: Transaction) {
-    const vipPaymentSessionDocRef = getVipPaymentSessionDocRef(vipPaymentSessionId);
-    return transaction ? transaction.get(vipPaymentSessionDocRef) : vipPaymentSessionDocRef.get();
-}
-
-async function createVipPaymentSessionData(
+export function getVipPaymentSessionResult(
     vipPaymentSessionDoc: DocumentSnapshot,
     vipPaymentSessionId: string
 ) {
@@ -66,4 +61,9 @@ async function createVipPaymentSessionData(
     vipPaymentSession.id = vipPaymentSessionId;
 
     return vipPaymentSession;
+}
+
+async function getVipPaymentSessionDoc(vipPaymentSessionId: string, transaction?: Transaction) {
+    const vipPaymentSessionDocRef = getVipPaymentSessionDocRef(vipPaymentSessionId);
+    return transaction ? transaction.get(vipPaymentSessionDocRef) : vipPaymentSessionDocRef.get();
 }
