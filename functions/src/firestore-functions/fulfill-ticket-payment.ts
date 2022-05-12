@@ -18,7 +18,7 @@ import { getTransferAmount } from '../utils/stripe-utils/get-transfer-amount';
 export async function fulfillTicketPayment(
     paymentSessionId: string,
     response: functions.Response
-): Promise<Ticket | undefined> {
+): Promise<void> {
     const ticketPaymentSession = await getTicketPaymentSessionDataOrUndefined(paymentSessionId);
 
     if (!ticketPaymentSession) return;
@@ -53,19 +53,7 @@ export async function fulfillTicketPayment(
         description: event.eventName,
     });
 
-    const ticket: Ticket = {
-        id: v1(),
-        eventId: event.id,
-        ticketPaymentId: ticketPaymentSession.id,
-        isVip: ticketPaymentSession.isVip,
-        currency: event.currency,
-        price: ticketPaymentSession.amount,
-        eventDateTime: Timestamp.fromMillis(event.eventStartDateTime),
-        clubName: event.clubName,
-        clubId: event.clubId,
-        eventName: event.eventName,
-        isExpired: false,
-    };
+    const ticketId = v1();
 
     await firestoreDatabase()
         .collection(ticketPaymentSessions)
@@ -74,25 +62,25 @@ export async function fulfillTicketPayment(
             transferId: transfer.id,
             status: 'succeeded',
             paymentDateTime: Timestamp.now(),
-            ticketId: ticket.id,
+            ticketId: ticketId,
         } as TicketPaymentSession);
 
     await firestoreDatabase()
         .collection(users)
         .doc(ticketPaymentSession.userId)
         .collection(tickets)
-        .doc(ticket.id)
+        .doc(ticketId)
         .set({
-            eventId: ticket.eventId,
-            ticketPaymentId: ticket.ticketPaymentId,
-            isVip: ticket.isVip,
-            currency: ticket.currency,
-            price: ticket.price,
-            eventDateTime: ticket.eventDateTime,
-            clubName: ticket.clubName,
-            clubId: ticket.clubId,
-            eventName: ticket.eventName,
-            isExpired: ticket.isExpired,
+            eventId: event.id,
+            ticketPaymentId: ticketPaymentSession.id,
+            isVip: ticketPaymentSession.isVip,
+            currency: event.currency,
+            price: ticketPaymentSession.amount,
+            eventDateTime: Timestamp.fromMillis(event.eventStartDateTime),
+            clubName: event.clubName,
+            clubId: event.clubId,
+            eventName: event.eventName,
+            isExpired: false,
         } as Ticket);
 
     await updateEventCostsOnUserPayment({
@@ -101,6 +89,4 @@ export async function fulfillTicketPayment(
         clubId: event.clubId,
         response,
     });
-
-    return ticket;
 }
