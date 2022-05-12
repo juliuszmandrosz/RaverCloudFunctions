@@ -12,12 +12,12 @@ import { getEventDataOrReturnNotFound } from './get-data/get-event-data';
 import { getCancelEventPaymentSessionDataOrUndefined } from './get-data/get-cancel-event-payment-session';
 import { CancelEventPaymentSession } from '../models/cancel-event-payment-session';
 import { updateEventCostsOnEventCancelation } from './update-event-costs/update-event-costs-on-event-cancelation';
-import { TicketPaymentSession } from '../models/ticket-payment-session';
-import { VipPaymentSession } from '../models/vip-payment-session';
 import { refundPayment } from '../stripe-functions/refund-payment/refund-payment';
 import DocumentReference = firestore.DocumentReference;
 import { getTicketDocRef } from './get-data/get-ticket-data';
 import { updateEventOnEventCancelation } from './update-event/update-event-on-event-cancelation';
+import { getTicketPaymentSessionResult } from './get-data/get-ticket-payment-session-data';
+import { getVipPaymentSessionResult } from './get-data/get-vip-payment-session.data';
 
 export async function fulfillEventCancelationPayment(
     paymentSessionId: string,
@@ -67,8 +67,10 @@ async function refundTicketsForUsers(eventId: string) {
         .where('eventId', '==', eventId)
         .get();
 
-    const ticketSessions = ticketSessionsData.docs.map((doc) => doc.data() as TicketPaymentSession);
-    const vipSessions = vipSessionsData.docs.map((doc) => doc.data() as VipPaymentSession);
+    const ticketSessions = ticketSessionsData.docs.map((doc) =>
+        getTicketPaymentSessionResult(doc, doc.id)
+    );
+    const vipSessions = vipSessionsData.docs.map((doc) => getVipPaymentSessionResult(doc, doc.id));
     let ticketRefs: DocumentReference[] = [];
 
     for (const vipSession of vipSessions) {
