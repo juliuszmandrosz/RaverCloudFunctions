@@ -5,10 +5,7 @@ import { cancelEventPaymentSessions, events } from '../../constants/collections'
 import { CreatePaymentSheetForPartnerResponse } from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner-response';
 import { CreateEventCancelationPaymentSheetRequest } from './create-event-cancelation-payment-sheet-request';
 import { checkPartnerClaim } from '../../auth-functions/check-claim/check-partner-claim';
-import {
-    getEventCostsDocRef,
-    tryGetEventCostsData,
-} from '../../firestore-functions/get-data/get-event-costs-data';
+import { tryGetEventCostsData } from '../../firestore-functions/get-data/get-event-costs-data';
 import { Event } from '../../models/event';
 import { createPaymentSheetForPartner } from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner';
 import { CancelEventPaymentSession } from '../../models/cancel-event-payment-session';
@@ -18,10 +15,10 @@ import { cancelUsersTicketPaymentSessions } from './cancel-users-ticket-payment-
 import { cancelUsersVipPaymentSessions } from './cancel-users-vip-payment-sessions';
 import * as moment from 'moment';
 import { FunctionsErrorDetails } from '../../errors/functions-error-details';
-import { getEventDocRef, tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
+import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
 import { refundTicketsForUsers } from '../refund-tickets-for-users';
-import { EventCosts } from '../../models/event-costs';
 import { Stripe } from 'stripe';
+import { updateEventOnEventCancelation } from '../../firestore-functions/update-event/update-event-on-event-cancelation';
 
 export async function createEventCancelationPaymentSheet(
     data: CreateEventCancelationPaymentSheetRequest,
@@ -75,12 +72,8 @@ export async function createEventCancelationPaymentSheet(
             (e.code === 'amount_too_small' || e.code === 'parameter_invalid_integer')
         ) {
             await refundTicketsForUsers(event.id);
+            await updateEventOnEventCancelation(event);
 
-            await getEventCostsDocRef(event.clubId, event.id).update({
-                paymentProcessorFeeBalance: 0,
-            } as EventCosts);
-
-            await getEventDocRef(eventId).update({ attending: 0 } as Event);
             return;
         }
 

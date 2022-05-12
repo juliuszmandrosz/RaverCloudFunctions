@@ -7,7 +7,6 @@ import Timestamp = firestore.Timestamp;
 import { getEventDataOrReturnNotFound } from './get-data/get-event-data';
 import { getCancelEventPaymentSessionDataOrUndefined } from './get-data/get-cancel-event-payment-session';
 import { CancelEventPaymentSession } from '../models/cancel-event-payment-session';
-import { updateEventCostsOnEventCancelation } from './update-event-costs/update-event-costs-on-event-cancelation';
 import { updateEventOnEventCancelation } from './update-event/update-event-on-event-cancelation';
 import { refundTicketsForUsers } from '../stripe-functions/refund-tickets-for-users';
 
@@ -35,13 +34,7 @@ export async function fulfillEventCancelationPayment(
             paymentDateTime: Timestamp.now(),
         } as CancelEventPaymentSession);
 
-    await updateEventCostsOnEventCancelation({
-        paymentSessionId: cancelEventPaymentSession.id,
-        eventId: event.id,
-        clubId: event.clubId,
-        response,
-    });
-
     await refundTicketsForUsers(event.id);
-    await updateEventOnEventCancelation(event.id, response);
+
+    await updateEventOnEventCancelation(event);
 }
