@@ -4,7 +4,6 @@ import { getTicketPaymentSessionResult } from '../firestore-functions/get-data/g
 import { getVipPaymentSessionResult } from '../firestore-functions/get-data/get-vip-payment-session.data';
 import { refundPayment } from './refund-payment/refund-payment';
 import { getTicketDocRef } from '../firestore-functions/get-data/get-ticket-data';
-import * as functions from 'firebase-functions';
 import { firestore } from 'firebase-admin';
 import DocumentReference = firestore.DocumentReference;
 
@@ -38,12 +37,7 @@ export async function refundTicketsForUsers(eventId: string) {
         });
 
         ticketRefs.push(getTicketDocRef(ticketSession.userId, ticketSession.ticketId));
-
-        functions.logger.log('ticketSession', ticketSession);
     }
-
-    functions.logger.log('ticketRefs', ticketRefs);
-    functions.logger.log('ticketRefsLength', ticketRefs.length);
 
     await deleteTickets(ticketRefs);
 }
@@ -52,14 +46,11 @@ async function deleteTickets(ticketRefs: DocumentReference[]) {
     const ticketRefsToDelete = ticketRefs.slice(0, 500);
     const batchSize = ticketRefsToDelete.length;
 
-    functions.logger.log('batchSize', batchSize);
-
     if (batchSize === 0) return;
 
     const batch = firestoreDatabase().batch();
 
     ticketRefs.forEach((ref) => {
-        functions.logger.log('ref', ref);
         batch.delete(ref);
     });
 
