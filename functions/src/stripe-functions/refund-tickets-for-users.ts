@@ -6,6 +6,7 @@ import { refundPayment } from './refund-payment/refund-payment';
 import { getTicketDocRef } from '../firestore-functions/get-data/get-ticket-data';
 import { firestore } from 'firebase-admin';
 import DocumentReference = firestore.DocumentReference;
+import { Ticket } from '../models/ticket';
 
 export async function refundTicketsForUsers(eventId: string) {
     const ticketSessionsData = await firestoreDatabase()
@@ -39,19 +40,19 @@ export async function refundTicketsForUsers(eventId: string) {
         ticketRefs.push(getTicketDocRef(ticketSession.userId, ticketSession.ticketId));
     }
 
-    await deleteTickets(ticketRefs);
+    await updateTickets(ticketRefs);
 }
 
-async function deleteTickets(ticketRefs: DocumentReference[]) {
-    const ticketRefsToDelete = ticketRefs.slice(0, 500);
-    const batchSize = ticketRefsToDelete.length;
+async function updateTickets(ticketRefs: DocumentReference[]) {
+    const ticketRefsToUpdate = ticketRefs.slice(0, 500);
+    const batchSize = ticketRefsToUpdate.length;
 
     if (batchSize === 0) return;
 
     const batch = firestoreDatabase().batch();
 
     ticketRefs.forEach((ref) => {
-        batch.delete(ref);
+        batch.update(ref, { isEventCanceled: true } as Ticket);
     });
 
     await batch.commit();
@@ -59,6 +60,6 @@ async function deleteTickets(ticketRefs: DocumentReference[]) {
     ticketRefs.splice(0, 500);
 
     process.nextTick(() => {
-        deleteTickets(ticketRefs);
+        updateTickets(ticketRefs);
     });
 }
