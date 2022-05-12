@@ -17,7 +17,7 @@ import { getTransferAmount } from '../utils/stripe-utils/get-transfer-amount';
 export async function fulfillVipPayment(
     paymentSessionId: string,
     response: functions.Response
-): Promise<Ticket | undefined> {
+): Promise<void> {
     const vipPaymentSession = await getVipPaymentSessionDataOrUndefined(paymentSessionId);
 
     if (!vipPaymentSession) return;
@@ -86,6 +86,4 @@ export async function fulfillVipPayment(
         clubId: ticket.clubId,
         response,
     });
-
-    return ticket;
 }
