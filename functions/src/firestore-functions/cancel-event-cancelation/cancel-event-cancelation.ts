@@ -16,35 +16,23 @@ export async function cancelEventCancelation(
 ): Promise<void> {
     const cancelEventRequest = request.body as CancelEventCancelationRequest;
 
-    const cancelEventPaymentSession = await firestoreDatabase().runTransaction(
-        async (transaction) => {
-            const sessionId = cancelEventRequest.cancelEventPaymentSessionId;
+    const sessionId = cancelEventRequest.cancelEventPaymentSessionId;
 
-            const sessionDocRef = getCancelEventPaymentSessionDocRef(sessionId);
+    const sessionDocRef = getCancelEventPaymentSessionDocRef(sessionId);
 
-            const session = await getCancelEventPaymentSessionDataOrReturnNotFound(
-                sessionId,
-                response,
-                transaction
-            );
+    const session = await getCancelEventPaymentSessionDataOrReturnNotFound(sessionId, response);
 
-            if (!session) return;
+    if (!session) return;
 
-            transaction.update(sessionDocRef, {
-                status: 'canceled',
-            } as CancelEventPaymentSession);
+    await sessionDocRef.update({
+        status: 'canceled',
+    } as CancelEventPaymentSession);
 
-            return session;
-        }
-    );
-
-    if (!cancelEventPaymentSession) return;
-
-    await stripe.paymentIntents.cancel(cancelEventPaymentSession.id);
+    await stripe.paymentIntents.cancel(session.id);
 
     await firestoreDatabase()
         .collection(events)
-        .doc(cancelEventPaymentSession.eventId)
+        .doc(session.eventId)
         .update({ isCanceled: false } as Event);
 
     response.send();
