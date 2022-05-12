@@ -49,8 +49,5 @@ async function getEventCostsDoc(clubId: string, eventId: string, transaction?: T
 }
 
 function getEventCostsResult(eventId: string, eventCostsDoc: DocumentSnapshot) {
-    const result = eventCostsDoc.data() as EventCosts;
-    result.eventId = eventId;
-
-    return result;
+    return eventCostsDoc.data() as EventCosts;
 }
