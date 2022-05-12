@@ -81,6 +81,8 @@ export async function fulfillTicketPayment(
             clubId: event.clubId,
             eventName: event.eventName,
             isExpired: false,
+            isEventCanceled: false,
+            isReturnable: false,
         } as Ticket);
 
     await updateEventCostsOnUserPayment({
