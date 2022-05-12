@@ -51,7 +51,7 @@ export async function createPaymentSheetForPartner(
 }
 
 function checkIfRequestIsValid(request: CreatePaymentSheetForPartnerRequest) {
-    if (!request.amount) {
+    if (request.amount == null) {
         const message = 'The function must be called with amount';
         throw new functions.https.HttpsError('invalid-argument', message);
     }
