@@ -1,32 +1,32 @@
 import * as functions from 'firebase-functions';
-import {throwUnauthenticatedError} from '../../errors/throw-unauthenticated-error';
-import {firestoreDatabase} from '../../modules/firebase-admin-module';
-import {cancelEventPaymentSessions, events} from '../../constants/collections';
+import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
+import { firestoreDatabase } from '../../modules/firebase-admin-module';
+import { cancelEventPaymentSessions, events } from '../../constants/collections';
+import { CreatePaymentSheetForPartnerResponse } from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner-response';
+import { CreateEventCancelationPaymentSheetRequest } from './create-event-cancelation-payment-sheet-request';
+import { checkPartnerClaim } from '../../auth-functions/check-claim/check-partner-claim';
 import {
-    CreatePaymentSheetForPartnerResponse
-} from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner-response';
-import {CreateEventCancelationPaymentSheetRequest} from './create-event-cancelation-payment-sheet-request';
-import {checkPartnerClaim} from '../../auth-functions/check-claim/check-partner-claim';
-import {tryGetEventCostsData} from '../../firestore-functions/get-data/get-event-costs-data';
-import {Event} from '../../models/event';
-import {createPaymentSheetForPartner} from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner';
-import {CancelEventPaymentSession} from '../../models/cancel-event-payment-session';
-import {
-    createCancelEventCancelationTask
-} from '../../cloud-tasks/create-cancel-event-cancelation-task/create-cancel-event-cancelation-task';
-import {
-    updateEventOnCreateEventCancelationPaymentSheet
-} from '../../firestore-functions/update-event/update-event-on-create-event-cancelation-payment-sheet';
-import {cancelUsersTicketPaymentSessions} from './cancel-users-ticket-payment-sessions';
-import {cancelUsersVipPaymentSessions} from './cancel-users-vip-payment-sessions';
+    getEventCostsDocRef,
+    tryGetEventCostsData,
+} from '../../firestore-functions/get-data/get-event-costs-data';
+import { Event } from '../../models/event';
+import { createPaymentSheetForPartner } from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner';
+import { CancelEventPaymentSession } from '../../models/cancel-event-payment-session';
+import { createCancelEventCancelationTask } from '../../cloud-tasks/create-cancel-event-cancelation-task/create-cancel-event-cancelation-task';
+import { updateEventOnCreateEventCancelationPaymentSheet } from '../../firestore-functions/update-event/update-event-on-create-event-cancelation-payment-sheet';
+import { cancelUsersTicketPaymentSessions } from './cancel-users-ticket-payment-sessions';
+import { cancelUsersVipPaymentSessions } from './cancel-users-vip-payment-sessions';
 import * as moment from 'moment';
-import {FunctionsErrorDetails} from '../../errors/functions-error-details';
-import {tryGetEventData} from '../../firestore-functions/get-data/get-event-data';
+import { FunctionsErrorDetails } from '../../errors/functions-error-details';
+import { getEventDocRef, tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
+import { refundTicketsForUsers } from '../refund-tickets-for-users';
+import { EventCosts } from '../../models/event-costs';
+import { Stripe } from 'stripe';
 
 export async function createEventCancelationPaymentSheet(
     data: CreateEventCancelationPaymentSheetRequest,
     context: functions.https.CallableContext
-): Promise<CreatePaymentSheetForPartnerResponse> {
+): Promise<CreatePaymentSheetForPartnerResponse | undefined> {
     if (!context.auth) {
         throwUnauthenticatedError();
     }
@@ -36,7 +36,7 @@ export async function createEventCancelationPaymentSheet(
     const eventId = data?.eventId;
     const partnerId = context.auth!.uid;
 
-    await checkPartnerClaim({email: context.auth?.token.email!});
+    await checkPartnerClaim({ email: context.auth?.token.email! });
 
     const event = await tryGetEventData(eventId);
     const eventStartDateTime = moment(event.eventStartDateTime);
@@ -50,7 +50,7 @@ export async function createEventCancelationPaymentSheet(
     await firestoreDatabase()
         .collection(events)
         .doc(eventId)
-        .update({isCanceled: true} as Event);
+        .update({ isCanceled: true } as Event);
 
     const eventCosts = await tryGetEventCostsData(partnerId, eventId);
 
@@ -58,22 +58,39 @@ export async function createEventCancelationPaymentSheet(
 
     await cancelUsersVipPaymentSessions(eventId);
 
+    let paymentSheet: CreatePaymentSheetForPartnerResponse;
+
+    try {
+        paymentSheet = await createPaymentSheetForPartner(
+            {
+                currency: eventCosts.currency,
+                amount: eventCosts.paymentProcessorFeeBalance,
+                description: event.eventName,
+            },
+            context
+        );
+    } catch (e) {
+        if (e instanceof Stripe.errors.StripeError && e.code === 'amount_too_small') {
+            await refundTicketsForUsers(event.id);
+
+            await getEventCostsDocRef(event.clubId, event.id).update({
+                paymentProcessorFeeBalance: 0,
+            } as EventCosts);
+
+            await getEventDocRef(eventId).update({ attending: 0 } as Event);
+            return;
+        }
+
+        throw e;
+    }
+
     await updateEventOnCreateEventCancelationPaymentSheet({
         eventId,
         canceledTicketSessionsQuantity:
-        cancelTicketsSessionsResponse.canceledTicketSessionsQuantity,
+            cancelTicketsSessionsResponse.canceledTicketSessionsQuantity,
         canceledFunds: cancelTicketsSessionsResponse.canceledFunds,
         canceledVipSessionsQuantity: cancelTicketsSessionsResponse.canceledVipSessionsQuantity,
     });
-
-    const paymentSheet = await createPaymentSheetForPartner(
-        {
-            currency: eventCosts.currency,
-            amount: eventCosts.paymentProcessorFeeBalance,
-            description: event.eventName,
-        },
-        context
-    );
 
     const cancelEventCancelationTaskId = await createCancelEventCancelationTask({
         cancelEventPaymentSessionId: paymentSheet.paymentIntentId,
