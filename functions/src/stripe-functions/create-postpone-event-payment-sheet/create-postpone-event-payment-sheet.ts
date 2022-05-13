@@ -65,7 +65,6 @@ export async function createPostponeEventPaymentSheet(
             (e.code === 'amount_too_small' || e.code === 'parameter_invalid_integer')
         ) {
             await updateEventCostsOnEventPostpone({
-                currentEventCosts: eventCosts,
                 eventId: event.id,
                 clubId: event.clubId,
             });
