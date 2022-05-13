@@ -6,7 +6,7 @@ import {
 } from './get-data/get-event-tickets-data';
 import { Ticket } from '../models/ticket';
 import * as functions from 'firebase-functions';
-import { getClubIncome } from '../utils/event-tickets-utils/get-club-income';
+import { getClubIncome } from '../utils/get-club-income';
 
 export async function updateTicketSalesOnVipPayment(
     ticket: Ticket,

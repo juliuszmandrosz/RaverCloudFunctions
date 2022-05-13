@@ -1,4 +1,4 @@
-import { TicketPool } from '../../models/ticket-pool';
+import { TicketPool } from '../models/ticket-pool';
 
 export function getCurrentOrLastPool(ticketPools: TicketPool[]) {
     const lastPool = ticketPools[ticketPools.length - 1];
