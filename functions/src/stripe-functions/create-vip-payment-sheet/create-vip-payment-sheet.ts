@@ -77,6 +77,7 @@ export async function createVipPaymentSheet(
             amount,
             status: 'requires_payment_method',
             eventId: ticket.eventId,
+            isRefunded: false,
         } as VipPaymentSession);
 
     return paymentSheet;

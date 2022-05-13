@@ -82,6 +82,7 @@ export async function createTicketPaymentSheet(
             isVip,
             amount,
             status: 'requires_payment_method',
+            isRefunded: false,
         } as TicketPaymentSession);
 
     return paymentSheet;
