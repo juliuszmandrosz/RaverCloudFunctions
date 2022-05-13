@@ -2,7 +2,7 @@ import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { getEventDocRef, tryGetEventData } from '../get-data/get-event-data';
 import { updateEventTicketsOnCreateEventCancelationPaymentSheet } from '../update-event-tickets/update-event-tickets-on-create-event-cancelation-payment-sheet';
 import { Event } from '../../models/event';
-import { getCurrentOrLastPool } from '../../utils/event-tickets-utils/get-current-or-last-pool';
+import { getCurrentOrLastPool } from '../../utils/get-current-or-last-pool';
 
 interface UpdateEventOnCreateEventCancelationPaymentSheetParams {
     eventId: string;
