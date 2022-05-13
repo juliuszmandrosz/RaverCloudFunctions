@@ -14,7 +14,7 @@ import { PostponeEventPaymentSession } from '../../models/postpone-event-payment
 import { createCancelEventPostponeTask } from '../../cloud-tasks/create-cancel-event-postpone-task/create-cancel-event-postpone-task';
 import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-users-payment-sessions/cancel-users-payment-sessions';
 import { getPostponeEventPaymentSessionDocRef } from '../../firestore-functions/get-data/get-postpone-event-payment-session';
-import { getAmountForPostponePaymentSheet } from '../../firestore-functions/update-event-costs/get-amount-for-postpone-payment-sheet';
+import { getAmountForPostponePaymentSheet } from './get-amount-for-postpone-payment-sheet';
 
 export async function createPostponeEventPaymentSheet(
     data: CreatePostponeEventPaymentSheetRequest,
