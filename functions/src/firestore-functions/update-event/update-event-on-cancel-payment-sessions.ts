@@ -4,19 +4,19 @@ import { updateEventTicketsOnCreateEventCancelationPaymentSheet } from '../updat
 import { Event } from '../../models/event';
 import { getCurrentOrLastPool } from '../../utils/get-current-or-last-pool';
 
-interface UpdateEventOnCreateEventCancelationPaymentSheetParams {
+interface UpdateEventOnCancelPaymentSessionsParams {
     eventId: string;
     canceledTicketSessionsQuantity: number;
     canceledVipSessionsQuantity: number;
     canceledFunds: number;
 }
 
-export async function updateEventOnCreateEventCancelationPaymentSheet({
+export async function updateEventOnCancelPaymentSessions({
     eventId,
     canceledTicketSessionsQuantity,
     canceledVipSessionsQuantity,
     canceledFunds,
-}: UpdateEventOnCreateEventCancelationPaymentSheetParams): Promise<void> {
+}: UpdateEventOnCancelPaymentSessionsParams): Promise<void> {
     return firestoreDatabase().runTransaction(async (transaction) => {
         const eventDocRef = getEventDocRef(eventId);
 

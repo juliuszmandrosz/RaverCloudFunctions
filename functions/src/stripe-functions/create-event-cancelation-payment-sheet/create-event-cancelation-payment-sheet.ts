@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
-import { cancelEventPaymentSessions, events } from '../../constants/collections';
+import { events } from '../../constants/collections';
 import { CreatePaymentSheetForPartnerResponse } from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner-response';
 import { CreateEventCancelationPaymentSheetRequest } from './create-event-cancelation-payment-sheet-request';
 import { checkPartnerClaim } from '../../auth-functions/check-claim/check-partner-claim';
@@ -10,15 +10,14 @@ import { Event } from '../../models/event';
 import { createPaymentSheetForPartner } from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner';
 import { CancelEventPaymentSession } from '../../models/cancel-event-payment-session';
 import { createCancelEventCancelationTask } from '../../cloud-tasks/create-cancel-event-cancelation-task/create-cancel-event-cancelation-task';
-import { updateEventOnCreateEventCancelationPaymentSheet } from '../../firestore-functions/update-event/update-event-on-create-event-cancelation-payment-sheet';
-import { cancelUsersTicketPaymentSessions } from './cancel-users-ticket-payment-sessions';
-import { cancelUsersVipPaymentSessions } from './cancel-users-vip-payment-sessions';
 import * as moment from 'moment';
 import { FunctionsErrorDetails } from '../../errors/functions-error-details';
 import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
 import { refundTicketsForUsers } from '../refund-tickets-for-users';
 import { Stripe } from 'stripe';
 import { updateEventOnEventCancelation } from '../../firestore-functions/update-event/update-event-on-event-cancelation';
+import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-users-payment-sessions/cancel-users-payment-sessions';
+import { getCancelEventPaymentSessionDocRef } from '../../firestore-functions/get-data/get-cancel-event-payment-session';
 
 export async function createEventCancelationPaymentSheet(
     data: CreateEventCancelationPaymentSheetRequest,
@@ -44,24 +43,14 @@ export async function createEventCancelationPaymentSheet(
         throw new functions.https.HttpsError('deadline-exceeded', message, details);
     }
 
+    await cancelUsersPaymentSessions(eventId);
+
     await firestoreDatabase()
         .collection(events)
         .doc(eventId)
         .update({ isCanceled: true } as Event);
 
     const eventCosts = await tryGetEventCostsData(partnerId, eventId);
-
-    const cancelTicketsSessionsResponse = await cancelUsersTicketPaymentSessions(eventId);
-
-    await cancelUsersVipPaymentSessions(eventId);
-
-    await updateEventOnCreateEventCancelationPaymentSheet({
-        eventId,
-        canceledTicketSessionsQuantity:
-            cancelTicketsSessionsResponse.canceledTicketSessionsQuantity,
-        canceledFunds: cancelTicketsSessionsResponse.canceledFunds,
-        canceledVipSessionsQuantity: cancelTicketsSessionsResponse.canceledVipSessionsQuantity,
-    });
 
     let paymentSheet: CreatePaymentSheetForPartnerResponse;
 
@@ -93,16 +82,13 @@ export async function createEventCancelationPaymentSheet(
         expirationTimeInSeconds: 600,
     });
 
-    await firestoreDatabase()
-        .collection(cancelEventPaymentSessions)
-        .doc(paymentSheet.paymentIntentId)
-        .set({
-            eventId,
-            cancelEventCancelationTaskId,
-            partnerId,
-            amount: eventCosts.paymentProcessorFeeBalance,
-            status: 'requires_payment_method',
-        } as CancelEventPaymentSession);
+    await getCancelEventPaymentSessionDocRef(paymentSheet.paymentIntentId).set({
+        eventId,
+        cancelEventCancelationTaskId,
+        partnerId,
+        amount: eventCosts.paymentProcessorFeeBalance,
+        status: 'requires_payment_method',
+    } as CancelEventPaymentSession);
 
     return paymentSheet;
 }
