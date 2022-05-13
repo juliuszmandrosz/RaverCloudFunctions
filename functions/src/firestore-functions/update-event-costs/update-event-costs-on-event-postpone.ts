@@ -1,21 +1,37 @@
-import { getEventCostsDocRef } from '../get-data/get-event-costs-data';
-import { EventCosts } from '../../models/event-costs';
+import {
+    getEventCostsDocRef,
+    getEventCostsOrReturnNotFound,
+    tryGetEventCostsData,
+} from '../get-data/get-event-costs-data';
+import { firestoreDatabase } from '../../modules/firebase-admin-module';
+import * as functions from 'firebase-functions';
 
 export interface UpdateEventCostsOnEventPostponeParams {
     eventId: string;
     clubId: string;
-    currentEventCosts: EventCosts;
+    response?: functions.Response;
 }
 
 export async function updateEventCostsOnEventPostpone(
     params: UpdateEventCostsOnEventPostponeParams
 ): Promise<void> {
-    const eventCostsDocRef = getEventCostsDocRef(params.clubId, params.eventId);
+    await firestoreDatabase().runTransaction(async (transaction) => {
+        const eventCostsDocRef = getEventCostsDocRef(params.clubId, params.eventId);
 
-    const currentPaymentProcessorFeeBalance = params.currentEventCosts.paymentProcessorFeeBalance;
+        const eventCosts = params.response
+            ? await getEventCostsOrReturnNotFound(
+                  params.clubId,
+                  params.eventId,
+                  params.response,
+                  transaction
+              )
+            : await tryGetEventCostsData(params.clubId, params.eventId);
 
-    await eventCostsDocRef.update({
-        paymentProcessorFeeBalance: 0,
-        eventPostponeBalance: currentPaymentProcessorFeeBalance,
-    } as EventCosts);
+        if (!eventCosts) return;
+
+        eventCosts.eventPostponeBalance += eventCosts.paymentProcessorFeeBalance;
+        eventCosts.paymentProcessorFeeBalance = 0;
+
+        transaction.update(eventCostsDocRef, eventCosts);
+    });
 }

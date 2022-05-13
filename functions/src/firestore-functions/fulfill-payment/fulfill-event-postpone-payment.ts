@@ -53,9 +53,9 @@ export async function fulfillEventPostponePayment(
     if (!eventCosts) return;
 
     await updateEventCostsOnEventPostpone({
-        currentEventCosts: eventCosts,
         eventId: event.id,
         clubId: event.clubId,
+        response,
     });
 
     await markTicketsAsReturnable(event.id);
