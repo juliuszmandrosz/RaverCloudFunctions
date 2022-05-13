@@ -7,6 +7,7 @@ export async function getTicketPaymentSessionsFromEvent(eventId: string) {
         .collection(ticketPaymentSessions)
         .where('status', '==', 'succeeded')
         .where('eventId', '==', eventId)
+        .where('isRefunded', '==', false)
         .get();
 
     return ticketSessionsData.docs.map((doc) => getTicketPaymentSessionResult(doc, doc.id));
