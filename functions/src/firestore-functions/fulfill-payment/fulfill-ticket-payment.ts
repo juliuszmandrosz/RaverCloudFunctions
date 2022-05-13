@@ -83,6 +83,7 @@ export async function fulfillTicketPayment(
             isExpired: false,
             isEventCanceled: false,
             isReturnable: false,
+            isReturned: false,
         } as Ticket);
 
     await updateEventCostsOnUserPayment({
