@@ -1,6 +1,6 @@
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { getEventDocRef, tryGetEventData } from '../get-data/get-event-data';
-import { updateEventTicketsOnCreateEventCancelationPaymentSheet } from '../update-event-tickets/update-event-tickets-on-create-event-cancelation-payment-sheet';
+import { updateEventTicketsOnCancelUsersPaymentSessions } from '../update-event-tickets/update-event-tickets-on-cancel-users-payment-sessions';
 import { Event } from '../../models/event';
 import { getCurrentOrLastPool } from '../../utils/get-current-or-last-pool';
 
@@ -11,7 +11,7 @@ interface UpdateEventOnCancelPaymentSessionsParams {
     canceledFunds: number;
 }
 
-export async function updateEventOnCancelPaymentSessions({
+export async function updateEventOnCancelUsersPaymentSessions({
     eventId,
     canceledTicketSessionsQuantity,
     canceledVipSessionsQuantity,
@@ -22,7 +22,7 @@ export async function updateEventOnCancelPaymentSessions({
 
         const event = await tryGetEventData(eventId, transaction);
 
-        const eventTickets = await updateEventTicketsOnCreateEventCancelationPaymentSheet({
+        const eventTickets = await updateEventTicketsOnCancelUsersPaymentSessions({
             canceledTicketSessionsQuantity,
             canceledVipSessionsQuantity,
             canceledFunds,

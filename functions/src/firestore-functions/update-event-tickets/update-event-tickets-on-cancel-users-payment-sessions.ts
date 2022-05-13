@@ -5,7 +5,7 @@ import { getEventTicketsDocRef, tryGetEventTicketsData } from '../get-data/get-e
 import { reduceTicketSalesByQuantity } from '../update-ticket-sales/reduce-ticket-sales-by-quantity';
 import { revertTicketQuantityFromPools } from '../update-ticket-pools/revert-ticket-quantity-from-pools';
 
-interface UpdateEventTicketsOnCreateEventCancelationPaymentSheetParams {
+interface UpdateEventTicketsOnCancelUsersPaymentSessionsParams {
     event: Event;
     canceledTicketSessionsQuantity: number;
     canceledVipSessionsQuantity: number;
@@ -13,12 +13,12 @@ interface UpdateEventTicketsOnCreateEventCancelationPaymentSheetParams {
 }
 
 /// Return event tickets after update
-export async function updateEventTicketsOnCreateEventCancelationPaymentSheet({
+export async function updateEventTicketsOnCancelUsersPaymentSessions({
     event,
     canceledTicketSessionsQuantity,
     canceledVipSessionsQuantity,
     canceledFunds,
-}: UpdateEventTicketsOnCreateEventCancelationPaymentSheetParams): Promise<EventTickets> {
+}: UpdateEventTicketsOnCancelUsersPaymentSessionsParams): Promise<EventTickets> {
     return firestoreDatabase().runTransaction(async (transaction) => {
         const eventTicketsDocRef = getEventTicketsDocRef(event.clubId, event.id);
         const tickets = await tryGetEventTicketsData(event.clubId, event.id, transaction);
