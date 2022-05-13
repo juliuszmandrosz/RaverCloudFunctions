@@ -65,6 +65,14 @@ exports.createEventCancelationPaymentSheet = functions.https.onCall(async (data,
     ).createEventCancelationPaymentSheet(data, context);
 });
 
+exports.createPostponeEventPaymentSheet = functions.https.onCall(async (data, context) => {
+    return (
+        await import(
+            './stripe-functions/create-postpone-event-payment-sheet/create-postpone-event-payment-sheet'
+        )
+    ).createPostponeEventPaymentSheet(data, context);
+});
+
 exports.checkUserClaim = functions.https.onCall(async (data, context) => {
     return (await import('./auth-functions/check-claim/check-user-claim')).checkUserClaim(
         data,
