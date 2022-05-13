@@ -7,6 +7,7 @@ export async function getVipPaymentSessionsFromEvent(eventId: string) {
         .collection(vipPaymentSessions)
         .where('status', '==', 'succeeded')
         .where('eventId', '==', eventId)
+        .where('isRefunded', '==', false)
         .get();
 
     return vipSessionsData.docs.map((doc) => getVipPaymentSessionResult(doc, doc.id));
