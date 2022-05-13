@@ -2,7 +2,6 @@ import * as functions from 'firebase-functions';
 import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
 import { CreatePaymentSheetForPartnerResponse } from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner-response';
 import { checkPartnerClaim } from '../../auth-functions/check-claim/check-partner-claim';
-import { tryGetEventCostsData } from '../../firestore-functions/get-data/get-event-costs-data';
 import { Event } from '../../models/event';
 import { createPaymentSheetForPartner } from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner';
 import * as moment from 'moment';
@@ -15,6 +14,7 @@ import { PostponeEventPaymentSession } from '../../models/postpone-event-payment
 import { createCancelEventPostponeTask } from '../../cloud-tasks/create-cancel-event-postpone-task/create-cancel-event-postpone-task';
 import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-users-payment-sessions/cancel-users-payment-sessions';
 import { getPostponeEventPaymentSessionDocRef } from '../../firestore-functions/get-data/get-postpone-event-payment-session';
+import { getAmountForPostponePaymentSheet } from '../../firestore-functions/update-event-costs/get-amount-for-postpone-payment-sheet';
 
 export async function createPostponeEventPaymentSheet(
     data: CreatePostponeEventPaymentSheetRequest,
@@ -46,15 +46,15 @@ export async function createPostponeEventPaymentSheet(
 
     await getEventDocRef(eventId).update({ isCurrentlyPostponing: true } as Event);
 
-    const eventCosts = await tryGetEventCostsData(partnerId, eventId);
-
     let paymentSheet: CreatePaymentSheetForPartnerResponse;
+
+    const postponeCost = await getAmountForPostponePaymentSheet({ eventId, clubId: event.clubId });
 
     try {
         paymentSheet = await createPaymentSheetForPartner(
             {
-                currency: eventCosts.currency,
-                amount: eventCosts.paymentProcessorFeeBalance,
+                currency: postponeCost.currency,
+                amount: postponeCost.amount,
                 description: event.eventName,
             },
             context
@@ -86,7 +86,7 @@ export async function createPostponeEventPaymentSheet(
         partnerId,
         newEventStartDateTime,
         newEventEndDateTime,
-        amount: eventCosts.paymentProcessorFeeBalance,
+        amount: postponeCost.amount,
         status: 'requires_payment_method',
     } as PostponeEventPaymentSession);
 
