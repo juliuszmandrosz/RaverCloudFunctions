@@ -1,10 +1,11 @@
 import * as functions from 'firebase-functions';
 import { Stripe } from 'stripe';
 import { getFunctionsConfig } from '../utils/get-functions-config';
-import { fulfillTicketPayment } from '../firestore-functions/fulfill-ticket-payment';
-import { fulfillVipPayment } from '../firestore-functions/fulfill-vip-payment';
-import { fulfillEventCancelationPayment } from '../firestore-functions/fulfill-event-cancelation-payment';
+
 import { tryConstructStripeEvent } from '../utils/stripe-utils/try-construct-stripe-event';
+import { fulfillTicketPayment } from '../firestore-functions/fulfill-payment/fulfill-ticket-payment';
+import { fulfillVipPayment } from '../firestore-functions/fulfill-payment/fulfill-vip-payment';
+import { fulfillEventCancelationPayment } from '../firestore-functions/fulfill-payment/fulfill-event-cancelation-payment';
 
 export async function onPaymentIntentSucceeded(
     request: functions.https.Request,

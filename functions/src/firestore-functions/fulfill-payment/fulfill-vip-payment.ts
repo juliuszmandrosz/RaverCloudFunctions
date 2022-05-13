@@ -1,18 +1,19 @@
-import { VipPaymentSession } from '../models/vip-payment-session';
 import * as functions from 'firebase-functions';
-import { applyPromotionCode } from './apply-promotion-code/apply-promotion-code';
-import { getConnectedAccountDataOrReturnNotFound } from './get-data/get-connected-account-data';
-import { stripe } from '../modules/stripe-module';
-import { firestoreDatabase } from '../modules/firebase-admin-module';
-import { vipPaymentSessions } from '../constants/collections';
+
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
-import { Ticket } from '../models/ticket';
-import { updateTicketSalesOnVipPayment } from './update-ticket-sales-on-vip-payment';
-import { getTicketDataOrReturnNotFound, getTicketDocRef } from './get-data/get-ticket-data';
-import { updateEventCostsOnUserPayment } from './update-event-costs/update-event-costs-on-user-payment';
-import { getVipPaymentSessionDataOrUndefined } from './get-data/get-vip-payment-session.data';
-import { getTransferAmount } from '../utils/stripe-utils/get-transfer-amount';
+import { stripe } from '../../modules/stripe-module';
+import { getConnectedAccountDataOrReturnNotFound } from '../get-data/get-connected-account-data';
+import { getTransferAmount } from '../../utils/stripe-utils/get-transfer-amount';
+import { applyPromotionCode } from '../apply-promotion-code/apply-promotion-code';
+import { Ticket } from '../../models/ticket';
+import { getTicketDataOrReturnNotFound, getTicketDocRef } from '../get-data/get-ticket-data';
+import { firestoreDatabase } from '../../modules/firebase-admin-module';
+import { getVipPaymentSessionDataOrUndefined } from '../get-data/get-vip-payment-session.data';
+import { vipPaymentSessions } from '../../constants/collections';
+import { VipPaymentSession } from '../../models/vip-payment-session';
+import { updateEventCostsOnUserPayment } from '../update-event-costs/update-event-costs-on-user-payment';
+import { updateTicketSalesOnVipPayment } from '../update-ticket-sales/update-ticket-sales-on-vip-payment';
 
 export async function fulfillVipPayment(
     paymentSessionId: string,
