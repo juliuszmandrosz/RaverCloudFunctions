@@ -1,4 +1,4 @@
-import { tryGetEventCostsData } from '../get-data/get-event-costs-data';
+import { tryGetEventCostsData } from '../../firestore-functions/get-data/get-event-costs-data';
 
 interface GetAmountForPostponePaymentSheetParams {
     eventId: string;
