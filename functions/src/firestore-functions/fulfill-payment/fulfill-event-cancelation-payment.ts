@@ -1,14 +1,14 @@
-import { tasksClient } from '../modules/cloud-tasks-module';
-import { firestoreDatabase } from '../modules/firebase-admin-module';
-import { cancelEventPaymentSessions } from '../constants/collections';
 import * as functions from 'firebase-functions';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
-import { getEventDataOrReturnNotFound } from './get-data/get-event-data';
-import { getCancelEventPaymentSessionDataOrUndefined } from './get-data/get-cancel-event-payment-session';
-import { CancelEventPaymentSession } from '../models/cancel-event-payment-session';
-import { updateEventOnEventCancelation } from './update-event/update-event-on-event-cancelation';
-import { refundTicketsForUsers } from '../stripe-functions/refund-tickets-for-users';
+import { getCancelEventPaymentSessionDataOrUndefined } from '../get-data/get-cancel-event-payment-session';
+import { tasksClient } from '../../modules/cloud-tasks-module';
+import { getEventDataOrReturnNotFound } from '../get-data/get-event-data';
+import { firestoreDatabase } from '../../modules/firebase-admin-module';
+import { cancelEventPaymentSessions } from '../../constants/collections';
+import { CancelEventPaymentSession } from '../../models/cancel-event-payment-session';
+import { refundTicketsForUsers } from '../../stripe-functions/refund-tickets-for-users';
+import { updateEventOnEventCancelation } from '../update-event/update-event-on-event-cancelation';
 
 export async function fulfillEventCancelationPayment(
     paymentSessionId: string,
