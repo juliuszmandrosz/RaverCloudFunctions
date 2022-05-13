@@ -4,6 +4,7 @@ import { getFunctionsConfig } from '../utils/get-functions-config';
 import { tryConstructStripeEvent } from '../utils/stripe-utils/try-construct-stripe-event';
 import { extendTicketPaymentSession } from '../firestore-functions/extend-payment-session/extend-ticket-payment-session';
 import { extendCancelEventPaymentSession } from '../firestore-functions/extend-payment-session/extend-cancel-event-payment-session';
+import { extendEventPostponePaymentSession } from '../firestore-functions/extend-payment-session/extend-event-postpone-payment-session';
 
 export async function onPaymentIntentRequiresAction(
     request: functions.https.Request,
@@ -19,6 +20,8 @@ export async function onPaymentIntentRequiresAction(
     await extendTicketPaymentSession(paymentIntent.id);
 
     await extendCancelEventPaymentSession(paymentIntent.id);
+
+    await extendEventPostponePaymentSession(paymentIntent.id);
 
     response.send();
 }
