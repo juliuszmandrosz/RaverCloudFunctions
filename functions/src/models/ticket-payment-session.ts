@@ -13,6 +13,7 @@ export interface TicketPaymentSession {
     status: Stripe.PaymentIntent.Status;
     isVip: boolean;
     cancelTicketReservationTaskId: string;
+    isRefunded: boolean;
     promotionCode?: string;
     transferId?: string;
     paymentDateTime?: Timestamp;
