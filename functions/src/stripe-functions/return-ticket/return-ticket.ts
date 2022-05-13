@@ -3,13 +3,22 @@ import { ReturnTicketRequest } from './return-ticket-request';
 import * as moment from 'moment';
 import { FunctionsErrorDetails } from '../../errors/functions-error-details';
 import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
-import { tryGetTicketData } from '../../firestore-functions/get-data/get-ticket-data';
-import { tryGetTicketPaymentSessionData } from '../../firestore-functions/get-data/get-ticket-payment-session-data';
-import { tryGetVipPaymentSession } from '../../firestore-functions/get-data/get-vip-payment-session.data';
+import {
+    getTicketDocRef,
+    tryGetTicketData,
+} from '../../firestore-functions/get-data/get-ticket-data';
+import {
+    getTicketPaymentSessionDocRef,
+    tryGetTicketPaymentSessionData,
+} from '../../firestore-functions/get-data/get-ticket-payment-session-data';
+import {
+    getVipPaymentSessionDocRef,
+    tryGetVipPaymentSession,
+} from '../../firestore-functions/get-data/get-vip-payment-session.data';
 import { updateEventOnTicketReturn } from '../../firestore-functions/update-event/update-event-on-ticket-return';
 import { refundPayment } from '../refund-payment/refund-payment';
-import { firestoreDatabase } from '../../modules/firebase-admin-module';
-import { tickets, users } from '../../constants/collections';
+import { TicketPaymentSession } from '../../models/ticket-payment-session';
+import { VipPaymentSession } from '../../models/vip-payment-session';
 
 export async function returnTicket(
     data: ReturnTicketRequest,
@@ -43,6 +52,7 @@ export async function returnTicket(
     }
 
     const ticketPayment = await tryGetTicketPaymentSessionData(ticket.ticketPaymentId);
+
     const vipPayment = ticket.vipPaymentId
         ? await tryGetVipPaymentSession(ticket.vipPaymentId)
         : null;
@@ -52,14 +62,22 @@ export async function returnTicket(
         transferId: ticketPayment.transferId!,
     });
 
+    await getTicketPaymentSessionDocRef(ticketPayment.id).update({
+        isRefunded: true,
+    } as TicketPaymentSession);
+
     if (vipPayment) {
         await refundPayment({
             paymentIntentId: vipPayment.id,
             transferId: vipPayment.transferId!,
         });
+
+        await getVipPaymentSessionDocRef(vipPayment.id).update({
+            isRefunded: true,
+        } as VipPaymentSession);
     }
 
-    await deleteTicket(userId, ticketId);
+    await getTicketDocRef(userId, ticketId).delete();
 
     await updateEventOnTicketReturn({
         eventId: ticket.eventId,
@@ -67,13 +85,4 @@ export async function returnTicket(
         vipPaymentSessionId: vipPayment?.id,
         ticketPaymentSessionId: ticketPayment.id,
     });
-}
-
-async function deleteTicket(userId: string, ticketId: string) {
-    await firestoreDatabase()
-        .collection(users)
-        .doc(userId)
-        .collection(tickets)
-        .doc(ticketId)
-        .delete();
 }
