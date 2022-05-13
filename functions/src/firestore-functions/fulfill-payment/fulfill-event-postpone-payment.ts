@@ -11,7 +11,7 @@ import { Event } from '../../models/event';
 import { updateEventCostsOnEventPostpone } from '../update-event-costs/update-event-costs-on-event-postpone';
 import { getEventCostsOrReturnNotFound } from '../get-data/get-event-costs-data';
 import { PostponeEventPaymentSession } from '../../models/postpone-event-payment-session';
-import { markTicketsAsReturnable } from '../update-tickets/mark-tickets-as-returnable';
+import { updateTicketsOnEventPostpone } from '../update-tickets/update-tickets-on-event-postpone';
 
 export async function fulfillEventPostponePayment(
     paymentSessionId: string,
@@ -58,5 +58,8 @@ export async function fulfillEventPostponePayment(
         response,
     });
 
-    await markTicketsAsReturnable(event.id);
+    await updateTicketsOnEventPostpone({
+        eventId: event.id,
+        newEventStartDateTime: postponeEventPaymentSession.newEventStartDateTime,
+    });
 }
