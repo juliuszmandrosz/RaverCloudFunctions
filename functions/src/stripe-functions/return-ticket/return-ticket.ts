@@ -28,6 +28,12 @@ export async function returnTicket(
 
     const userId = context.auth!.uid;
     const ticket = await tryGetTicketData(userId, ticketId);
+
+    if (!ticket.isReturnable) {
+        const message = 'Ticket is not returnable';
+        throw new functions.https.HttpsError('permission-denied', message);
+    }
+
     const eventDateTime = moment(ticket.eventDateTime.toMillis());
 
     if (eventDateTime.isBefore(moment().add(1, 'day'))) {
