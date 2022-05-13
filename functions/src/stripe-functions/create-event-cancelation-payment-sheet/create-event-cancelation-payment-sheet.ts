@@ -55,6 +55,14 @@ export async function createEventCancelationPaymentSheet(
 
     await cancelUsersVipPaymentSessions(eventId);
 
+    await updateEventOnCreateEventCancelationPaymentSheet({
+        eventId,
+        canceledTicketSessionsQuantity:
+            cancelTicketsSessionsResponse.canceledTicketSessionsQuantity,
+        canceledFunds: cancelTicketsSessionsResponse.canceledFunds,
+        canceledVipSessionsQuantity: cancelTicketsSessionsResponse.canceledVipSessionsQuantity,
+    });
+
     let paymentSheet: CreatePaymentSheetForPartnerResponse;
 
     try {
@@ -79,14 +87,6 @@ export async function createEventCancelationPaymentSheet(
 
         throw e;
     }
-
-    await updateEventOnCreateEventCancelationPaymentSheet({
-        eventId,
-        canceledTicketSessionsQuantity:
-            cancelTicketsSessionsResponse.canceledTicketSessionsQuantity,
-        canceledFunds: cancelTicketsSessionsResponse.canceledFunds,
-        canceledVipSessionsQuantity: cancelTicketsSessionsResponse.canceledVipSessionsQuantity,
-    });
 
     const cancelEventCancelationTaskId = await createCancelEventCancelationTask({
         cancelEventPaymentSessionId: paymentSheet.paymentIntentId,
