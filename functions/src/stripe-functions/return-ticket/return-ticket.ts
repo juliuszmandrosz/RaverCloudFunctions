@@ -61,7 +61,12 @@ export async function returnTicket(
 
     await deleteTicket(userId, ticketId);
 
-    await updateEventOnTicketReturn(ticket.eventId, ticket.isVip);
+    await updateEventOnTicketReturn({
+        eventId: ticket.eventId,
+        isVip: ticket.isVip,
+        vipPaymentSessionId: vipPayment?.id,
+        ticketPaymentSessionId: ticketPayment.id,
+    });
 }
 
 async function deleteTicket(userId: string, ticketId: string) {
