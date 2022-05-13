@@ -157,3 +157,21 @@ exports.cancelEventCancelationOnClosingPaymentSheet = functions.https.onCall(
         ).cancelEventCancelationOnClosingPaymentSheet(data, context);
     }
 );
+
+exports.cancelEventPostponeOnCloudTaskCallback = functions.https.onRequest(
+    async (request, response) => {
+        await (
+            await import(
+                './firestore-functions/cancel-event-postpone/cancel-event-postpone-on-cloud-task-callback'
+            )
+        ).cancelEventPostponeOnCloudTaskCallback(request, response);
+    }
+);
+
+exports.cancelEventPostponeOnClosingPaymentSheet = functions.https.onCall(async (data, context) => {
+    return (
+        await import(
+            './firestore-functions/cancel-event-postpone/cancel-event-postpone-on-closing-payment-sheet'
+        )
+    ).cancelEventPostponeOnClosingPaymentSheet(data, context);
+});
