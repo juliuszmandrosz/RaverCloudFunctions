@@ -6,7 +6,6 @@ import {
 } from '../get-data/get-ticket-payment-session-data';
 import { updateEventOnCancelReservation } from '../update-event/update-event-on-cancel-reservation';
 import { stripe } from '../../modules/stripe-module';
-import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { TicketPaymentSession } from '../../models/ticket-payment-session';
 
 export async function cancelTicketReservation(
@@ -15,32 +14,19 @@ export async function cancelTicketReservation(
 ): Promise<void> {
     const cancelTicketReservationRequest = request.body as CancelTicketReservationRequest;
 
-    const ticketPaymentSession = await firestoreDatabase().runTransaction(async (transaction) => {
-        const sessionId = cancelTicketReservationRequest.ticketPaymentSessionId;
+    const sessionId = cancelTicketReservationRequest.ticketPaymentSessionId;
 
-        const sessionDocRef = getTicketPaymentSessionDocRef(sessionId);
+    const session = await getTicketPaymentSessionDataOrReturnNotFound(sessionId, response);
 
-        const session = await getTicketPaymentSessionDataOrReturnNotFound(
-            sessionId,
-            response,
-            transaction
-        );
-        if (!session) return;
+    if (!session) return;
 
-        transaction.update(sessionDocRef, { status: 'canceled' } as TicketPaymentSession);
+    const sessionDocRef = getTicketPaymentSessionDocRef(sessionId);
 
-        return session;
-    });
+    await sessionDocRef.update({ status: 'canceled' } as TicketPaymentSession);
 
-    if (!ticketPaymentSession) return;
+    await stripe.paymentIntents.cancel(session.id);
 
-    await stripe.paymentIntents.cancel(ticketPaymentSession.id);
-
-    const event = await updateEventOnCancelReservation(
-        ticketPaymentSession.eventId,
-        ticketPaymentSession.isVip,
-        response
-    );
+    const event = await updateEventOnCancelReservation(session.eventId, session.isVip, response);
 
     if (!event) return;
 

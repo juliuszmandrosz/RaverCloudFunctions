@@ -23,28 +23,21 @@ export async function fulfillVipPayment(
 
     if (!vipPaymentSession) return;
 
-    const ticket = await firestoreDatabase().runTransaction(async (transaction) => {
-        const ticketDocRef = getTicketDocRef(vipPaymentSession.userId, vipPaymentSession.ticketId);
-
-        const ticketData = await getTicketDataOrReturnNotFound(
-            vipPaymentSession.userId,
-            vipPaymentSession.ticketId,
-            response,
-            transaction
-        );
-
-        if (!ticketData) return;
-
-        transaction.update(ticketDocRef, {
-            isVip: true,
-            price: ticketData.price + vipPaymentSession.amount,
-            vipPaymentId: vipPaymentSession.id,
-        } as Ticket);
-
-        return ticketData;
-    });
+    const ticket = await getTicketDataOrReturnNotFound(
+        vipPaymentSession.userId,
+        vipPaymentSession.ticketId,
+        response
+    );
 
     if (!ticket) return;
+
+    const ticketDocRef = getTicketDocRef(vipPaymentSession.userId, vipPaymentSession.ticketId);
+
+    await ticketDocRef.update({
+        isVip: true,
+        price: ticket.price + vipPaymentSession.amount,
+        vipPaymentId: vipPaymentSession.id,
+    } as Ticket);
 
     const promotionCodeAmountOff = vipPaymentSession.promotionCode
         ? await applyPromotionCode({

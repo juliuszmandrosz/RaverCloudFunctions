@@ -26,7 +26,7 @@ export async function getTicketDataOrReturnNotFound(
     userId: string,
     ticketId: string,
     response: functions.Response,
-    transaction: Transaction
+    transaction?: Transaction
 ) {
     const ticketDoc = await getTicketDoc(userId, ticketId, transaction);
 
