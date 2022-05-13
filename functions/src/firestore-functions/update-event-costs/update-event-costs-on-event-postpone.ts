@@ -5,6 +5,7 @@ import {
 } from '../get-data/get-event-costs-data';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import * as functions from 'firebase-functions';
+import { EventCosts } from '../../models/event-costs';
 
 export interface UpdateEventCostsOnEventPostponeParams {
     eventId: string;
@@ -29,9 +30,29 @@ export async function updateEventCostsOnEventPostpone(
 
         if (!eventCosts) return;
 
-        eventCosts.eventPostponeBalance += eventCosts.paymentProcessorFeeBalance;
-        eventCosts.paymentProcessorFeeBalance = 0;
-
-        transaction.update(eventCostsDocRef, eventCosts);
+        transaction.update(eventCostsDocRef, getUpdatedEventCosts(eventCosts));
     });
+}
+
+function getUpdatedEventCosts(eventCosts: EventCosts) {
+    let feeBalance = eventCosts.paymentProcessorFeeBalance;
+    let postponeBalance = eventCosts.eventPostponeBalance;
+
+    if (feeBalance > postponeBalance) {
+        feeBalance -= postponeBalance;
+        postponeBalance = feeBalance;
+        feeBalance = 0;
+    } else if (feeBalance < postponeBalance) {
+        postponeBalance -= feeBalance;
+        feeBalance = 0;
+    } else if (feeBalance === postponeBalance) {
+        feeBalance = 0;
+        postponeBalance = 0;
+    }
+
+    return {
+        eventPostponeBalance: postponeBalance,
+        paymentProcessorFeeBalance: feeBalance,
+        currency: eventCosts.currency,
+    } as EventCosts;
 }
