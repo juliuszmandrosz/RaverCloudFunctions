@@ -1,14 +1,16 @@
 import * as functions from 'firebase-functions';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
-import { getCancelEventPaymentSessionDataOrUndefined } from '../get-data/get-cancel-event-payment-session';
+import {
+    getCancelEventPaymentSessionDataOrUndefined,
+    getCancelEventPaymentSessionDocRef,
+} from '../get-data/get-cancel-event-payment-session';
 import { tasksClient } from '../../modules/cloud-tasks-module';
 import { getEventDataOrReturnNotFound } from '../get-data/get-event-data';
-import { firestoreDatabase } from '../../modules/firebase-admin-module';
-import { cancelEventPaymentSessions } from '../../constants/collections';
 import { CancelEventPaymentSession } from '../../models/cancel-event-payment-session';
 import { refundTicketsForUsers } from '../../stripe-functions/refund-tickets-for-users';
 import { updateEventOnEventCancelation } from '../update-event/update-event-on-event-cancelation';
+import { updateTicketsOnEventCancelation } from '../update-tickets/update-tickets-on-event-cancelation';
 
 export async function fulfillEventCancelationPayment(
     paymentSessionId: string,
@@ -26,15 +28,18 @@ export async function fulfillEventCancelationPayment(
 
     if (!event) return;
 
-    await firestoreDatabase()
-        .collection(cancelEventPaymentSessions)
-        .doc(cancelEventPaymentSession.id)
-        .update({
-            status: 'succeeded',
-            paymentDateTime: Timestamp.now(),
-        } as CancelEventPaymentSession);
+    const cancelPaymentSessionDocRef = getCancelEventPaymentSessionDocRef(
+        cancelEventPaymentSession.id
+    );
 
-    await refundTicketsForUsers(event.id);
+    await cancelPaymentSessionDocRef.update({
+        status: 'succeeded',
+        paymentDateTime: Timestamp.now(),
+    } as CancelEventPaymentSession);
+
+    const refundedSessions = await refundTicketsForUsers(event.id);
+
+    await updateTicketsOnEventCancelation(refundedSessions.ticketSessions);
 
     await updateEventOnEventCancelation(event);
 }
