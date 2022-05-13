@@ -1,7 +1,7 @@
 import { EventTickets } from '../../models/event-tickets';
-import { getTotalRevenue } from './get-total-revenue';
-import { getClubIncome } from './get-club-income';
-import { getCurrentOrLastPool } from './get-current-or-last-pool';
+import { getCurrentOrLastPool } from '../../utils/get-current-or-last-pool';
+import { getTotalRevenue } from '../../utils/get-total-revenue';
+import { getClubIncome } from '../../utils/get-club-income';
 
 export async function reduceTicketSalesBySingleTransaction(
     tickets: EventTickets,

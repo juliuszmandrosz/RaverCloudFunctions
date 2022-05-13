@@ -1,5 +1,5 @@
 import { TicketSales } from '../../models/ticket-sales';
-import { getClubIncome } from './get-club-income';
+import { getClubIncome } from '../../utils/get-club-income';
 
 interface ReduceTicketSalesByQuantityParams {
     currentTicketSales: TicketSales;

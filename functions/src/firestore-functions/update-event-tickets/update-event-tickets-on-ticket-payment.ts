@@ -3,9 +3,9 @@ import { EventTickets } from '../../models/event-tickets';
 import { TicketPool } from '../../models/ticket-pool';
 import { getEventTicketsDocRef, tryGetEventTicketsData } from '../get-data/get-event-tickets-data';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
-import { getTotalRevenue } from '../../utils/event-tickets-utils/get-total-revenue';
-import { getClubIncome } from '../../utils/event-tickets-utils/get-club-income';
-import { getCurrentOrLastPool } from '../../utils/event-tickets-utils/get-current-or-last-pool';
+import { getTotalRevenue } from '../../utils/get-total-revenue';
+import { getClubIncome } from '../../utils/get-club-income';
+import { getCurrentOrLastPool } from '../../utils/get-current-or-last-pool';
 
 interface UpdateTicketSalesParams {
     tickets: EventTickets;

@@ -2,8 +2,8 @@ import { Event } from '../../models/event';
 import { EventTickets } from '../../models/event-tickets';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { getEventTicketsDocRef, tryGetEventTicketsData } from '../get-data/get-event-tickets-data';
-import { reduceTicketSalesByQuantity } from '../../utils/event-tickets-utils/reduce-ticket-sales-by-quantity';
-import { revertTicketQuantityFromPools } from '../../utils/event-tickets-utils/revert-ticket-quantity-from-pools';
+import { reduceTicketSalesByQuantity } from '../update-ticket-sales/reduce-ticket-sales-by-quantity';
+import { revertTicketQuantityFromPools } from '../update-ticket-pools/revert-ticket-quantity-from-pools';
 
 interface UpdateEventTicketsOnCreateEventCancelationPaymentSheetParams {
     event: Event;
