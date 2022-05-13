@@ -1,4 +1,3 @@
-import { EventCosts } from '../../models/event-costs';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import {
     getEventCostsDocRef,
@@ -14,10 +13,9 @@ export interface UpdateEventCostsOnUserPaymentParams {
     response: functions.Response;
 }
 
-/// Returns events costs after update or undefined
 export async function updateEventCostsOnUserPayment(
     params: UpdateEventCostsOnUserPaymentParams
-): Promise<EventCosts | undefined> {
+): Promise<void> {
     return firestoreDatabase().runTransaction(async (transaction) => {
         const eventCostsDocRef = getEventCostsDocRef(params.clubId, params.eventId);
         const eventCosts = await getEventCostsOrReturnNotFound(
@@ -39,7 +37,5 @@ export async function updateEventCostsOnUserPayment(
         eventCosts.paymentProcessorFeeBalance += stripeFee;
 
         transaction.update(eventCostsDocRef, eventCosts);
-
-        return eventCosts;
     });
 }
