@@ -3,8 +3,8 @@ import {
     getEventCostsDocRef,
     getEventCostsOrReturnNotFound,
 } from '../get-data/get-event-costs-data';
-import { getStripeFeeOrReturnNotFound } from '../../utils/stripe-utils/get-stripe-fee';
 import * as functions from 'firebase-functions';
+import { getStripeFeeOrReturnNotFound } from '../../utils/stripe-utils/get-stripe-fee';
 
 export interface UpdateEventCostsOnUserPaymentParams {
     eventId: string;
@@ -27,10 +27,10 @@ export async function updateEventCostsOnUserPayment(
 
         if (!eventCosts) return;
 
-        const stripeFee = await getStripeFeeOrReturnNotFound({
-            paymentSessionId: params.paymentSessionId,
-            response: params.response,
-        });
+        const stripeFee = await getStripeFeeOrReturnNotFound(
+            params.paymentSessionId,
+            params.response
+        );
 
         if (!stripeFee) return;
 
