@@ -8,4 +8,5 @@ export type FunctionsErrorDetails =
     | 'event-canceled'
     | 'event-postponed'
     | 'cancel-time-expired'
-    | 'postpone-time-expired';
+    | 'postpone-time-expired'
+    | 'postpone-time-too-short';
