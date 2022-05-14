@@ -17,3 +17,4 @@ export const vipPaymentSessions = 'vipPaymentSessions';
 export const cancelEventPaymentSessions = 'cancelEventPaymentSessions';
 export const postponeEventPaymentSessions = 'postponeEventPaymentSessions';
 export const payouts = 'payouts';
+export const eventsPayoutTasks = 'eventsPayoutTasks';
