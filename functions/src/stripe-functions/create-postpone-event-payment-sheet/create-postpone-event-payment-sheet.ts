@@ -15,6 +15,8 @@ import { createCancelEventPostponeTask } from '../../cloud-tasks/create-cancel-e
 import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-users-payment-sessions/cancel-users-payment-sessions';
 import { getPostponeEventPaymentSessionDocRef } from '../../firestore-functions/get-data/get-postpone-event-payment-session';
 import { getAmountForPostponePaymentSheet } from './get-amount-for-postpone-payment-sheet';
+import { firestore } from 'firebase-admin';
+import Timestamp = firestore.Timestamp;
 
 export async function createPostponeEventPaymentSheet(
     data: CreatePostponeEventPaymentSheetRequest,
@@ -27,8 +29,8 @@ export async function createPostponeEventPaymentSheet(
     checkIfRequestIsValid(data);
 
     const eventId = data?.eventId;
-    const newEventStartDateTime = data?.newEventStartDateTime;
-    const newEventEndDateTime = data?.newEventEndDateTime;
+    const newEventStartTimestamp = data?.newEventStartTimestamp;
+    const newEventEndTimestamp = data?.newEventEndTimestamp;
     const partnerId = context.auth!.uid;
 
     await checkPartnerClaim({ email: context.auth?.token.email! });
@@ -42,7 +44,7 @@ export async function createPostponeEventPaymentSheet(
         throw new functions.https.HttpsError('deadline-exceeded', message, details);
     }
 
-    if (moment(newEventStartDateTime).isBefore(eventStartDateTime.add(24, 'hours'))) {
+    if (moment(newEventStartTimestamp).isBefore(eventStartDateTime.add(24, 'hours'))) {
         const message = 'The minimum time by which an event can be postponed is 24 hours';
         const details: FunctionsErrorDetails = 'postpone-time-too-short';
         throw new functions.https.HttpsError('invalid-argument', message, details);
@@ -90,8 +92,8 @@ export async function createPostponeEventPaymentSheet(
         eventId,
         cancelEventPostponeTaskId,
         partnerId,
-        newEventStartDateTime,
-        newEventEndDateTime,
+        newEventStartDateTime: Timestamp.fromMillis(newEventStartTimestamp),
+        newEventEndDateTime: Timestamp.fromMillis(newEventEndTimestamp),
         amount: postponeCost.amount,
         status: 'requires_payment_method',
     } as PostponeEventPaymentSession);
@@ -105,13 +107,13 @@ function checkIfRequestIsValid(request: CreatePostponeEventPaymentSheetRequest) 
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-    if (!request.newEventStartDateTime) {
-        const message = 'The function must be called with new event start datetime';
+    if (!request.newEventStartTimestamp) {
+        const message = 'The function must be called with new event start timestamp';
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-    if (!request.newEventEndDateTime) {
-        const message = 'The function must be called with new event end datetime';
+    if (!request.newEventEndTimestamp) {
+        const message = 'The function must be called with new event end timestamp';
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 }
