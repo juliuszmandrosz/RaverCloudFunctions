@@ -18,6 +18,7 @@ import { Stripe } from 'stripe';
 import { updateEventOnEventCancelation } from '../../firestore-functions/update-event/update-event-on-event-cancelation';
 import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-users-payment-sessions/cancel-users-payment-sessions';
 import { getCancelEventPaymentSessionDocRef } from '../../firestore-functions/get-data/get-cancel-event-payment-session';
+import { updateTicketsOnEventCancelation } from '../../firestore-functions/update-tickets/update-tickets-on-event-cancelation';
 
 export async function createEventCancelationPaymentSheet(
     data: CreateEventCancelationPaymentSheetRequest,
@@ -68,7 +69,8 @@ export async function createEventCancelationPaymentSheet(
             e instanceof Stripe.errors.StripeError &&
             (e.code === 'amount_too_small' || e.code === 'parameter_invalid_integer')
         ) {
-            await refundTicketsForUsers(event.id);
+            const refundedSessions = await refundTicketsForUsers(event.id);
+            await updateTicketsOnEventCancelation(refundedSessions.ticketSessions);
             await updateEventOnEventCancelation(event);
 
             return;

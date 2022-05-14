@@ -9,7 +9,6 @@ import { FunctionsErrorDetails } from '../../errors/functions-error-details';
 import { getEventDocRef, tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
 import { Stripe } from 'stripe';
 import { CreatePostponeEventPaymentSheetRequest } from './create-postpone-event-payment-sheet-request';
-import { updateEventCostsOnEventPostpone } from '../../firestore-functions/update-event-costs/update-event-costs-on-event-postpone';
 import { PostponeEventPaymentSession } from '../../models/postpone-event-payment-session';
 import { createCancelEventPostponeTask } from '../../cloud-tasks/create-cancel-event-postpone-task/create-cancel-event-postpone-task';
 import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-users-payment-sessions/cancel-users-payment-sessions';
@@ -17,6 +16,8 @@ import { getPostponeEventPaymentSessionDocRef } from '../../firestore-functions/
 import { getAmountForPostponePaymentSheet } from './get-amount-for-postpone-payment-sheet';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
+import { updateEventOnEventPostpone } from '../../firestore-functions/update-event/update-event-on-event-postpone';
+import { updateTicketsOnEventPostpone } from '../../firestore-functions/update-tickets/update-tickets-on-event-postpone';
 
 export async function createPostponeEventPaymentSheet(
     data: CreatePostponeEventPaymentSheetRequest,
@@ -72,9 +73,15 @@ export async function createPostponeEventPaymentSheet(
             e instanceof Stripe.errors.StripeError &&
             (e.code === 'amount_too_small' || e.code === 'parameter_invalid_integer')
         ) {
-            await updateEventCostsOnEventPostpone({
+            await updateEventOnEventPostpone({
+                event,
+                newEventStartTimestamp,
+                newEventEndTimestamp,
+            });
+
+            await updateTicketsOnEventPostpone({
                 eventId: event.id,
-                clubId: event.clubId,
+                newEventStartDateTime: Timestamp.fromMillis(newEventStartTimestamp),
             });
 
             return;
