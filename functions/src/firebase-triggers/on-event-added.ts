@@ -20,8 +20,8 @@ async function createPayoutTask(snapshot: DocumentSnapshot) {
     const payoutTaskId = await createPayoutToPartnerTask({ event });
     await getEventPayoutTaskDocRef(event.id).set({
         payoutTaskId,
+        isCompleted: false,
         isCanceled: false,
-        isPaidOut: false,
     } as EventPayoutTask);
 }
 

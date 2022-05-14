@@ -9,8 +9,8 @@ import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 import { getConnectedAccountDataOrReturnNotFound } from '../../firestore-functions/get-data/get-connected-account-data';
 import { getEventCostsOrReturnNotFound } from '../../firestore-functions/get-data/get-event-costs-data';
-import { getEventPayoutTaskDocRef } from '../../firestore-functions/get-data/get-event-payout-task-data';
 import { EventPayoutTask } from '../../models/event-payout-task';
+import { getEventPayoutTaskDocRef } from '../../firestore-functions/get-data/get-event-payout-task-data';
 
 export async function payOutToPartnerOnEventEnd(
     request: functions.https.Request,
@@ -58,7 +58,7 @@ export async function payOutToPartnerOnEventEnd(
             payoutDateTime: Timestamp.now(),
         } as Payout);
 
-    await getEventPayoutTaskDocRef(event.id).update({ isPaidOut: true } as EventPayoutTask);
+    await getEventPayoutTaskDocRef(event.id).update({ isCompleted: true } as EventPayoutTask);
 
     response.send();
 }
