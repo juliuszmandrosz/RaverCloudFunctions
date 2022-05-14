@@ -11,6 +11,7 @@ import { CancelEventPaymentSession } from '../../models/cancel-event-payment-ses
 import { refundTicketsForUsers } from '../../stripe-functions/refund-tickets-for-users';
 import { updateEventOnEventCancelation } from '../update-event/update-event-on-event-cancelation';
 import { updateTicketsOnEventCancelation } from '../update-tickets/update-tickets-on-event-cancelation';
+import { payoutToPartnerOnFulfillEventCancelationPayment } from '../../stripe-functions/pay-out-to-partner/payout-to-partner-on-fulfill-event-canelation-payment';
 
 export async function fulfillEventCancelationPayment(
     paymentSessionId: string,
@@ -42,4 +43,6 @@ export async function fulfillEventCancelationPayment(
     await updateTicketsOnEventCancelation(refundedSessions.ticketSessions);
 
     await updateEventOnEventCancelation(event);
+
+    await payoutToPartnerOnFulfillEventCancelationPayment(event, response);
 }
