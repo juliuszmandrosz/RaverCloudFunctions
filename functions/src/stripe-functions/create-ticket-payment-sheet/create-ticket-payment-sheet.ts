@@ -36,7 +36,7 @@ export async function createTicketPaymentSheet(
         throwEventCanceledError();
     }
 
-    if (event.isCurrentlyPostponing) {
+    if (event.isBeingPostponed) {
         throwEventPostponedError();
     }
 

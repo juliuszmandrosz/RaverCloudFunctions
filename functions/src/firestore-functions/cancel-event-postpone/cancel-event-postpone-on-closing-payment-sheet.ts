@@ -42,5 +42,5 @@ export async function cancelEventPostponeOnClosingPaymentSheet(
     await firestoreDatabase()
         .collection(events)
         .doc(session.eventId)
-        .update({ isCurrentlyPostponing: false } as Event);
+        .update({ isBeingPostponed: false } as Event);
 }

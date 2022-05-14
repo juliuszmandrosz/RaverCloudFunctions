@@ -50,7 +50,7 @@ export async function createPostponeEventPaymentSheet(
 
     await cancelUsersPaymentSessions(eventId);
 
-    await getEventDocRef(eventId).update({ isCurrentlyPostponing: true } as Event);
+    await getEventDocRef(eventId).update({ isBeingPostponed: true } as Event);
 
     let paymentSheet: CreatePaymentSheetForPartnerResponse;
 
