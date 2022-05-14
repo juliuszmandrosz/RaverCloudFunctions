@@ -142,9 +142,7 @@ exports.cancelTicketReservation = functions.https.onRequest(async (request, resp
 
 exports.payOutToPartnerOnEventEnd = functions.https.onRequest(async (request, response) => {
     await (
-        await import(
-            './stripe-functions/pay-out-to-partner-on-event-end/pay-out-to-partner-on-event-end'
-        )
+        await import('./stripe-functions/pay-out-to-partner/pay-out-to-partner-on-event-end')
     ).payOutToPartnerOnEventEnd(request, response);
 });
 

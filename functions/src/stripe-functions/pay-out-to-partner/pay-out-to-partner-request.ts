@@ -1,5 +1,5 @@
 import { Event } from '../../models/event';
 
-export interface PayOutToPartnerOnEventEndRequest {
+export interface PayOutToPartnerRequest {
     event: Event;
 }
