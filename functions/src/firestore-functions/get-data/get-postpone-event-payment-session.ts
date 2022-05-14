@@ -32,18 +32,18 @@ export async function getPostponeEventPaymentSessionDataOrReturnNotFound(
     response: functions.Response,
     transaction?: Transaction
 ) {
-    const PostponeEventPaymentDoc = await getPostponeEventPaymentSessionDoc(
+    const postponeEventPaymentDoc = await getPostponeEventPaymentSessionDoc(
         postponeEventPaymentSessionId,
         transaction
     );
 
-    if (!PostponeEventPaymentDoc.exists) {
+    if (!postponeEventPaymentDoc.exists) {
         response.status(404).send(errorMessage);
         return;
     }
 
     return getPostponeEventPaymentSessionData(
-        PostponeEventPaymentDoc,
+        postponeEventPaymentDoc,
         postponeEventPaymentSessionId
     );
 }
