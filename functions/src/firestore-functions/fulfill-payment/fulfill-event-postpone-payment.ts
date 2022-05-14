@@ -38,7 +38,7 @@ export async function fulfillEventPostponePayment(
     );
 
     await eventDocRef.update({
-        isCurrentlyPostponing: false,
+        isBeingPostponed: false,
         eventStartDateTime: postponeEventPaymentSession.newEventStartDateTime.toMillis(),
         eventEndDateTime: postponeEventPaymentSession.newEventEndDateTime.toMillis(),
     } as Event);
