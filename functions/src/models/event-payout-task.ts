@@ -3,5 +3,5 @@ export interface EventPayoutTask {
     id: string;
     payoutTaskId: string;
     isCanceled: boolean;
-    isPaidOut: boolean;
+    isCompleted: boolean;
 }
