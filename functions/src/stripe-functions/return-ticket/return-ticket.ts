@@ -19,6 +19,7 @@ import { updateEventOnTicketReturn } from '../../firestore-functions/update-even
 import { refundPayment } from '../refund-payment/refund-payment';
 import { TicketPaymentSession } from '../../models/ticket-payment-session';
 import { VipPaymentSession } from '../../models/vip-payment-session';
+import { Ticket } from '../../models/ticket';
 
 export async function returnTicket(
     data: ReturnTicketRequest,
@@ -82,7 +83,7 @@ export async function returnTicket(
         } as VipPaymentSession);
     }
 
-    await getTicketDocRef(userId, ticketId).delete();
+    await getTicketDocRef(userId, ticketId).update({ isReturned: true } as Ticket);
 
     await updateEventOnTicketReturn({
         eventId: ticket.eventId,
