@@ -1,6 +1,6 @@
 import { Event } from '../../models/event';
 import { getEventDocRef } from '../get-data/get-event-data';
-import { updateEventCostsOnEventPostpone } from '../update-event-costs/update-event-costs-on-event-postpone';
+import { updateEventCostsOnPartnerPayment } from '../update-event-costs/update-event-costs-on-partner-payment';
 import * as functions from 'firebase-functions';
 
 interface UpdateEventOnEventPostponeParams {
@@ -22,7 +22,7 @@ export async function updateEventOnEventPostpone({
         eventEndDateTime: newEventEndTimestamp,
     } as Event);
 
-    await updateEventCostsOnEventPostpone({
+    await updateEventCostsOnPartnerPayment({
         eventId: event.id,
         clubId: event.clubId,
         response,

@@ -13,11 +13,11 @@ import { PostponeEventPaymentSession } from '../../models/postpone-event-payment
 import { createCancelEventPostponeTask } from '../../cloud-tasks/create-cancel-event-postpone-task/create-cancel-event-postpone-task';
 import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-users-payment-sessions/cancel-users-payment-sessions';
 import { getPostponeEventPaymentSessionDocRef } from '../../firestore-functions/get-data/get-postpone-event-payment-session';
-import { getAmountForPostponePaymentSheet } from './get-amount-for-postpone-payment-sheet';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 import { updateEventOnEventPostpone } from '../../firestore-functions/update-event/update-event-on-event-postpone';
 import { updateTicketsOnEventPostpone } from '../../firestore-functions/update-tickets/update-tickets-on-event-postpone';
+import { getAmountForPartnerPaymentSheet } from '../get-amount-for-partner-payment-sheet';
 
 export async function createPostponeEventPaymentSheet(
     data: CreatePostponeEventPaymentSheetRequest,
@@ -57,7 +57,7 @@ export async function createPostponeEventPaymentSheet(
 
     let paymentSheet: CreatePaymentSheetForPartnerResponse;
 
-    const postponeCost = await getAmountForPostponePaymentSheet({ eventId, clubId: event.clubId });
+    const postponeCost = await getAmountForPartnerPaymentSheet({ eventId, clubId: event.clubId });
 
     try {
         paymentSheet = await createPaymentSheetForPartner(
