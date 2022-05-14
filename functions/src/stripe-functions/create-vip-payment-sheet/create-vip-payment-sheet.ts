@@ -47,7 +47,7 @@ export async function createVipPaymentSheet(
         throwEventCanceledError();
     }
 
-    if (event.isCurrentlyPostponing) {
+    if (event.isBeingPostponed) {
         throwEventPostponedError();
     }
 

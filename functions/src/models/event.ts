@@ -16,7 +16,7 @@ export interface Event {
     cityId: string;
     isConcert: boolean;
     isCanceled: boolean;
-    isCurrentlyPostponing: boolean;
+    isBeingPostponed: boolean;
     artistName?: string;
     description?: string;
     photos?: string[];

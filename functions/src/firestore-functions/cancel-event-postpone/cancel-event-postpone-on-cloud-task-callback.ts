@@ -33,7 +33,7 @@ export async function cancelEventPostponeOnCloudTaskCallback(
     await firestoreDatabase()
         .collection(events)
         .doc(session.eventId)
-        .update({ isCurrentlyPostponing: false } as Event);
+        .update({ isBeingPostponed: false } as Event);
 
     response.send();
 }
