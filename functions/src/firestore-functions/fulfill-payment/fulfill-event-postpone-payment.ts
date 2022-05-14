@@ -2,16 +2,15 @@ import * as functions from 'firebase-functions';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 import { tasksClient } from '../../modules/cloud-tasks-module';
-import { getEventDataOrReturnNotFound, getEventDocRef } from '../get-data/get-event-data';
+import { getEventDataOrReturnNotFound } from '../get-data/get-event-data';
 import {
     getPostponeEventPaymentSessionDataOrUndefined,
     getPostponeEventPaymentSessionDocRef,
 } from '../get-data/get-postpone-event-payment-session';
-import { Event } from '../../models/event';
-import { updateEventCostsOnEventPostpone } from '../update-event-costs/update-event-costs-on-event-postpone';
 import { getEventCostsOrReturnNotFound } from '../get-data/get-event-costs-data';
 import { PostponeEventPaymentSession } from '../../models/postpone-event-payment-session';
 import { updateTicketsOnEventPostpone } from '../update-tickets/update-tickets-on-event-postpone';
+import { updateEventOnEventPostpone } from '../update-event/update-event-on-event-postpone';
 
 export async function fulfillEventPostponePayment(
     paymentSessionId: string,
@@ -31,17 +30,9 @@ export async function fulfillEventPostponePayment(
 
     if (!event) return;
 
-    const eventDocRef = getEventDocRef(event.id);
-
     const postponeEventSessionDocRef = getPostponeEventPaymentSessionDocRef(
         postponeEventPaymentSession.id
     );
-
-    await eventDocRef.update({
-        isBeingPostponed: false,
-        eventStartDateTime: postponeEventPaymentSession.newEventStartDateTime.toMillis(),
-        eventEndDateTime: postponeEventPaymentSession.newEventEndDateTime.toMillis(),
-    } as Event);
 
     await postponeEventSessionDocRef.update({
         status: 'succeeded',
@@ -52,9 +43,10 @@ export async function fulfillEventPostponePayment(
 
     if (!eventCosts) return;
 
-    await updateEventCostsOnEventPostpone({
-        eventId: event.id,
-        clubId: event.clubId,
+    await updateEventOnEventPostpone({
+        event,
+        newEventStartTimestamp: postponeEventPaymentSession.newEventStartDateTime.toMillis(),
+        newEventEndTimestamp: postponeEventPaymentSession.newEventEndDateTime.toMillis(),
         response,
     });
 
