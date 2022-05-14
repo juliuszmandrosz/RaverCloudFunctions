@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import { PayOutToPartnerOnEventEndRequest } from './pay-out-to-partner-on-event-end-request';
+import { PayOutToPartnerRequest } from './pay-out-to-partner-request';
 import { stripe } from '../../modules/stripe-module';
 import { getEventTicketsOrReturnNotFound } from '../../firestore-functions/get-data/get-event-tickets-data';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
@@ -9,12 +9,14 @@ import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 import { getConnectedAccountDataOrReturnNotFound } from '../../firestore-functions/get-data/get-connected-account-data';
 import { getEventCostsOrReturnNotFound } from '../../firestore-functions/get-data/get-event-costs-data';
+import { getEventPayoutTaskDocRef } from '../../firestore-functions/get-data/get-event-payout-task-data';
+import { EventPayoutTask } from '../../models/event-payout-task';
 
 export async function payOutToPartnerOnEventEnd(
     request: functions.https.Request,
     response: functions.Response
 ): Promise<void> {
-    const payoutToConnectedAccountRequest = request.body as PayOutToPartnerOnEventEndRequest;
+    const payoutToConnectedAccountRequest = request.body as PayOutToPartnerRequest;
 
     const event = payoutToConnectedAccountRequest.event;
 
@@ -51,10 +53,12 @@ export async function payOutToPartnerOnEventEnd(
         .collection(payouts)
         .doc(payout.id)
         .set({
-            amount: clubIncome,
+            amount: clubIncome + eventCosts.eventPostponeBalance,
             currency: eventTickets.ticketSales.currency,
             payoutDateTime: Timestamp.now(),
         } as Payout);
+
+    await getEventPayoutTaskDocRef(event.id).update({ isPaidOut: true } as EventPayoutTask);
 
     response.send();
 }
