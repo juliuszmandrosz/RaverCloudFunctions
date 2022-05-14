@@ -38,6 +38,11 @@ export async function returnTicket(
     const userId = context.auth!.uid;
     const ticket = await tryGetTicketData(userId, ticketId);
 
+    if (ticket.isReturned) {
+        const message = 'Ticket is already returned';
+        throw new functions.https.HttpsError('permission-denied', message);
+    }
+
     if (!ticket.isReturnable) {
         const message = 'Ticket is not returnable';
         throw new functions.https.HttpsError('permission-denied', message);
