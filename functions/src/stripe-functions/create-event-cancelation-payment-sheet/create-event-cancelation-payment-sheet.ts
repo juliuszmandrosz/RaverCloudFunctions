@@ -19,6 +19,7 @@ import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-use
 import { getCancelEventPaymentSessionDocRef } from '../../firestore-functions/get-data/get-cancel-event-payment-session';
 import { updateTicketsOnEventCancelation } from '../../firestore-functions/update-tickets/update-tickets-on-event-cancelation';
 import { getAmountForPartnerPaymentSheet } from '../get-amount-for-partner-payment-sheet';
+import { payoutToPartnerInstantlyOnEventCancelation } from '../pay-out-to-partner/payout-to-partner-instantly-on-event-cancelation';
 
 export async function createEventCancelationPaymentSheet(
     data: CreateEventCancelationPaymentSheetRequest,
@@ -75,6 +76,7 @@ export async function createEventCancelationPaymentSheet(
             const refundedSessions = await refundTicketsForUsers(event.id);
             await updateTicketsOnEventCancelation(refundedSessions.ticketSessions);
             await updateEventOnEventCancelation(event);
+            await payoutToPartnerInstantlyOnEventCancelation(event);
 
             return;
         }
