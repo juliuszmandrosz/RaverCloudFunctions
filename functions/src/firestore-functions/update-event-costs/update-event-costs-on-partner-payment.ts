@@ -7,14 +7,14 @@ import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import * as functions from 'firebase-functions';
 import { EventCosts } from '../../models/event-costs';
 
-export interface UpdateEventCostsOnEventPostponeParams {
+export interface UpdateEventCostsOnPartnerPaymentParams {
     eventId: string;
     clubId: string;
     response?: functions.Response;
 }
 
-export async function updateEventCostsOnEventPostpone(
-    params: UpdateEventCostsOnEventPostponeParams
+export async function updateEventCostsOnPartnerPayment(
+    params: UpdateEventCostsOnPartnerPaymentParams
 ): Promise<void> {
     await firestoreDatabase().runTransaction(async (transaction) => {
         const eventCostsDocRef = getEventCostsDocRef(params.clubId, params.eventId);

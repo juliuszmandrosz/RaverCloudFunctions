@@ -5,7 +5,6 @@ import { events } from '../../constants/collections';
 import { CreatePaymentSheetForPartnerResponse } from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner-response';
 import { CreateEventCancelationPaymentSheetRequest } from './create-event-cancelation-payment-sheet-request';
 import { checkPartnerClaim } from '../../auth-functions/check-claim/check-partner-claim';
-import { tryGetEventCostsData } from '../../firestore-functions/get-data/get-event-costs-data';
 import { Event } from '../../models/event';
 import { createPaymentSheetForPartner } from '../create-payment-sheet-for-partner/create-payment-sheet-for-partner';
 import { CancelEventPaymentSession } from '../../models/cancel-event-payment-session';
@@ -19,6 +18,7 @@ import { updateEventOnEventCancelation } from '../../firestore-functions/update-
 import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-users-payment-sessions/cancel-users-payment-sessions';
 import { getCancelEventPaymentSessionDocRef } from '../../firestore-functions/get-data/get-cancel-event-payment-session';
 import { updateTicketsOnEventCancelation } from '../../firestore-functions/update-tickets/update-tickets-on-event-cancelation';
+import { getAmountForPartnerPaymentSheet } from '../get-amount-for-partner-payment-sheet';
 
 export async function createEventCancelationPaymentSheet(
     data: CreateEventCancelationPaymentSheetRequest,
@@ -51,15 +51,18 @@ export async function createEventCancelationPaymentSheet(
         .doc(eventId)
         .update({ isCanceled: true } as Event);
 
-    const eventCosts = await tryGetEventCostsData(partnerId, eventId);
+    const cancelationCost = await getAmountForPartnerPaymentSheet({
+        eventId,
+        clubId: event.clubId,
+    });
 
     let paymentSheet: CreatePaymentSheetForPartnerResponse;
 
     try {
         paymentSheet = await createPaymentSheetForPartner(
             {
-                currency: eventCosts.currency,
-                amount: eventCosts.paymentProcessorFeeBalance,
+                currency: cancelationCost.currency,
+                amount: cancelationCost.amount,
                 description: event.eventName,
             },
             context
@@ -88,7 +91,7 @@ export async function createEventCancelationPaymentSheet(
         eventId,
         cancelEventCancelationTaskId,
         partnerId,
-        amount: eventCosts.paymentProcessorFeeBalance,
+        amount: cancelationCost.amount,
         status: 'requires_payment_method',
     } as CancelEventPaymentSession);
 

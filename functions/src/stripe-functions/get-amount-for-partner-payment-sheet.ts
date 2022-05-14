@@ -1,20 +1,20 @@
-import { tryGetEventCostsData } from '../../firestore-functions/get-data/get-event-costs-data';
+import { tryGetEventCostsData } from '../firestore-functions/get-data/get-event-costs-data';
 
-interface GetAmountForPostponePaymentSheetParams {
+interface GetAmountForPartnerPaymentSheetParams {
     eventId: string;
     clubId: string;
 }
 
-interface GetAmountForPostponePaymentSheetResponse {
+interface GetAmountForPartnerPaymentSheetResponse {
     amount: number;
     currency: string;
 }
 
 /// Returns event costs after update
-export async function getAmountForPostponePaymentSheet({
+export async function getAmountForPartnerPaymentSheet({
     eventId,
     clubId,
-}: GetAmountForPostponePaymentSheetParams): Promise<GetAmountForPostponePaymentSheetResponse> {
+}: GetAmountForPartnerPaymentSheetParams): Promise<GetAmountForPartnerPaymentSheetResponse> {
     const eventCosts = await tryGetEventCostsData(clubId, eventId);
 
     const balance = eventCosts.paymentProcessorFeeBalance - eventCosts.eventPostponeBalance;
