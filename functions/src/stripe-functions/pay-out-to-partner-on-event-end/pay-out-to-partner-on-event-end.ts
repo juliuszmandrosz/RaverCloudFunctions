@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import { PayOutToPartnerRequest } from './pay-out-to-partner-request';
+import { PayOutToPartnerOnEventEndRequest } from './pay-out-to-partner-on-event-end-request';
 import { stripe } from '../../modules/stripe-module';
 import { getEventTicketsOrReturnNotFound } from '../../firestore-functions/get-data/get-event-tickets-data';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
@@ -10,11 +10,11 @@ import Timestamp = firestore.Timestamp;
 import { getConnectedAccountDataOrReturnNotFound } from '../../firestore-functions/get-data/get-connected-account-data';
 import { getEventCostsOrReturnNotFound } from '../../firestore-functions/get-data/get-event-costs-data';
 
-export async function payOutToPartner(
+export async function payOutToPartnerOnEventEnd(
     request: functions.https.Request,
     response: functions.Response
 ): Promise<void> {
-    const payoutToConnectedAccountRequest = request.body as PayOutToPartnerRequest;
+    const payoutToConnectedAccountRequest = request.body as PayOutToPartnerOnEventEndRequest;
 
     const event = payoutToConnectedAccountRequest.event;
 
