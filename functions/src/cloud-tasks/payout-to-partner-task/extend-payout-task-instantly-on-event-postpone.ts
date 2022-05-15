@@ -1,7 +1,7 @@
 import { Event } from '../../models/event';
 import { tryGetEventPayoutTaskData } from '../../firestore-functions/get-data/get-event-payout-task-data';
 import { cancelPayoutTask } from './cancel-payout-task';
-import { createPayoutToPartnerTask } from '../../cloud-tasks/create-payout-to-partner-task/create-payout-to-partner-task';
+import { createPayoutToPartnerTask } from './create-payout-to-partner-task';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 

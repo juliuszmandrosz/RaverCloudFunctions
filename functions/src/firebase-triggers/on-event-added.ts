@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import { eventIndex } from '../modules/algolia-module';
-import { createPayoutToPartnerTask } from '../cloud-tasks/create-payout-to-partner-task/create-payout-to-partner-task';
+import { createPayoutToPartnerTask } from '../cloud-tasks/payout-to-partner-task/create-payout-to-partner-task';
 import { Event } from '../models/event';
 import { DocumentSnapshot } from 'firebase-functions/lib/providers/firestore';
 

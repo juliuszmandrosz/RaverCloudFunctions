@@ -4,7 +4,7 @@ import { Event } from '../../models/event';
 import { tryGetEventPayoutTaskData } from '../../firestore-functions/get-data/get-event-payout-task-data';
 import { createPayout } from './create-payout';
 import { getPayoutAmount } from './get-payout-amount';
-import { cancelPayoutTask } from './cancel-payout-task';
+import { cancelPayoutTask } from '../../cloud-tasks/payout-to-partner-task/cancel-payout-task';
 
 export async function payoutToPartnerInstantlyOnEventCancelation(event: Event): Promise<void> {
     const connectedAccount = await tryGetConnectedAccountData(event.clubId);
