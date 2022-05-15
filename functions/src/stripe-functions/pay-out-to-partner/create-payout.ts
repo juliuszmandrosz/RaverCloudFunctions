@@ -4,6 +4,7 @@ import { partners, payouts } from '../../constants/collections';
 import { Payout } from '../../models/payout';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
+import { Stripe } from 'stripe';
 
 interface CreatePayoutParams {
     amount: number;
@@ -18,13 +19,26 @@ export async function createPayout({
     connectedAccountId,
     partnerId,
 }: CreatePayoutParams) {
-    const payout = await stripe.payouts.create(
-        {
-            amount,
-            currency,
-        },
-        { stripeAccount: connectedAccountId }
-    );
+    let payout: Stripe.Payout;
+
+    try {
+        payout = await stripe.payouts.create(
+            {
+                amount,
+                currency,
+            },
+            { stripeAccount: connectedAccountId }
+        );
+    } catch (e) {
+        if (
+            e instanceof Stripe.errors.StripeError &&
+            (e.code === 'amount_too_small' || e.code === 'parameter_invalid_integer')
+        ) {
+            return;
+        }
+
+        throw e;
+    }
 
     await firestoreDatabase()
         .collection(partners)
