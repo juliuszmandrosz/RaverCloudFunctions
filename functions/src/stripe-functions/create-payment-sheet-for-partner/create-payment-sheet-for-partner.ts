@@ -6,7 +6,6 @@ import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-er
 import { getStripeCustomerIdFromContext } from '../../utils/stripe-utils/get-stripe-customer-id-from-context';
 import { tryCreateEphemeralKey } from '../../utils/stripe-utils/try-create-ephemeral-key';
 import { getPaymentMethodTypes } from '../../utils/stripe-utils/get-payment-method-types';
-import { getPaymentIntentAmount } from '../../utils/stripe-utils/get-payment-intent-amount';
 
 export async function createPaymentSheetForPartner(
     data: CreatePaymentSheetForPartnerRequest,
@@ -26,12 +25,11 @@ export async function createPaymentSheetForPartner(
 
     const ephemeralKeySecret = await tryCreateEphemeralKey(customerId);
     const paymentMethodTypes = getPaymentMethodTypes(currency);
-    const paymentIntentAmount = getPaymentIntentAmount(amount);
 
     const paymentIntent = await stripe.paymentIntents.create({
         currency,
         description,
-        amount: paymentIntentAmount,
+        amount,
         customer: customerId,
         payment_method_types: paymentMethodTypes,
         receipt_email: userEmail,

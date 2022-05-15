@@ -40,13 +40,13 @@ export async function createPostponeEventPaymentSheet(
     const event = await tryGetEventData(eventId);
     const eventStartDateTime = moment(event.eventStartDateTime);
 
-    if (eventStartDateTime.isBefore(moment().add(24, 'hours'))) {
+    if (eventStartDateTime.isBefore(moment().add(1, 'day'))) {
         const message = 'Time to postpone event has expired';
         const details: FunctionsErrorDetails = 'postpone-time-expired';
         throw new functions.https.HttpsError('deadline-exceeded', message, details);
     }
 
-    if (moment(newEventStartTimestamp).isBefore(eventStartDateTime.add(24, 'hours'))) {
+    if (moment(newEventStartTimestamp).isBefore(eventStartDateTime.add(1, 'day'))) {
         const message = 'The minimum time by which an event can be postponed is 24 hours';
         const details: FunctionsErrorDetails = 'postpone-time-too-short';
         throw new functions.https.HttpsError('invalid-argument', message, details);
