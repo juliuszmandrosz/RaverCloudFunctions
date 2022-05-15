@@ -39,7 +39,5 @@ async function getStripeFee(paymentSessionId: string) {
         (fee) => fee.type === 'stripe_fee'
     );
 
-    const result = stripeFeeDetails?.amount;
-
-    return result ? result / 100 : undefined;
+    return stripeFeeDetails?.amount;
 }
