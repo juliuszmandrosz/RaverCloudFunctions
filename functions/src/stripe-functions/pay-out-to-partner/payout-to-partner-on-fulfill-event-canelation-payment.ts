@@ -5,7 +5,7 @@ import { getEventPayoutTaskDataOrReturnNotFound } from '../../firestore-function
 import * as functions from 'firebase-functions';
 import { createPayout } from './create-payout';
 import { getPayoutAmount } from './get-payout-amount';
-import { cancelPayoutTask } from './cancel-payout-task';
+import { cancelPayoutTask } from '../../cloud-tasks/payout-to-partner-task/cancel-payout-task';
 
 export async function payoutToPartnerOnFulfillEventCancelationPayment(
     event: Event,
