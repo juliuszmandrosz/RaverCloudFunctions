@@ -11,6 +11,7 @@ import { getEventCostsOrReturnNotFound } from '../get-data/get-event-costs-data'
 import { PostponeEventPaymentSession } from '../../models/postpone-event-payment-session';
 import { updateTicketsOnEventPostpone } from '../update-tickets/update-tickets-on-event-postpone';
 import { updateEventOnEventPostpone } from '../update-event/update-event-on-event-postpone';
+import { extendPayoutTaskOnFulfillEventPostponePayment } from '../../cloud-tasks/payout-to-partner-task/extend-payout-task-on-fulfill-event-postpone-payment';
 
 export async function fulfillEventPostponePayment(
     paymentSessionId: string,
@@ -53,5 +54,11 @@ export async function fulfillEventPostponePayment(
     await updateTicketsOnEventPostpone({
         eventId: event.id,
         newEventStartDateTime: postponeEventPaymentSession.newEventStartDateTime,
+    });
+
+    await extendPayoutTaskOnFulfillEventPostponePayment({
+        event,
+        newEventEndDateTime: postponeEventPaymentSession.newEventEndDateTime,
+        response,
     });
 }
