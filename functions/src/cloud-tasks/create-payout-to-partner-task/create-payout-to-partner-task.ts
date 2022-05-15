@@ -27,7 +27,6 @@ export async function createPayoutToPartnerTask(
         payoutTaskId,
         executesAt,
         isCompleted: false,
-        isCanceled: false,
     } as EventPayoutTask);
 
     return payoutTaskId;
