@@ -5,16 +5,30 @@ import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 import { payOutToPartnerQueue } from '../../constants/cloud-queues';
 import { payOutToPartnerOnEventEndCallback } from '../../constants/cloud-tasks-callbacks';
+import { getEventPayoutTaskDocRef } from '../../firestore-functions/get-data/get-event-payout-task-data';
+import { EventPayoutTask } from '../../models/event-payout-task';
 
 export async function createPayoutToPartnerTask(
     request: CreatePayoutToPartnerTaskRequest
 ): Promise<string> {
-    const payload: PayOutToPartnerRequest = { event: request.event };
+    const event = request.event;
+    const payload: PayOutToPartnerRequest = { event };
 
-    return createCloudTask<PayOutToPartnerRequest>({
+    const executesAt = Timestamp.fromMillis(request.event.eventEndDateTime);
+
+    const payoutTaskId = await createCloudTask<PayOutToPartnerRequest>({
         payload,
+        executesAt,
         callbackName: payOutToPartnerOnEventEndCallback,
         queueName: payOutToPartnerQueue,
-        executesAt: Timestamp.fromMillis(request.event.eventEndDateTime),
     });
+
+    await getEventPayoutTaskDocRef(event.id).set({
+        payoutTaskId,
+        executesAt,
+        isCompleted: false,
+        isCanceled: false,
+    } as EventPayoutTask);
+
+    return payoutTaskId;
 }
