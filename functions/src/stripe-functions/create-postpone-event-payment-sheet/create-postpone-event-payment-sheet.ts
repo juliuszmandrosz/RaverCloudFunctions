@@ -18,6 +18,7 @@ import Timestamp = firestore.Timestamp;
 import { updateEventOnEventPostpone } from '../../firestore-functions/update-event/update-event-on-event-postpone';
 import { updateTicketsOnEventPostpone } from '../../firestore-functions/update-tickets/update-tickets-on-event-postpone';
 import { getAmountForPartnerPaymentSheet } from '../get-amount-for-partner-payment-sheet';
+import { extendPayoutTaskInstantlyOnEventPostpone } from '../pay-out-to-partner/extend-payout-task-instantly-on-event-postpone';
 
 export async function createPostponeEventPaymentSheet(
     data: CreatePostponeEventPaymentSheetRequest,
@@ -82,6 +83,11 @@ export async function createPostponeEventPaymentSheet(
             await updateTicketsOnEventPostpone({
                 eventId: event.id,
                 newEventStartDateTime: Timestamp.fromMillis(newEventStartTimestamp),
+            });
+
+            await extendPayoutTaskInstantlyOnEventPostpone({
+                event,
+                newEventEndDateTime: Timestamp.fromMillis(newEventEndTimestamp),
             });
 
             return;

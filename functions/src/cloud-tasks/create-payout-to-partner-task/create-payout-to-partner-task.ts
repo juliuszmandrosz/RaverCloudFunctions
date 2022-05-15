@@ -14,7 +14,7 @@ export async function createPayoutToPartnerTask(
     const event = request.event;
     const payload: PayOutToPartnerRequest = { event };
 
-    const executesAt = Timestamp.fromMillis(request.event.eventEndDateTime);
+    const executesAt = request.executesAt ?? Timestamp.fromMillis(request.event.eventEndDateTime);
 
     const payoutTaskId = await createCloudTask<PayOutToPartnerRequest>({
         payload,
