@@ -48,6 +48,7 @@ export async function fulfillEventPostponePayment(
         event,
         newEventStartTimestamp: postponeEventPaymentSession.newEventStartDateTime.toMillis(),
         newEventEndTimestamp: postponeEventPaymentSession.newEventEndDateTime.toMillis(),
+        hasPartnerPaid: true,
         response,
     });
 
