@@ -45,7 +45,7 @@ export async function createEventCancelationPaymentSheet(
         throw new functions.https.HttpsError('deadline-exceeded', message, details);
     }
 
-    await cancelUsersPaymentSessions(eventId);
+    await cancelUsersPaymentSessions({ eventId });
 
     await firestoreDatabase()
         .collection(events)
@@ -75,7 +75,7 @@ export async function createEventCancelationPaymentSheet(
         ) {
             const refundedSessions = await refundTicketsForUsers(event.id);
             await updateTicketsOnEventCancelation(refundedSessions.ticketSessions);
-            await updateEventOnEventCancelation(event);
+            await updateEventOnEventCancelation({ event });
             await payoutToPartnerInstantlyOnEventCancelation(event);
 
             return;

@@ -5,6 +5,5 @@ export interface EventPayoutTask {
     /// Event id
     id: string;
     payoutTaskId: string;
-    isCompleted: boolean;
     executesAt: Timestamp;
 }

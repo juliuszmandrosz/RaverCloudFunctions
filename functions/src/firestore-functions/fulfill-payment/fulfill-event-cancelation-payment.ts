@@ -42,7 +42,7 @@ export async function fulfillEventCancelationPayment(
 
     await updateTicketsOnEventCancelation(refundedSessions.ticketSessions);
 
-    await updateEventOnEventCancelation(event);
+    await updateEventOnEventCancelation({ event, response });
 
     await payoutToPartnerOnFulfillEventCancelationPayment(event, response);
 }

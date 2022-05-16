@@ -13,7 +13,7 @@ export interface UpdateEventCostsOnPartnerPaymentParams {
     response?: functions.Response;
 }
 
-export async function updateEventCostsOnPartnerPayment(
+export async function updateEventCostsOnEventPostpone(
     params: UpdateEventCostsOnPartnerPaymentParams
 ): Promise<void> {
     await firestoreDatabase().runTransaction(async (transaction) => {
@@ -38,17 +38,8 @@ function getUpdatedEventCosts(eventCosts: EventCosts) {
     let feeBalance = eventCosts.paymentProcessorFeeBalance;
     let postponeBalance = eventCosts.eventPostponeBalance;
 
-    if (feeBalance > postponeBalance) {
-        feeBalance -= postponeBalance;
-        postponeBalance = feeBalance;
-        feeBalance = 0;
-    } else if (feeBalance < postponeBalance) {
-        postponeBalance -= feeBalance;
-        feeBalance = 0;
-    } else if (feeBalance === postponeBalance) {
-        feeBalance = 0;
-        postponeBalance = 0;
-    }
+    postponeBalance += feeBalance;
+    feeBalance = 0;
 
     return {
         eventPostponeBalance: postponeBalance,

@@ -140,11 +140,15 @@ exports.cancelTicketReservation = functions.https.onRequest(async (request, resp
     ).cancelTicketReservation(request, response);
 });
 
-exports.payOutToPartnerOnEventEnd = functions.https.onRequest(async (request, response) => {
-    await (
-        await import('./stripe-functions/pay-out-to-partner/pay-out-to-partner-on-event-end')
-    ).payOutToPartnerOnEventEnd(request, response);
-});
+exports.payOutToPartnerOnCloudTaskCallback = functions.https.onRequest(
+    async (request, response) => {
+        await (
+            await import(
+                './stripe-functions/pay-out-to-partner/pay-out-to-partner-on-cloud-task-callback'
+            )
+        ).payOutToPartnerOnCloudTaskCallback(request, response);
+    }
+);
 
 exports.cancelEventCancelationOnCloudTaskCallback = functions.https.onRequest(
     async (request, response) => {
