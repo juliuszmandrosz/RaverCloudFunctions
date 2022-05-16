@@ -7,6 +7,7 @@ interface UpdateEventOnEventPostponeParams {
     event: Event;
     newEventStartTimestamp: number;
     newEventEndTimestamp: number;
+    hasPartnerPaid: boolean;
     response?: functions.Response;
 }
 
@@ -14,6 +15,7 @@ export async function updateEventOnEventPostpone({
     event,
     newEventStartTimestamp,
     newEventEndTimestamp,
+    hasPartnerPaid,
     response,
 }: UpdateEventOnEventPostponeParams): Promise<void> {
     await getEventDocRef(event.id).update({
@@ -22,9 +24,11 @@ export async function updateEventOnEventPostpone({
         eventEndDateTime: newEventEndTimestamp,
     } as Event);
 
-    await updateEventCostsOnEventPostpone({
-        eventId: event.id,
-        clubId: event.clubId,
-        response,
-    });
+    if (hasPartnerPaid) {
+        await updateEventCostsOnEventPostpone({
+            eventId: event.id,
+            clubId: event.clubId,
+            response,
+        });
+    }
 }
