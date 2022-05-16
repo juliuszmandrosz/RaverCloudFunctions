@@ -23,5 +23,5 @@ export async function extendPayoutTaskOnFulfillEventPostponePayment({
 
     await cancelPayoutTask({ eventId: event.id, payoutTaskId: eventPayoutTask.payoutTaskId });
 
-    await createPayoutToPartnerTask({ event, executesAt: newEventEndDateTime });
+    await createPayoutToPartnerTask({ eventId: event.id, executesAt: newEventEndDateTime });
 }

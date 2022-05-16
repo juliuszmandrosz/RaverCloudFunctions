@@ -1,6 +1,7 @@
 interface GetPayoutAmountParams {
     /// Amount in the smallest currency unit
     eventPostponeBalance: number;
+
     clubIncome?: number;
 }
 
