@@ -78,6 +78,7 @@ export async function createPostponeEventPaymentSheet(
                 event,
                 newEventStartTimestamp,
                 newEventEndTimestamp,
+                hasPartnerPaid: false,
             });
 
             await updateTicketsOnEventPostpone({
