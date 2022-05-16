@@ -3,36 +3,40 @@ import { PayOutToPartnerRequest } from '../../stripe-functions/pay-out-to-partne
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 import { payOutToPartnerQueue } from '../../constants/cloud-queues';
-import { payOutToPartnerOnEventEndCallback } from '../../constants/cloud-tasks-callbacks';
+import { payOutToPartnerOnCloudTaskCallback } from '../../constants/cloud-tasks-callbacks';
 import { getEventPayoutTaskDocRef } from '../../firestore-functions/get-data/get-event-payout-task-data';
 import { EventPayoutTask } from '../../models/event-payout-task';
-import { Event } from '../../models/event';
+import * as moment from 'moment';
 
 export interface CreatePayoutToPartnerTaskParams {
-    event: Event;
-    /// If not provided, event end date time will be used
-    executesAt?: Timestamp;
+    eventId: string;
+    executesAt: Timestamp;
 }
 
 export async function createPayoutToPartnerTask({
-    event,
+    eventId,
     executesAt,
 }: CreatePayoutToPartnerTaskParams): Promise<string> {
-    const payload: PayOutToPartnerRequest = { event };
+    const payload: PayOutToPartnerRequest = { eventId };
 
-    const executionDateTime = executesAt ?? Timestamp.fromMillis(event.eventEndDateTime);
+    const executionMoment = moment(executesAt.toMillis());
+
+    const maxScheduleDate = moment().add(20, 'days').toDate();
+
+    if (executionMoment.isAfter(maxScheduleDate)) {
+        executesAt = Timestamp.fromDate(maxScheduleDate);
+    }
 
     const payoutTaskId = await createCloudTask<PayOutToPartnerRequest>({
         payload,
-        executesAt: executionDateTime,
-        callbackName: payOutToPartnerOnEventEndCallback,
+        executesAt: executesAt,
+        callbackName: payOutToPartnerOnCloudTaskCallback,
         queueName: payOutToPartnerQueue,
     });
 
-    await getEventPayoutTaskDocRef(event.id).set({
+    await getEventPayoutTaskDocRef(eventId).set({
         payoutTaskId,
-        executesAt: executionDateTime,
-        isCompleted: false,
+        executesAt: executesAt,
     } as EventPayoutTask);
 
     return payoutTaskId;

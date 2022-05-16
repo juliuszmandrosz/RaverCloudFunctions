@@ -10,19 +10,14 @@ interface GetAmountForPartnerPaymentSheetResponse {
     currency: string;
 }
 
-/// Returns event costs after update
 export async function getAmountForPartnerPaymentSheet({
     eventId,
     clubId,
 }: GetAmountForPartnerPaymentSheetParams): Promise<GetAmountForPartnerPaymentSheetResponse> {
     const eventCosts = await tryGetEventCostsData(clubId, eventId);
 
-    const balance = eventCosts.paymentProcessorFeeBalance - eventCosts.eventPostponeBalance;
-
-    const amount = balance > 0 ? balance : 0;
-
     return {
-        amount,
+        amount: eventCosts.paymentProcessorFeeBalance,
         currency: eventCosts.currency,
     };
 }

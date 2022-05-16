@@ -52,7 +52,7 @@ export async function createPostponeEventPaymentSheet(
         throw new functions.https.HttpsError('invalid-argument', message, details);
     }
 
-    await cancelUsersPaymentSessions(eventId);
+    await cancelUsersPaymentSessions({ eventId });
 
     await getEventDocRef(eventId).update({ isBeingPostponed: true } as Event);
 
