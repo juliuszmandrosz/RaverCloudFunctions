@@ -1,5 +1,8 @@
 export interface User {
-    email: string;
-    favoriteEvents: string[],
-    favoriteClubs: string[],
+  email: string;
+  username: string;
+  favoriteEventIds: string[];
+  favoriteClubIds: string[];
+  /// key - clubId, value - number of entries
+  attendance: Map<string, number>;
 }
