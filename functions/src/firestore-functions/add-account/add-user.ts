@@ -1,15 +1,11 @@
-import * as functions from "firebase-functions";
-import {firestoreDatabase} from "../../modules/firebase-admin-module";
-import {setUserClaim} from "../../auth-functions/set-claim/set-user-claim";
-import {addStripeCustomer} from "../../stripe-functions/add-stripe-customer/add-stripe-customer";
-import {users} from "../../constants/collections";
-import {User} from "../../models/user";
+import * as functions from 'firebase-functions';
+import { firestoreDatabase } from '../../modules/firebase-admin-module';
+import { setUserClaim } from '../../auth-functions/set-claim/set-user-claim';
+import { addStripeCustomer } from '../../stripe-functions/add-stripe-customer/add-stripe-customer';
+import { users } from '../../constants/collections';
+import { User } from '../../models/user';
 
-
-export async function addUser(
-    data: any,
-    context: functions.https.CallableContext
-): Promise<void> {
+export async function addUser(data: any, context: functions.https.CallableContext): Promise<void> {
     if (!context.auth) {
         const message = 'The function must be called while authenticated.';
         throw new functions.https.HttpsError('failed-precondition', message);
@@ -26,15 +22,15 @@ export async function addUser(
         throw new functions.https.HttpsError('already-exists', message);
     }
 
-    await setUserClaim({email});
+    await setUserClaim({ email });
 
-    await addStripeCustomer({userId: userId, userEmail: email});
+    await addStripeCustomer({ userId: userId, userEmail: email });
 
     await userDocRef.set({
-            email,
-            favoriteEvents: [],
-            favoriteClubs: [],
-        } as User
-    );
+        email,
+        attendance: new Map<string, number>(),
+        favoriteEventIds: [],
+        favoriteClubIds: [],
+        username: '',
+    } as User);
 }
-
