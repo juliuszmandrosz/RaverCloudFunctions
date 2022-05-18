@@ -5,23 +5,17 @@ import { selectors } from '../../../constants/collections';
 import { Selector } from '../../../models/selector';
 import { setSelectorClaim } from '../../../auth-functions/set-claim/set-selector-claim';
 import { useSelectorAccessCode } from '../../use-selector-access-code/use-selector-access-code';
+import { throwUnauthenticatedError } from '../../../errors/throw-unauthenticated-error';
 
 export async function addSelector(
     data: AddSelectorRequest,
     context: functions.https.CallableContext
 ): Promise<void> {
     if (!context.auth) {
-        const message = 'The function must be called while authenticated.';
-        throw new functions.https.HttpsError('failed-precondition', message);
+        throwUnauthenticatedError();
     }
 
-    const selectorEmail = data?.email;
     const accessCode = data?.accessCode;
-
-    if (!selectorEmail) {
-        const message = 'The function must be called with selector email.';
-        throw new functions.https.HttpsError('invalid-argument', message);
-    }
 
     if (!accessCode) {
         const message = 'The function must be called with access code.';
@@ -30,10 +24,20 @@ export async function addSelector(
 
     const accessCodeData = await useSelectorAccessCode({ accessCode }, context);
 
-    const selectorId = context.auth.uid;
+    const selectorId = context.auth!.uid;
+    const selectorEmail = context.auth!.token.email!;
+
+    const selectorDocRef = firestoreDatabase().collection(selectors).doc(selectorId);
+    const selectorDoc = await selectorDocRef.get();
+
+    if (selectorDoc.exists) {
+        const message = 'Selector with given id already exists';
+        throw new functions.https.HttpsError('already-exists', message);
+    }
+
     const selector: Selector = { clubId: accessCodeData.partnerId, email: selectorEmail };
 
-    await firestoreDatabase().collection(selectors).doc(selectorId).set(selector);
+    await selectorDocRef.set(selector);
 
     await setSelectorClaim({ email: selectorEmail });
 }

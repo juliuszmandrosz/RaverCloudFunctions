@@ -1,4 +1,4 @@
-import {firestore} from "firebase-admin";
+import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 
 export interface TicketPayment {
@@ -6,7 +6,8 @@ export interface TicketPayment {
     paymentIntentId: string;
     transferId: string;
     eventId: string;
-    eventDateTime: Timestamp,
+    eventName: string;
+    eventDateTime: Timestamp;
     paymentDateTime: Timestamp;
     price: number;
     currency: string;
