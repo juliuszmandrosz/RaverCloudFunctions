@@ -143,3 +143,15 @@ exports.checkPartnerClaim = functions.https.onCall(async (data, context) => {
         context
     );
 });
+
+exports.checkIfAccountExists = functions.https.onCall(async (data, context) => {
+    return (
+        await import('./auth-functions/check-account/check-if-account-exists')
+    ).checkIfAccountExists(data, context);
+});
+
+exports.checkIfAccountNotExists = functions.https.onCall(async (data, context) => {
+    return (
+        await import('./auth-functions/check-account/check-if-account-not-exists')
+    ).checkIfAccountNotExists(data, context);
+});
