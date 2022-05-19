@@ -8,7 +8,7 @@ export async function getConnectedAccountData(partnerId: string) {
 
     if (!connectedAccountDoc.exists) {
         const message = 'Connected account with given id does not exists';
-        throw new functions.https.HttpsError('invalid-argument', message);
+        throw new functions.https.HttpsError('not-found', message);
     }
 
     return connectedAccountDoc.data() as StripeConnectedAccount;
