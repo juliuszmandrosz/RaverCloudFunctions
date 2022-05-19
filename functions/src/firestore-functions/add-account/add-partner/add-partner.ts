@@ -1,12 +1,17 @@
-import * as functions from "firebase-functions";
-import {throwUnauthenticatedError} from "../../../errors/throw-unauthenticated-error";
-import {firestoreDatabase} from "../../../modules/firebase-admin-module";
-import {partners, stripeConnectedAccounts} from "../../../constants/collections";
-import {setPartnerClaim} from "../../../auth-functions/set-claim/set-partner-claim";
-import {Partner} from "../../../models/partner";
-import {StripeConnectedAccount} from "../../../models/stripe-connected-account";
-import {AddPartnerRequest} from "./add-partner-request";
-
+import * as functions from 'firebase-functions';
+import { throwUnauthenticatedError } from '../../../errors/throw-unauthenticated-error';
+import { firestoreDatabase } from '../../../modules/firebase-admin-module';
+import { partners } from '../../../constants/collections';
+import { setPartnerClaim } from '../../../auth-functions/set-claim/set-partner-claim';
+import { Partner } from '../../../models/partner';
+import { StripeConnectedAccount } from '../../../models/stripe-connected-account';
+import { AddPartnerRequest } from './add-partner-request';
+import {
+    getPartnerAccessCodeDocRef,
+    tryGetPartnerAccessCodeData,
+} from '../../get-data/get-partner-access-code-data';
+import { getConnectedAccountDocRef } from '../../get-data/get-connected-account-data';
+import { getClubDocRef, tryGetClubData } from '../../get-data/get-club-data';
 
 export async function addPartner(
     data: AddPartnerRequest,
@@ -18,10 +23,10 @@ export async function addPartner(
 
     const partnerId = context.auth!.token.uid;
     const email = context.auth!.token.email!;
-    const connectedAccountId = data?.connectedAccountId;
+    const accessCode = data?.accessCode;
 
-    if (!connectedAccountId) {
-        const message = 'The function must be called with connected account id';
+    if (!accessCode) {
+        const message = 'The function must be called with access code';
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
@@ -33,13 +38,45 @@ export async function addPartner(
         throw new functions.https.HttpsError('already-exists', message);
     }
 
-    await setPartnerClaim({email});
+    await setPartnerClaim({ email });
 
-    await partnerDocRef.set({email} as Partner);
+    await usePartnerAccessCode(accessCode, partnerId);
 
-    await firestoreDatabase()
-        .collection(stripeConnectedAccounts).doc(partnerId).set({
-            connectedAccountId
-        } as StripeConnectedAccount);
+    await partnerDocRef.set({ email } as Partner);
 }
 
+async function usePartnerAccessCode(accessCode: string, partnerId: string) {
+    const accessCodeData = await tryGetPartnerAccessCodeData(accessCode);
+
+    await removeAccessCode(accessCode);
+
+    await addConnectedAccountToFirestore(partnerId, accessCodeData.connectedAccountId);
+
+    await addRegisteredClub(accessCodeData.clubId, partnerId);
+
+    await removeExistingClub(accessCodeData.clubId);
+
+    return accessCodeData;
+}
+
+async function addConnectedAccountToFirestore(partnerId: string, connectedAccountId: string) {
+    await getConnectedAccountDocRef(partnerId).set({
+        connectedAccountId: connectedAccountId,
+    } as StripeConnectedAccount);
+}
+
+async function addRegisteredClub(currentClubId: string, partnerId: string) {
+    let clubData = await tryGetClubData(currentClubId);
+    clubData.isRegistered = true;
+
+    await getClubDocRef(partnerId).set(clubData);
+}
+
+async function removeExistingClub(clubId: string) {
+    const clubDocRef = getClubDocRef(clubId);
+    await clubDocRef.delete();
+}
+
+async function removeAccessCode(accessCode: string) {
+    await getPartnerAccessCodeDocRef(accessCode).delete();
+}
