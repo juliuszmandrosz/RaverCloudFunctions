@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import { UseSelectorAccessCodeRequest } from './use-selector-access-code-request';
-import { getAccessCodeDocRef, tryGetAccessCodeData } from '../get-data/get-access-code-data';
+import { getSelectorAccessCodeDocRef, tryGetSelectorAccessCodeData } from '../get-data/get-selector-access-code-data';
 import { Selector } from '../../models/selector';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { partners, selectors } from '../../constants/collections';
@@ -22,7 +22,7 @@ export async function useSelectorAccessCode(
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-    const accessCodeData = await tryGetAccessCodeData(accessCode);
+    const accessCodeData = await tryGetSelectorAccessCodeData(accessCode);
 
     const selectorEmail = context.auth.token.email!;
     const selectorId = context.auth.uid;
@@ -37,5 +37,5 @@ export async function useSelectorAccessCode(
 }
 
 async function removeAccessCode(accessCode: string) {
-    await getAccessCodeDocRef(accessCode).delete();
+    await getSelectorAccessCodeDocRef(accessCode).delete();
 }

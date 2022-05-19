@@ -3,8 +3,8 @@ import { throwInvalidAccessCodeError } from '../../errors/throw-invalid-access-c
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { selectorsAccessCodes } from '../../constants/collections';
 
-export async function tryGetAccessCodeData(accessCode: string) {
-    const codeDoc = await getAccessCodeDocRef(accessCode).get();
+export async function tryGetSelectorAccessCodeData(accessCode: string) {
+    const codeDoc = await getSelectorAccessCodeDocRef(accessCode).get();
 
     if (!codeDoc.exists) {
         throwInvalidAccessCodeError();
@@ -16,6 +16,6 @@ export async function tryGetAccessCodeData(accessCode: string) {
     return result;
 }
 
-export function getAccessCodeDocRef(accessCode: string) {
+export function getSelectorAccessCodeDocRef(accessCode: string) {
     return firestoreDatabase().collection(selectorsAccessCodes).doc(accessCode);
 }
