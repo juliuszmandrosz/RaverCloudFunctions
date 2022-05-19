@@ -1,3 +1,3 @@
 export interface AddPartnerRequest {
-    connectedAccountId: string;
+    accessCode: string;
 }
