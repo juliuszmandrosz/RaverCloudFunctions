@@ -2,7 +2,7 @@ import * as functions from 'firebase-functions';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 import { CheckSelectorAccessCodeRequest } from './check-selector-access-code-request';
-import { tryGetAccessCodeData } from '../get-data/get-access-code-data';
+import { tryGetSelectorAccessCodeData } from '../get-data/get-selector-access-code-data';
 import { throwInvalidAccessCodeError } from '../../errors/throw-invalid-access-code-error';
 
 export async function checkSelectorAccessCode(
@@ -16,7 +16,7 @@ export async function checkSelectorAccessCode(
         throw new functions.https.HttpsError('invalid-argument', message);
     }
 
-    const accessCodeData = await tryGetAccessCodeData(accessCode);
+    const accessCodeData = await tryGetSelectorAccessCodeData(accessCode);
 
     if (Timestamp.now().toMillis() >= accessCodeData.expirationDateTime.toMillis()) {
         throwInvalidAccessCodeError();
