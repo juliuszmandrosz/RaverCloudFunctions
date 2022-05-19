@@ -162,3 +162,9 @@ exports.useSelectorAccessCode = functions.https.onCall(async (data, context) => 
         await import('./firestore-functions/use-selector-access-code/use-selector-access-code')
     ).useSelectorAccessCode(data, context);
 });
+
+exports.checkPartnerAccessCode = functions.https.onCall(async (data, context) => {
+    return (
+        await import('./firestore-functions/check-partner-access-code/check-partner-access-code')
+    ).checkPartnerAccessCode(data, context);
+});

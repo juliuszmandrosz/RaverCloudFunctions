@@ -1,6 +1,6 @@
 import {throwInvalidAccessCodeError} from '../../errors/throw-invalid-access-code-error';
 import {firestoreDatabase} from '../../modules/firebase-admin-module';
-import {selectorsAccessCodes} from '../../constants/collections';
+import {partnersAccessCodes} from '../../constants/collections';
 import {PartnerAccessCode} from "../../models/partner-access-code";
 
 export async function tryGetPartnerAccessCodeData(accessCode: string) {
@@ -17,5 +17,5 @@ export async function tryGetPartnerAccessCodeData(accessCode: string) {
 }
 
 export function getPartnerAccessCodeDocRef(accessCode: string) {
-    return firestoreDatabase().collection(selectorsAccessCodes).doc(accessCode);
+    return firestoreDatabase().collection(partnersAccessCodes).doc(accessCode);
 }
