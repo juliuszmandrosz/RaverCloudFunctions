@@ -134,11 +134,25 @@ exports.onPaymentIntentRequiresAction = functions.https.onRequest(async (request
     ).onPaymentIntentRequiresAction(request, response);
 });
 
-exports.cancelTicketReservation = functions.https.onRequest(async (request, response) => {
-    await (
-        await import('./firestore-functions/cancel-ticket-reservation/cancel-ticket-reservation')
-    ).cancelTicketReservation(request, response);
-});
+exports.cancelTicketReservationOnCloudTaskCallback = functions.https.onRequest(
+    async (request, response) => {
+        await (
+            await import(
+                './firestore-functions/cancel-ticket-reservation/cancel-ticket-reservation-on-cloud-task-callback'
+            )
+        ).cancelTicketReservationOnCloudTaskCallback(request, response);
+    }
+);
+
+exports.cancelTicketReservationOnClosingPaymentSheet = functions.https.onCall(
+    async (data, context) => {
+        await (
+            await import(
+                './firestore-functions/cancel-ticket-reservation/cancel-ticket-reservation-on-closing-payment-sheet'
+            )
+        ).cancelTicketReservationOnClosingPaymentSheet(data, context);
+    }
+);
 
 exports.payOutToPartnerOnCloudTaskCallback = functions.https.onRequest(
     async (request, response) => {

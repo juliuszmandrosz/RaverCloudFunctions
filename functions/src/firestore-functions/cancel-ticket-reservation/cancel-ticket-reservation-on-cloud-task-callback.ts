@@ -8,7 +8,7 @@ import { updateEventOnCancelReservation } from '../update-event/update-event-on-
 import { stripe } from '../../modules/stripe-module';
 import { TicketPaymentSession } from '../../models/ticket-payment-session';
 
-export async function cancelTicketReservation(
+export async function cancelTicketReservationOnCloudTaskCallback(
     request: functions.https.Request,
     response: functions.Response
 ): Promise<void> {
@@ -26,7 +26,11 @@ export async function cancelTicketReservation(
 
     await stripe.paymentIntents.cancel(session.id);
 
-    const event = await updateEventOnCancelReservation(session.eventId, session.isVip, response);
+    const event = await updateEventOnCancelReservation({
+        eventId: session.eventId,
+        isVip: session.isVip,
+        response,
+    });
 
     if (!event) return;
 
