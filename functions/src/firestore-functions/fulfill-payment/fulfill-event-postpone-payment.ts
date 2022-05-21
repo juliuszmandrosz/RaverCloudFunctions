@@ -55,6 +55,7 @@ export async function fulfillEventPostponePayment(
     await updateTicketsOnEventPostpone({
         eventId: event.id,
         newEventStartDateTime: postponeEventPaymentSession.newEventStartDateTime,
+        newEventEndDateTime: postponeEventPaymentSession.newEventEndDateTime,
     });
 
     await extendPayoutTaskOnFulfillEventPostponePayment({
