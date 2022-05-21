@@ -49,9 +49,9 @@ export async function returnTicket(
         throw new functions.https.HttpsError('permission-denied', message);
     }
 
-    const eventDateTime = moment(ticket.eventDateTime.toMillis());
+    const eventStartDateTime = moment(ticket.eventStartDateTime.toMillis());
 
-    if (eventDateTime.isBefore(moment().add(1, 'day'))) {
+    if (eventStartDateTime.isBefore(moment().add(1, 'day'))) {
         const message = 'Time to return ticket has expired';
         const details: FunctionsErrorDetails = 'return-time-expired';
         throw new functions.https.HttpsError('deadline-exceeded', message, details);

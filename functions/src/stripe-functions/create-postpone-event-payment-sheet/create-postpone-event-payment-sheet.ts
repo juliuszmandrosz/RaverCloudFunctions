@@ -84,6 +84,7 @@ export async function createPostponeEventPaymentSheet(
             await updateTicketsOnEventPostpone({
                 eventId: event.id,
                 newEventStartDateTime: Timestamp.fromMillis(newEventStartTimestamp),
+                newEventEndDateTime: Timestamp.fromMillis(newEventEndTimestamp),
             });
 
             await extendPayoutTaskInstantlyOnEventPostpone({
