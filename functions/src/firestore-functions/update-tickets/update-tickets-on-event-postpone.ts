@@ -8,16 +8,19 @@ import Timestamp = firestore.Timestamp;
 interface UpdateTicketsOnEventPostponeParams {
     eventId: string;
     newEventStartDateTime: Timestamp;
+    newEventEndDateTime: Timestamp;
 }
 
 export async function updateTicketsOnEventPostpone({
     eventId,
     newEventStartDateTime,
+    newEventEndDateTime,
 }: UpdateTicketsOnEventPostponeParams) {
     const ticketSessions = await getTicketPaymentSessionsFromEvent(eventId);
     const ticketRefs = getTicketRefsFromTicketSessions(ticketSessions);
     await updateDocRefsBatch(ticketRefs, {
         isReturnable: true,
-        eventDateTime: newEventStartDateTime,
+        eventStartDateTime: newEventStartDateTime,
+        eventEndDateTime: newEventEndDateTime,
     } as Ticket);
 }

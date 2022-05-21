@@ -8,7 +8,8 @@ export interface Ticket {
     ticketPaymentId: string;
     clubName: string;
     eventName: string;
-    eventDateTime: Timestamp;
+    eventStartDateTime: Timestamp;
+    eventEndDateTime: Timestamp;
     price: number;
     currency: string;
     isVip: boolean;
