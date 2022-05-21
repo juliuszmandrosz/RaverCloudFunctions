@@ -30,7 +30,7 @@ export async function addUser(data: any, context: functions.https.CallableContex
         email,
         favoriteEventIds: [],
         favoriteClubIds: [],
-        attendance: new Map<string, number>(),
+        attendance: {},
         username: '',
     } as User);
 }
