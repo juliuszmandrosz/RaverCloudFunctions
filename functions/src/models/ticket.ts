@@ -17,5 +17,6 @@ export interface Ticket {
     isEventCanceled: boolean;
     isReturnable: boolean;
     isReturned: boolean;
+    poolNumber: number;
     vipPaymentId?: string;
 }

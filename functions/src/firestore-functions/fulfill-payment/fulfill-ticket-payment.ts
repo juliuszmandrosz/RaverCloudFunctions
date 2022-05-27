@@ -85,6 +85,7 @@ export async function fulfillTicketPayment(
             isEventCanceled: false,
             isReturnable: false,
             isReturned: false,
+            poolNumber: ticketPaymentSession.poolNumber,
         } as Ticket);
 
     await updateEventCostsOnUserPayment({

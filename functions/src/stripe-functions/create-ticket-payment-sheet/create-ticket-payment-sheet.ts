@@ -14,6 +14,8 @@ import { tryGetEventData } from '../../firestore-functions/get-data/get-event-da
 import { throwEventCanceledError } from '../../errors/throw-event-canceled-error';
 import { throwEventPostponedError } from '../../errors/throw-event-postponed-errors';
 import { getVipPrice } from '../../firestore-functions/get-vip-price/get-vip-price';
+import { tryGetEventTicketsData } from '../../firestore-functions/get-data/get-event-tickets-data';
+import { getCurrentOrLastPool } from '../../utils/get-current-or-last-pool';
 
 export async function createTicketPaymentSheet(
     data: CreateTicketPaymentSheetRequest,
@@ -39,6 +41,10 @@ export async function createTicketPaymentSheet(
     if (event.isBeingPostponed) {
         throwEventPostponedError();
     }
+
+    const eventTickets = await tryGetEventTicketsData(event.clubId, event.id);
+
+    const currentPool = getCurrentOrLastPool(eventTickets.ticketPools);
 
     const vipPrice = await getVipPrice({ clubId: event.clubId, eventId });
 
@@ -83,6 +89,7 @@ export async function createTicketPaymentSheet(
             amount,
             status: 'requires_payment_method',
             isRefunded: false,
+            poolNumber: currentPool.poolNumber,
         } as TicketPaymentSession);
 
     return paymentSheet;
