@@ -15,6 +15,7 @@ export interface TicketPaymentSession {
     cancelTicketReservationTaskId: string;
     isRefunded: boolean;
     poolNumber: number;
+    promotionCodeAmountOff: number;
     promotionCode?: string;
     transferId?: string;
     paymentDateTime?: Timestamp;

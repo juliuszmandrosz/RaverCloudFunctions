@@ -9,7 +9,7 @@ import { getCurrentOrLastPool } from '../../utils/get-current-or-last-pool';
 
 interface UpdateTicketSalesParams {
     tickets: EventTickets;
-    eventPrice: number;
+    ticketPrice: number;
     vipPrice: number;
     isVip: boolean;
 }
@@ -24,7 +24,7 @@ export async function updateEventTicketsOnTicketPayment(
         const tickets = await tryGetEventTicketsData(event.clubId, event.id, transaction);
         const vipPrice = getCurrentOrLastPool(tickets.ticketPools).vipPrice;
 
-        await updateTicketSales({ tickets, isVip, vipPrice, eventPrice: event.price });
+        await updateTicketSales({ tickets, isVip, vipPrice, ticketPrice: event.price });
 
         await updateTicketPools(tickets);
 
@@ -36,7 +36,7 @@ export async function updateEventTicketsOnTicketPayment(
 
 async function updateTicketSales({
     tickets,
-    eventPrice,
+    ticketPrice,
     vipPrice,
     isVip,
 }: UpdateTicketSalesParams) {
@@ -48,7 +48,7 @@ async function updateTicketSales({
         ticketSales.vipsSold++;
     }
 
-    const totalRevenue = await getTotalRevenue({ isVip, vipPrice, eventPrice });
+    const totalRevenue = await getTotalRevenue({ isVip, vipPrice, ticketPrice });
 
     ticketSales.totalRevenue += totalRevenue;
     ticketSales.clubIncome += await getClubIncome(totalRevenue);

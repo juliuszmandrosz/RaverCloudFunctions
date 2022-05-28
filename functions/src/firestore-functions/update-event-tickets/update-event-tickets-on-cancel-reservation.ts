@@ -13,6 +13,7 @@ import { revertSingleTicketFromPools } from '../update-ticket-pools/revert-singl
 interface UpdateEventTicketsOnCancelReservationParams {
     event: Event;
     isVip: boolean;
+    canceledAmount: number;
     response?: functions.Response;
 }
 
@@ -20,6 +21,7 @@ interface UpdateEventTicketsOnCancelReservationParams {
 export async function updateEventTicketsOnCancelReservation({
     event,
     isVip,
+    canceledAmount,
     response,
 }: UpdateEventTicketsOnCancelReservationParams): Promise<EventTickets | undefined> {
     return firestoreDatabase().runTransaction(async (transaction) => {
@@ -31,9 +33,13 @@ export async function updateEventTicketsOnCancelReservation({
 
         if (!tickets) return;
 
-        await revertSingleTicketFromPools(tickets);
+        await reduceTicketSalesBySingleTransaction({
+            tickets: tickets,
+            isVip,
+            amountToReduce: canceledAmount,
+        });
 
-        await reduceTicketSalesBySingleTransaction(tickets, event.price, isVip);
+        await revertSingleTicketFromPools(tickets);
 
         transaction.update(eventTicketsDocRef, tickets);
 

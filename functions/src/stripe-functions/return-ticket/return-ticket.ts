@@ -85,10 +85,19 @@ export async function returnTicket(
 
     await getTicketDocRef(userId, ticketId).update({ isReturned: true } as Ticket);
 
+    let returnedAmountWithoutPromoCode =
+        ticketPayment.amount + ticketPayment.promotionCodeAmountOff;
+
+    if (vipPayment) {
+        returnedAmountWithoutPromoCode += vipPayment.amount;
+        returnedAmountWithoutPromoCode += vipPayment.promotionCodeAmountOff;
+    }
+
     await updateEventOnTicketReturn({
         eventId: ticket.eventId,
         isVip: ticket.isVip,
         vipPaymentSessionId: vipPayment?.id,
         ticketPaymentSessionId: ticketPayment.id,
+        returnedAmountWithoutPromoCode,
     });
 }

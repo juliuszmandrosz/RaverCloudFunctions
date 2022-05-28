@@ -5,18 +5,29 @@ import { getEventTicketsDocRef, tryGetEventTicketsData } from '../get-data/get-e
 import { reduceTicketSalesBySingleTransaction } from '../update-ticket-sales/reduce-ticket-sales-by-single-transaction';
 import { revertSingleTicketFromPools } from '../update-ticket-pools/revert-single-ticket-from-pools';
 
+interface UpdateEventTicketsOnTicketReturnParams {
+    event: Event;
+    isVip: boolean;
+    returnedAmountWithoutPromoCode: number;
+}
+
 /// Return event tickets after update
-export async function updateEventTicketsOnTicketReturn(
-    event: Event,
-    isVip: boolean
-): Promise<EventTickets> {
+export async function updateEventTicketsOnTicketReturn({
+    event,
+    isVip,
+    returnedAmountWithoutPromoCode,
+}: UpdateEventTicketsOnTicketReturnParams): Promise<EventTickets> {
     return firestoreDatabase().runTransaction(async (transaction) => {
         const eventTicketsDocRef = getEventTicketsDocRef(event.clubId, event.id);
         const tickets = await tryGetEventTicketsData(event.clubId, event.id, transaction);
 
-        await revertSingleTicketFromPools(tickets);
+        await reduceTicketSalesBySingleTransaction({
+            tickets,
+            amountToReduce: returnedAmountWithoutPromoCode,
+            isVip,
+        });
 
-        await reduceTicketSalesBySingleTransaction(tickets, event.price, isVip);
+        await revertSingleTicketFromPools(tickets);
 
         transaction.update(eventTicketsDocRef, tickets);
 

@@ -1,9 +1,9 @@
 interface GetTotalRevenueParams {
-    eventPrice: number;
+    ticketPrice: number;
     vipPrice: number;
     isVip: boolean;
 }
 
-export async function getTotalRevenue({ eventPrice, vipPrice, isVip }: GetTotalRevenueParams) {
-    return eventPrice + (isVip ? vipPrice : 0);
+export async function getTotalRevenue({ ticketPrice, vipPrice, isVip }: GetTotalRevenueParams) {
+    return ticketPrice + (isVip ? vipPrice : 0);
 }
