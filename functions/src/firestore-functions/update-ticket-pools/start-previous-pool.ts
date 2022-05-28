@@ -1,5 +1,5 @@
-import {TicketPool} from '../../models/ticket-pool';
-import {restorePool} from './restore-pool';
+import { TicketPool } from '../../models/ticket-pool';
+import { restorePool } from './restore-pool';
 
 export function startPreviousPool(currentPool: TicketPool, ticketPools: TicketPool[]) {
     if (currentPool.poolNumber === 1) return;
