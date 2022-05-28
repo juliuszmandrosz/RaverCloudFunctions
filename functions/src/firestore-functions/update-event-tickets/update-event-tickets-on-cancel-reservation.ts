@@ -31,9 +31,9 @@ export async function updateEventTicketsOnCancelReservation({
 
         if (!tickets) return;
 
-        await reduceTicketSalesBySingleTransaction(tickets, event.price, isVip);
-
         await revertSingleTicketFromPools(tickets);
+
+        await reduceTicketSalesBySingleTransaction(tickets, event.price, isVip);
 
         transaction.update(eventTicketsDocRef, tickets);
 
