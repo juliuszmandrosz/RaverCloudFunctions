@@ -17,5 +17,6 @@ export interface Ticket {
     isEventCanceled: boolean;
     isReturnable: boolean;
     isReturned: boolean;
+    reviewId?: string;
     vipPaymentId?: string;
 }
