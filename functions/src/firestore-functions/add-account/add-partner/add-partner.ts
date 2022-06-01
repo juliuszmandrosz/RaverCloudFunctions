@@ -12,6 +12,7 @@ import {
 } from '../../get-data/get-partner-access-code-data';
 import { getConnectedAccountDocRef } from '../../get-data/get-connected-account-data';
 import { getClubDocRef, tryGetClubData } from '../../get-data/get-club-data';
+import { addStripeCustomer } from '../../../stripe-functions/add-stripe-customer/add-stripe-customer';
 
 export async function addPartner(
     data: AddPartnerRequest,
@@ -43,6 +44,8 @@ export async function addPartner(
     await usePartnerAccessCode(accessCode, partnerId);
 
     await partnerDocRef.set({ email } as Partner);
+
+    await addStripeCustomer({ userId: partnerId, userEmail: email });
 }
 
 async function usePartnerAccessCode(accessCode: string, partnerId: string) {
