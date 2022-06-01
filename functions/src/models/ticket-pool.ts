@@ -4,7 +4,8 @@ export interface TicketPool {
     isSoldOut: boolean;
     poolNumber: number;
     ticketPrice: number;
-    vipPrice: number;
     ticketQuantity: number;
     ticketsSold: number;
+    isVipEnabled: boolean;
+    vipPrice?: number;
 }
