@@ -2,11 +2,11 @@ import * as functions from 'firebase-functions';
 import { checkPartnerClaim } from '../../auth-functions/check-claim/check-partner-claim';
 import * as randomstring from 'randomstring';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
-import { selectorsAccessCodes } from '../../constants/collections';
 import { SelectorAccessCode } from '../../models/selector-access-code';
 import * as moment from 'moment';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
+import { selectorsAccessCodes } from '../../constants/collections';
 
 export async function generateAccessCodeForSelector(
     data: any,

@@ -30,6 +30,7 @@ export async function cancelTicketReservationOnCloudTaskCallback(
         eventId: session.eventId,
         isVip: session.isVip,
         response,
+        canceledAmount: session.amount + session.promotionCodeAmountOff,
     });
 
     if (!event) return;

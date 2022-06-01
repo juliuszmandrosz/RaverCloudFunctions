@@ -9,7 +9,6 @@ import {
     selectors,
     stripeConnectedAccounts,
     stripeCustomers,
-    ticketPayments,
     tickets,
     users,
 } from '../constants/collections';
