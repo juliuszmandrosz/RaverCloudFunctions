@@ -52,6 +52,8 @@ export async function createTicketPaymentSheet(
         promotionCode,
     });
 
+    const promotionCodeAmountOff = event.price + (isVip ? vipPrice : 0) - amount;
+
     const transferGroupId = v1();
 
     const paymentSheet = await createPaymentSheetForUser(
@@ -78,6 +80,7 @@ export async function createTicketPaymentSheet(
             cancelTicketReservationTaskId,
             eventId: event.id,
             userId,
+            promotionCodeAmountOff,
             promotionCode,
             isVip,
             amount,

@@ -11,6 +11,7 @@ import { updateEventTicketsOnCancelReservation } from '../update-event-tickets/u
 interface UpdateEventOnCancelReservationParams {
     eventId: string;
     isVip: boolean;
+    canceledAmount: number;
     response?: functions.Response;
 }
 
@@ -18,6 +19,7 @@ interface UpdateEventOnCancelReservationParams {
 export async function updateEventOnCancelReservation({
     eventId,
     isVip,
+    canceledAmount,
     response,
 }: UpdateEventOnCancelReservationParams): Promise<Event | undefined> {
     return firestoreDatabase().runTransaction(async (transaction) => {
@@ -33,6 +35,7 @@ export async function updateEventOnCancelReservation({
             event,
             isVip,
             response,
+            canceledAmount,
         });
 
         if (!eventTickets) return;

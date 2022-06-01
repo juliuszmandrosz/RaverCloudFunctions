@@ -4,7 +4,6 @@ import { CreateVipPaymentSheetRequest } from './create-vip-payment-sheet-request
 import { createPaymentSheetForUser } from '../create-payment-sheet-for-user/create-payment-sheet-for-user';
 import { CreatePaymentSheetForUserResponse } from '../create-payment-sheet-for-user/create-payment-sheet-for-user-response';
 import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
-import { Ticket } from '../../models/ticket';
 import { FunctionsErrorDetails } from '../../errors/functions-error-details';
 import { tryGetTicketData } from '../../firestore-functions/get-data/get-ticket-data';
 import { v1 } from 'uuid';
@@ -51,7 +50,12 @@ export async function createVipPaymentSheet(
         throwEventPostponedError();
     }
 
-    const amount = await getAmount(ticket, context, promotionCode);
+    const vipPrice = await getVipPrice({
+        eventId: ticket.eventId,
+        clubId: ticket.clubId,
+    });
+
+    const amount = await getAmount(vipPrice, context, promotionCode);
 
     const transferGroupId = v1();
 
@@ -66,6 +70,8 @@ export async function createVipPaymentSheet(
         context
     );
 
+    const promotionCodeAmountOff = vipPrice - amount;
+
     await firestoreDatabase()
         .collection(vipPaymentSessions)
         .doc(paymentSheet.paymentIntentId)
@@ -75,6 +81,7 @@ export async function createVipPaymentSheet(
             ticketId,
             promotionCode,
             amount,
+            promotionCodeAmountOff,
             status: 'requires_payment_method',
             eventId: ticket.eventId,
             isRefunded: false,
@@ -84,14 +91,11 @@ export async function createVipPaymentSheet(
 }
 
 async function getAmount(
-    ticket: Ticket,
+    vipPrice: number,
     context: functions.https.CallableContext,
     promotionCode?: string
 ) {
-    let amount = await getVipPrice({
-        eventId: ticket.eventId,
-        clubId: ticket.clubId,
-    });
+    let amount = vipPrice;
 
     if (promotionCode) {
         const result = await getPromotionCode(

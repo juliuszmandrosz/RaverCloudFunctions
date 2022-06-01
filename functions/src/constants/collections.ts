@@ -18,3 +18,5 @@ export const cancelEventPaymentSessions = 'cancelEventPaymentSessions';
 export const postponeEventPaymentSessions = 'postponeEventPaymentSessions';
 export const payouts = 'payouts';
 export const eventsPayoutTasks = 'eventsPayoutTasks';
+export const selectorsAccessCodes = 'selectorsAccessCodes';
+export const partnersAccessCodes = 'partnersAccessCodes';
