@@ -1,11 +1,13 @@
-import * as functions from 'firebase-functions'
-import {Review} from "../models/review";
-import {firestoreDatabase} from "../modules/firebase-admin-module";
-import {clubs} from "../constants/collections";
-import {Club} from "../models/club";
+import * as functions from 'firebase-functions';
+import { Review } from '../models/review';
+import { firestoreDatabase } from '../modules/firebase-admin-module';
+import { clubs } from '../constants/collections';
+import { Club } from '../models/club';
 
-export async function onReviewAdded(snapshot: functions.firestore.DocumentSnapshot,
-                                    context: functions.EventContext) {
+export async function onReviewAdded(
+    snapshot: functions.firestore.DocumentSnapshot,
+    context: functions.EventContext
+) {
     const review = snapshot.data()! as Review;
 
     const clubId = context.params.clubId;
@@ -19,15 +21,13 @@ export async function onReviewAdded(snapshot: functions.firestore.DocumentSnapsh
 
         const newReviewCount = club.reviewCount + 1;
 
-        const newAvg = ((club.reviewAvg * club.reviewCount) +
-                review.reviewValue) /
-            (newReviewCount);
+        const newAvg = (club.reviewAvg * club.reviewCount + review.userRate) / newReviewCount;
 
-        transaction.update(
-            clubRef, {
-                reviewAvg: newAvg,
-                reviewCount: newReviewCount
-            } as Club
-        );
-    })
+        const roundedAvg = parseFloat(newAvg.toFixed(1));
+
+        transaction.update(clubRef, {
+            reviewAvg: roundedAvg,
+            reviewCount: newReviewCount,
+        } as Club);
+    });
 }

@@ -1,7 +1,15 @@
 import * as functions from 'firebase-functions';
-import { newClub, newEvent } from './constants/collections';
+import { newClub, newEvent, newReview } from './constants/collections';
 
 export const env = functions.config();
+
+exports.onReviewAdded = functions.firestore
+    .document(newReview)
+    .onCreate(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/on-review-added')
+        ).onReviewAdded(snapshot, context);
+    });
 
 exports.onEventAdded = functions.firestore
     .document(newEvent)

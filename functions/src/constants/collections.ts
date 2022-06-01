@@ -20,3 +20,4 @@ export const payouts = 'payouts';
 export const eventsPayoutTasks = 'eventsPayoutTasks';
 export const selectorsAccessCodes = 'selectorsAccessCodes';
 export const partnersAccessCodes = 'partnersAccessCodes';
+export const newReview = 'clubs/{clubId}/reviews/{reviewId}';
