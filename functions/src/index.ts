@@ -209,3 +209,41 @@ exports.cancelEventPostponeOnClosingPaymentSheet = functions.https.onCall(async 
         )
     ).cancelEventPostponeOnClosingPaymentSheet(data, context);
 });
+
+exports.checkIfAccountExists = functions.https.onCall(async (data, context) => {
+    return (
+        await import('./auth-functions/check-account/check-if-account-exists')
+    ).checkIfAccountExists(data, context);
+});
+
+exports.checkIfAccountNotExists = functions.https.onCall(async (data, context) => {
+    return (
+        await import('./auth-functions/check-account/check-if-account-not-exists')
+    ).checkIfAccountNotExists(data, context);
+});
+
+exports.checkPartnerAccessCode = functions.https.onCall(async (data, context) => {
+    return (
+        await import('./firestore-functions/check-partner-access-code/check-partner-access-code')
+    ).checkPartnerAccessCode(data, context);
+});
+
+exports.checkSelectorAccessCode = functions.https.onCall(async (data, context) => {
+    return (
+        await import('./firestore-functions/check-selector-access-code/check-selector-access-code')
+    ).checkSelectorAccessCode(data, context);
+});
+
+exports.generateAccessCodeForSelector = functions.https.onCall(async (data, context) => {
+    return (
+        await import(
+            './firestore-functions/generate-access-code-for-selector/generate-access-code-for-selector'
+        )
+    ).generateAccessCodeForSelector(data, context);
+});
+
+exports.useSelectorAccessCode = functions.https.onCall(async (data, context) => {
+    return (
+        await import('./firestore-functions/use-selector-access-code/use-selector-access-code')
+    ).useSelectorAccessCode(data, context);
+});
