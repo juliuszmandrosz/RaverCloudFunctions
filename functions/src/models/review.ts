@@ -1,11 +1,11 @@
-import {firestore} from "firebase-admin";
+import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 
-export interface Review{
+export interface Review {
     id: string;
     dateAdded: Timestamp;
-    reviewContent: string;
+    userOpinion: string;
     userId: string;
     username: string;
-    reviewValue: number;
+    userRate: number;
 }
