@@ -41,6 +41,7 @@ async function updateTicketSales({
     isVip,
 }: UpdateTicketSalesParams) {
     const ticketSales = tickets.ticketSales;
+    const eventFee = ticketSales.eventFee;
 
     ticketSales.ticketsSold++;
 
@@ -51,7 +52,7 @@ async function updateTicketSales({
     const totalRevenue = await getTotalRevenue({ isVip, vipPrice, ticketPrice });
 
     ticketSales.totalRevenue += totalRevenue;
-    ticketSales.clubIncome += await getClubIncome(totalRevenue);
+    ticketSales.clubIncome += await getClubIncome(totalRevenue, eventFee);
 }
 
 async function updateTicketPools(tickets: EventTickets) {

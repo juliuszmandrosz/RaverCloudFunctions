@@ -1,19 +1,19 @@
 interface GetVipPaymentSheetAmountParams {
     vipPrice: number;
-    userFeeAmount: number;
+    serviceFeeAmount: number;
     promotionCodeAmountOff: number;
 }
 
 export async function getVipPaymentSheetAmount({
     vipPrice,
-    userFeeAmount,
+    serviceFeeAmount,
     promotionCodeAmountOff,
 }: GetVipPaymentSheetAmountParams) {
     let amount = 0;
 
     amount += vipPrice;
 
-    amount += userFeeAmount;
+    amount += serviceFeeAmount;
 
     amount -= promotionCodeAmountOff;
 

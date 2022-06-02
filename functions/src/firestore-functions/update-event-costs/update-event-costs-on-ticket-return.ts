@@ -21,13 +21,13 @@ export async function updateEventCostsOnTicketReturn(
             params.ticketPaymentSessionId
         );
 
-        const ticketFee = ticketPaymentSession.userFeeAmount;
+        const ticketFee = ticketPaymentSession.serviceFeeAmount;
 
         let vipFee = 0;
 
         if (params.vipPaymentSessionId) {
             const vipPaymentSession = await tryGetVipPaymentSession(params.vipPaymentSessionId);
-            vipFee = vipPaymentSession.userFeeAmount;
+            vipFee = vipPaymentSession.serviceFeeAmount;
         }
 
         eventCosts.eventPostponeBalance -= ticketFee;

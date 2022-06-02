@@ -1,8 +1,8 @@
 import { getParameterFromRemoteConfig } from '../remote-config-utils';
-import { userFeeAmount } from '../../constants/remote-config-params';
+import { serviceFee } from '../../constants/remote-config-params';
 
-export async function getUserFee(price: number, currency: string) {
-    const fee = await getParameterFromRemoteConfig(userFeeAmount);
+export async function getServiceFeeAmount(price: number, currency: string) {
+    const fee = await getParameterFromRemoteConfig(serviceFee);
     const minFeeAmount = getMinimalFeeAmount(currency);
     return minFeeAmount + price * parseFloat(fee);
 }

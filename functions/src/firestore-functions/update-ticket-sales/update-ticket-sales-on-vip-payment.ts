@@ -35,8 +35,9 @@ export async function updateTicketSalesOnVipPayment(
 
 async function updateTicketSales(tickets: EventTickets, vipPrice: number) {
     const ticketSales = tickets.ticketSales;
+    const eventFee = tickets.ticketSales.eventFee;
 
     ticketSales.vipsSold++;
     ticketSales.totalRevenue += vipPrice;
-    ticketSales.clubIncome += await getClubIncome(vipPrice);
+    ticketSales.clubIncome += await getClubIncome(vipPrice, eventFee);
 }

@@ -13,7 +13,7 @@ export interface TicketPaymentSession {
     cancelTicketReservationTaskId: string;
     isRefunded: boolean;
     clubIncome: number;
-    userFeeAmount: number;
+    serviceFeeAmount: number;
     promotionCodeAmountOff: number;
     promotionCode?: string;
     paymentDateTime?: Timestamp;
