@@ -7,6 +7,7 @@ import * as moment from 'moment';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 import { selectorsAccessCodes } from '../../constants/collections';
+import { tryGetPartnerData } from '../get-data/get-partner-data';
 
 export async function generateAccessCodeForSelector(
     data: any,
@@ -21,6 +22,8 @@ export async function generateAccessCodeForSelector(
 
     const partnerId = context.auth.uid;
 
+    const partner = await tryGetPartnerData(partnerId);
+
     const code = await generateCode();
 
     // TODO - add cloud task with delete after merge https://github.com/juliuszmandrosz/RaverCloudFunctions/pull/12
@@ -29,7 +32,7 @@ export async function generateAccessCodeForSelector(
     await firestoreDatabase()
         .collection(selectorsAccessCodes)
         .doc(code)
-        .set({ partnerId, expirationDateTime } as SelectorAccessCode);
+        .set({ clubId: partner.clubId, expirationDateTime } as SelectorAccessCode);
 
     return code;
 }

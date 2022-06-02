@@ -11,5 +11,4 @@ export interface Club {
     phoneNumber: string;
     location: { [key: string]: number };
     socialMedia: { [key: string]: string };
-    isRegistered: boolean;
 }

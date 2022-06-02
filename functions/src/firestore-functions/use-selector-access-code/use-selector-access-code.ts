@@ -1,9 +1,12 @@
 import * as functions from 'firebase-functions';
 import { UseSelectorAccessCodeRequest } from './use-selector-access-code-request';
-import { getSelectorAccessCodeDocRef, tryGetSelectorAccessCodeData } from '../get-data/get-selector-access-code-data';
+import {
+    getSelectorAccessCodeDocRef,
+    tryGetSelectorAccessCodeData,
+} from '../get-data/get-selector-access-code-data';
 import { Selector } from '../../models/selector';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
-import { partners, selectors } from '../../constants/collections';
+import { clubs, selectors } from '../../constants/collections';
 import { SelectorAccessCode } from '../../models/selector-access-code';
 
 export async function useSelectorAccessCode(
@@ -28,8 +31,8 @@ export async function useSelectorAccessCode(
     const selectorId = context.auth.uid;
     const selector: Selector = { email: selectorEmail };
 
-    const partnerDocRef = firestoreDatabase().collection(partners).doc(accessCodeData.partnerId);
-    await partnerDocRef.collection(selectors).doc(selectorId).set(selector);
+    const clubDocRef = firestoreDatabase().collection(clubs).doc(accessCodeData.clubId);
+    await clubDocRef.collection(selectors).doc(selectorId).set(selector);
 
     await removeAccessCode(accessCode);
 

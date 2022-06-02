@@ -3,7 +3,7 @@ import { firestoreDatabase } from '../modules/firebase-admin-module';
 import { stripe } from '../modules/stripe-module';
 import { StripeCustomer } from '../models/stripe-customer';
 import {
-    partners,
+    clubs,
     promotionCodes,
     rewards,
     selectors,
@@ -13,6 +13,7 @@ import {
 } from '../constants/collections';
 import { Selector } from '../models/selector';
 import { deleteQueryBatch } from '../utils/delete-query-batch';
+import { getPartnerDocRef } from '../firestore-functions/get-data/get-partner-data';
 
 export async function onAccountDeleted(
     event: functions.auth.UserRecord,
@@ -46,22 +47,10 @@ async function removeUser(userId: string) {
 }
 
 async function removePartner(partnerId: string) {
-    const partnerRef = firestoreDatabase().collection(partners).doc(partnerId);
+    const partnerRef = getPartnerDocRef(partnerId);
     const partnerDoc = await partnerRef.get();
 
     if (!partnerDoc.exists) return;
-
-    const partnerSelectorsQuery = partnerRef.collection(selectors).limit(500);
-
-    // TODO - change
-    const selectorsQuery = firestoreDatabase()
-        .collection(selectors)
-        .where('partnerId', '==', partnerDoc.id)
-        .limit(500);
-
-    await deleteQueryBatch(partnerSelectorsQuery);
-
-    await deleteQueryBatch(selectorsQuery);
 
     await partnerRef.delete();
 }
@@ -85,12 +74,13 @@ async function removeSelector(selectorId: string) {
     if (!selectorDoc.exists) return;
 
     const clubId = (selectorDoc.data() as Selector).clubId;
-    const partnerSelectorRef = firestoreDatabase()
-        .collection(partners)
+
+    const clubSelectorRef = firestoreDatabase()
+        .collection(clubs)
         .doc(clubId!)
         .collection(selectors)
         .doc(selectorId);
 
     await selectorRef.delete();
-    await partnerSelectorRef.delete();
+    await clubSelectorRef.delete();
 }
