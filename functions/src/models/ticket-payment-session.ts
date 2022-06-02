@@ -5,15 +5,15 @@ import Timestamp = firestore.Timestamp;
 export interface TicketPaymentSession {
     /// Payment intent id
     id: string;
-    transferGroupId: string;
     userId: string;
     eventId: string;
     ticketId: string;
-    amount: number;
     status: Stripe.PaymentIntent.Status;
     isVip: boolean;
     cancelTicketReservationTaskId: string;
     isRefunded: boolean;
+    clubIncome: number;
+    userFeeAmount: number;
     promotionCodeAmountOff: number;
     promotionCode?: string;
     paymentDateTime?: Timestamp;

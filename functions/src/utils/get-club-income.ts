@@ -1,6 +1,6 @@
-import { getFee } from './stripe-utils/get-fee';
+import { getClubFee } from './stripe-utils/get-club-fee';
 
 export async function getClubIncome(amount: number) {
-    const fee = await getFee(amount);
+    const fee = await getClubFee(amount);
     return amount - fee;
 }

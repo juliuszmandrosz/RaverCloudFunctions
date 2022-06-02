@@ -1,35 +1,21 @@
-import * as functions from 'firebase-functions';
-import { getPromotionCode } from '../../firestore-functions/get-promotion-code/get-promotion-code';
-
 interface GetTicketPaymentSheetAmountParams {
-    eventPrice: number;
-    vipPrice: number;
-    isVip: boolean;
-    context: functions.https.CallableContext;
-    promotionCode?: string;
+    clubIncome: number;
+    userFeeAmount: number;
+    promotionCodeAmountOff: number;
 }
 
-export async function getTicketPaymentSheetAmount({
-    eventPrice,
-    vipPrice,
-    isVip,
-    context,
-    promotionCode,
-}: GetTicketPaymentSheetAmountParams) {
-    if (promotionCode) {
-        const result = await getPromotionCode(
-            {
-                promotionCode: promotionCode,
-            },
-            context
-        );
-        // TODO - add currency support for codes
-        eventPrice -= result.amountOff;
-    }
+export function getTicketPaymentSheetAmount({
+    clubIncome,
+    userFeeAmount,
+    promotionCodeAmountOff,
+}: GetTicketPaymentSheetAmountParams): number {
+    let amount = 0;
 
-    if (isVip) {
-        eventPrice += vipPrice;
-    }
+    amount += clubIncome;
 
-    return eventPrice;
+    amount += userFeeAmount;
+
+    amount -= promotionCodeAmountOff;
+
+    return amount;
 }

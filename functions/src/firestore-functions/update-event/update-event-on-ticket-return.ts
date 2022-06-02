@@ -8,7 +8,7 @@ interface UpdateEventOnTicketReturnParams {
     eventId: string;
     ticketPaymentSessionId: string;
     isVip: boolean;
-    returnedAmountWithoutPromoCode: number;
+    returnedClubIncome: number;
     vipPaymentSessionId?: string;
 }
 
@@ -17,7 +17,7 @@ export async function updateEventOnTicketReturn({
     eventId,
     ticketPaymentSessionId,
     isVip,
-    returnedAmountWithoutPromoCode,
+    returnedClubIncome,
     vipPaymentSessionId,
 }: UpdateEventOnTicketReturnParams): Promise<Event> {
     return firestoreDatabase().runTransaction(async (transaction) => {
@@ -28,7 +28,7 @@ export async function updateEventOnTicketReturn({
         const eventTickets = await updateEventTicketsOnTicketReturn({
             event,
             isVip,
-            returnedAmountWithoutPromoCode,
+            returnedClubIncome,
         });
 
         await updateEventCostsOnTicketReturn({

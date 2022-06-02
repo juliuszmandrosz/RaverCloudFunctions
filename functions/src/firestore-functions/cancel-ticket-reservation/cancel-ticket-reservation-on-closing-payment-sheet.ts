@@ -37,6 +37,6 @@ export async function cancelTicketReservationOnClosingPaymentSheet(
     await updateEventOnCancelReservation({
         eventId: session.eventId,
         isVip: session.isVip,
-        canceledAmount: session.amount + session.promotionCodeAmountOff,
+        canceledAmount: session.clubIncome,
     });
 }

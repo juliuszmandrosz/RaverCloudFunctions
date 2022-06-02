@@ -8,14 +8,14 @@ import { revertSingleTicketFromPools } from '../update-ticket-pools/revert-singl
 interface UpdateEventTicketsOnTicketReturnParams {
     event: Event;
     isVip: boolean;
-    returnedAmountWithoutPromoCode: number;
+    returnedClubIncome: number;
 }
 
 /// Return event tickets after update
 export async function updateEventTicketsOnTicketReturn({
     event,
     isVip,
-    returnedAmountWithoutPromoCode,
+    returnedClubIncome,
 }: UpdateEventTicketsOnTicketReturnParams): Promise<EventTickets> {
     return firestoreDatabase().runTransaction(async (transaction) => {
         const eventTicketsDocRef = getEventTicketsDocRef(event.clubId, event.id);
@@ -23,7 +23,7 @@ export async function updateEventTicketsOnTicketReturn({
 
         await reduceTicketSalesBySingleTransaction({
             tickets,
-            amountToReduce: returnedAmountWithoutPromoCode,
+            amountToReduce: returnedClubIncome,
             isVip,
         });
 

@@ -5,13 +5,13 @@ import { Stripe } from 'stripe';
 export interface VipPaymentSession {
     /// Payment intent id
     id: string;
-    transferGroupId: string;
     ticketId: string;
     eventId: string;
     userId: string;
-    amount: number;
     status: Stripe.PaymentIntent.Status;
     isRefunded: boolean;
+    clubIncome: number;
+    userFeeAmount: number;
     promotionCodeAmountOff: number;
     paymentDateTime?: Timestamp;
     promotionCode?: string;

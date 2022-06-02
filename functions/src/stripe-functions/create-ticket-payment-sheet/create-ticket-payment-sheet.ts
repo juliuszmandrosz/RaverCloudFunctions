@@ -13,6 +13,8 @@ import { tryGetEventData } from '../../firestore-functions/get-data/get-event-da
 import { throwEventCanceledError } from '../../errors/throw-event-canceled-error';
 import { throwEventPostponedError } from '../../errors/throw-event-postponed-errors';
 import { getVipPrice } from '../../firestore-functions/get-vip-price/get-vip-price';
+import { getUserFee } from '../../utils/stripe-utils/get-user-fee';
+import { getPromotionCode } from '../../firestore-functions/get-promotion-code/get-promotion-code';
 
 export async function createTicketPaymentSheet(
     data: CreateTicketPaymentSheetRequest,
@@ -39,23 +41,27 @@ export async function createTicketPaymentSheet(
         throwEventPostponedError();
     }
 
-    const vipPrice = await getVipPrice({ clubId: event.clubId, eventId });
-
     await updateEventOnTicketPayment(eventId, isVip);
 
-    const amount = await getTicketPaymentSheetAmount({
-        eventPrice: event.price,
-        vipPrice,
-        isVip,
-        context,
-        promotionCode,
-    });
+    const vipPrice = isVip ? await getVipPrice({ clubId: event.clubId, eventId }) : 0;
 
-    const promotionCodeAmountOff = event.price + (isVip ? vipPrice : 0) - amount;
+    const clubIncome = event.price + vipPrice;
+
+    const promotionCodeAmountOff = promotionCode
+        ? await getPromotionCode({ promotionCode }, context).then((code) => code.amountOff)
+        : 0;
+
+    const userFeeAmount = await getUserFee(clubIncome - promotionCodeAmountOff, event.currency);
+
+    const paymentSheetAmount = getTicketPaymentSheetAmount({
+        clubIncome,
+        userFeeAmount,
+        promotionCodeAmountOff,
+    });
 
     const paymentSheet = await createPaymentSheetForUser(
         {
-            amount,
+            amount: paymentSheetAmount,
             description: event.eventName,
             currency: event.currency,
         },
@@ -74,10 +80,11 @@ export async function createTicketPaymentSheet(
             cancelTicketReservationTaskId,
             eventId: event.id,
             userId,
-            promotionCodeAmountOff,
             promotionCode,
             isVip,
-            amount,
+            clubIncome,
+            userFeeAmount,
+            promotionCodeAmountOff,
             status: 'requires_payment_method',
             isRefunded: false,
         } as TicketPaymentSession);

@@ -46,7 +46,7 @@ export async function fulfillTicketPayment(
             ticketPaymentId: ticketPaymentSession.id,
             isVip: ticketPaymentSession.isVip,
             currency: event.currency,
-            price: ticketPaymentSession.amount,
+            price: ticketPaymentSession.clubIncome - ticketPaymentSession.promotionCodeAmountOff,
             eventStartDateTime: Timestamp.fromMillis(event.eventStartDateTime),
             eventEndDateTime: Timestamp.fromMillis(event.eventEndDateTime),
             clubName: event.clubName,
@@ -59,9 +59,9 @@ export async function fulfillTicketPayment(
         } as Ticket);
 
     await updateEventCostsOnUserPayment({
-        paymentSessionId: ticketPaymentSession.id,
         eventId: event.id,
         clubId: event.clubId,
+        amount: ticketPaymentSession.userFeeAmount,
         response,
     });
 }

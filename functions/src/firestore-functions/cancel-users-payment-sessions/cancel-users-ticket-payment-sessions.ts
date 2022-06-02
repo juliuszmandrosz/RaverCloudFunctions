@@ -31,7 +31,7 @@ export async function cancelUsersTicketPaymentSessions(
             canceledVipSessionsQuantity++;
         }
 
-        canceledFunds += session.amount;
+        canceledFunds += session.clubIncome;
     }
 
     await cancelUsersPaymentSessionsQueryBatch(query.limit(500), {

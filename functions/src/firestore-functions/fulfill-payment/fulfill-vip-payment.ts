@@ -28,9 +28,12 @@ export async function fulfillVipPayment(
 
     const ticketDocRef = getTicketDocRef(vipPaymentSession.userId, vipPaymentSession.ticketId);
 
+    const newTicketPrice =
+        ticket.price + vipPaymentSession.clubIncome - vipPaymentSession.promotionCodeAmountOff;
+
     await ticketDocRef.update({
         isVip: true,
-        price: ticket.price + vipPaymentSession.amount,
+        price: newTicketPrice,
         vipPaymentId: vipPaymentSession.id,
     } as Ticket);
 
@@ -42,10 +45,10 @@ export async function fulfillVipPayment(
             status: 'succeeded',
         } as VipPaymentSession);
 
-    await updateTicketSalesOnVipPayment(ticket, vipPaymentSession.amount, response);
+    await updateTicketSalesOnVipPayment(ticket, vipPaymentSession.clubIncome, response);
 
     await updateEventCostsOnUserPayment({
-        paymentSessionId: vipPaymentSession.id,
+        amount: vipPaymentSession.userFeeAmount,
         eventId: ticket.eventId,
         clubId: ticket.clubId,
         response,

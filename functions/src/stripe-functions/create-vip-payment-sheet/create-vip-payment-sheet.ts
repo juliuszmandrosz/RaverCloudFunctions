@@ -1,5 +1,4 @@
 import * as functions from 'firebase-functions';
-import { getPromotionCode } from '../../firestore-functions/get-promotion-code/get-promotion-code';
 import { CreateVipPaymentSheetRequest } from './create-vip-payment-sheet-request';
 import { createPaymentSheetForUser } from '../create-payment-sheet-for-user/create-payment-sheet-for-user';
 import { CreatePaymentSheetForUserResponse } from '../create-payment-sheet-for-user/create-payment-sheet-for-user-response';
@@ -13,6 +12,9 @@ import { getVipPrice } from '../../firestore-functions/get-vip-price/get-vip-pri
 import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
 import { throwEventCanceledError } from '../../errors/throw-event-canceled-error';
 import { throwEventPostponedError } from '../../errors/throw-event-postponed-errors';
+import { getUserFee } from '../../utils/stripe-utils/get-user-fee';
+import { getVipPaymentSheetAmount } from './get-vip-payment-sheet-amount';
+import { getPromotionCode } from '../../firestore-functions/get-promotion-code/get-promotion-code';
 
 export async function createVipPaymentSheet(
     data: CreateVipPaymentSheetRequest,
@@ -54,18 +56,26 @@ export async function createVipPaymentSheet(
         clubId: ticket.clubId,
     });
 
-    const amount = await getAmount(vipPrice, context, promotionCode);
+    const promotionCodeAmountOff = promotionCode
+        ? await getPromotionCode({ promotionCode }, context).then((code) => code.amountOff)
+        : 0;
+
+    const userFeeAmount = await getUserFee(vipPrice - promotionCodeAmountOff, event.currency);
+
+    const paymentSheetAmount = await getVipPaymentSheetAmount({
+        vipPrice,
+        promotionCodeAmountOff,
+        userFeeAmount,
+    });
 
     const paymentSheet = await createPaymentSheetForUser(
         {
-            amount,
+            amount: paymentSheetAmount,
             currency: ticket.currency,
             description: ticket.eventName,
         },
         context
     );
-
-    const promotionCodeAmountOff = vipPrice - amount;
 
     await firestoreDatabase()
         .collection(vipPaymentSessions)
@@ -74,33 +84,13 @@ export async function createVipPaymentSheet(
             userId,
             ticketId,
             promotionCode,
-            amount,
+            clubIncome: vipPrice,
             promotionCodeAmountOff,
+            userFeeAmount,
             status: 'requires_payment_method',
             eventId: ticket.eventId,
             isRefunded: false,
         } as VipPaymentSession);
 
     return paymentSheet;
-}
-
-async function getAmount(
-    vipPrice: number,
-    context: functions.https.CallableContext,
-    promotionCode?: string
-) {
-    let amount = vipPrice;
-
-    if (promotionCode) {
-        const result = await getPromotionCode(
-            {
-                promotionCode: promotionCode,
-            },
-            context
-        );
-        // TODO - add currency support for codes
-        amount -= result.amountOff;
-    }
-
-    return amount;
 }
