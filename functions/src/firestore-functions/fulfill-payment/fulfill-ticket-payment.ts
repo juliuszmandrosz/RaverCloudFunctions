@@ -46,7 +46,7 @@ export async function fulfillTicketPayment(
             ticketPaymentId: ticketPaymentSession.id,
             isVip: ticketPaymentSession.isVip,
             currency: event.currency,
-            price: ticketPaymentSession.clubIncome - ticketPaymentSession.promotionCodeAmountOff,
+            price: ticketPaymentSession.revenue - ticketPaymentSession.promotionCodeAmountOff,
             eventStartDateTime: Timestamp.fromMillis(event.eventStartDateTime),
             eventEndDateTime: Timestamp.fromMillis(event.eventEndDateTime),
             clubName: event.clubName,

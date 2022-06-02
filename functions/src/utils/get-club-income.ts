@@ -1,6 +1,6 @@
 import { getEventFeeAmount } from './get-event-fee-amount';
 
-export async function getClubIncome(amount: number, eventFee: number) {
-    const fee = await getEventFeeAmount(amount, eventFee);
+export function getClubIncome(amount: number, eventFee: number) {
+    const fee = getEventFeeAmount(amount, eventFee);
     return amount - fee;
 }

@@ -1,18 +1,13 @@
 import { Event } from '../../models/event';
 import { EventTickets } from '../../models/event-tickets';
-import { TicketPool } from '../../models/ticket-pool';
 import { getEventTicketsDocRef, tryGetEventTicketsData } from '../get-data/get-event-tickets-data';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { getTotalRevenue } from '../../utils/get-total-revenue';
-import { getClubIncome } from '../../utils/get-club-income';
 import { getCurrentOrLastPool } from '../../utils/get-current-or-last-pool';
-
-interface UpdateTicketSalesParams {
-    tickets: EventTickets;
-    ticketPrice: number;
-    vipPrice?: number;
-    isVip: boolean;
-}
+import { getClubIncome } from '../../utils/get-club-income';
+import { updateTicketSalesOnTicketPayment } from '../update-ticket-sales/update-ticket-sales-on-ticket-payment';
+import { updateTicketPoolsOnTicketPayment } from '../update-ticket-pools/update-ticket-pools-on-ticket-payment';
+import { updateClubSalesOnTicketPayment } from '../update-club-sales/update-club-sales-on-ticket-payment';
 
 /// Returns event tickets after update
 export async function updateEventTicketsOnTicketPayment(
@@ -24,64 +19,24 @@ export async function updateEventTicketsOnTicketPayment(
         const tickets = await tryGetEventTicketsData(event.clubId, event.id, transaction);
         const vipPrice = getCurrentOrLastPool(tickets.ticketPools).vipPrice;
 
-        await updateTicketSales({ tickets, isVip, vipPrice, ticketPrice: event.price });
+        const eventFee = tickets.ticketSales.eventFee;
+        const totalRevenue = getTotalRevenue({ isVip, vipPrice, ticketPrice: event.price });
+        const clubIncome = getClubIncome(totalRevenue, eventFee);
+        const isExclusiveEvent = tickets.ticketSales.isExclusiveEvent;
 
-        await updateTicketPools(tickets);
+        updateTicketSalesOnTicketPayment({ tickets, isVip, totalRevenue, clubIncome });
+
+        await updateClubSalesOnTicketPayment({
+            isExclusiveEvent,
+            clubId: event.clubId,
+            revenue: totalRevenue,
+            isVip,
+        });
+
+        await updateTicketPoolsOnTicketPayment(tickets);
 
         transaction.update(eventTicketsDocRef, tickets);
 
         return tickets;
     });
-}
-
-async function updateTicketSales({
-    tickets,
-    ticketPrice,
-    vipPrice,
-    isVip,
-}: UpdateTicketSalesParams) {
-    const ticketSales = tickets.ticketSales;
-    const eventFee = ticketSales.eventFee;
-
-    ticketSales.ticketsSold++;
-
-    if (isVip) {
-        ticketSales.vipsSold++;
-    }
-
-    const totalRevenue = await getTotalRevenue({ isVip, vipPrice, ticketPrice });
-
-    ticketSales.totalRevenue += totalRevenue;
-    ticketSales.clubIncome += await getClubIncome(totalRevenue, eventFee);
-}
-
-async function updateTicketPools(tickets: EventTickets) {
-    const ticketPools = tickets.ticketPools;
-
-    const currentPool = getCurrentOrLastPool(ticketPools);
-    currentPool.ticketsSold++;
-
-    const isCurrentPoolSoldOut = currentPool.ticketsSold === currentPool.ticketQuantity;
-
-    if (isCurrentPoolSoldOut) {
-        currentPool.isSoldOut = true;
-        currentPool.isCurrent = false;
-
-        const lastPoolNumber = ticketPools[ticketPools.length - 1].poolNumber;
-        const isLastPool = currentPool.poolNumber === lastPoolNumber;
-
-        tickets.isSoldOut = isLastPool;
-
-        if (!isLastPool) {
-            startNextPool(currentPool, ticketPools);
-        }
-    }
-}
-
-function startNextPool(currentPool: TicketPool, ticketPools: TicketPool[]) {
-    const nextPool = ticketPools.find((pool) => pool.poolNumber == currentPool.poolNumber + 1)!;
-    nextPool.isCurrent = true;
-
-    const index = ticketPools.indexOf(nextPool);
-    ticketPools[index] = nextPool;
 }

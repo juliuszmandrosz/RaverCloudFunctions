@@ -1,9 +1,9 @@
 import { TicketSales } from '../../models/ticket-sales';
-import { getClubIncome } from '../../utils/get-club-income';
 
 interface ReduceTicketSalesByQuantityParams {
     currentTicketSales: TicketSales;
     ticketQuantityToReduce: number;
+    clubIncomeToReduce: number;
     vipQuantityToReduce: number;
     totalRevenueToReduce: number;
 }
@@ -11,14 +11,12 @@ interface ReduceTicketSalesByQuantityParams {
 export async function reduceTicketSalesByQuantity({
     currentTicketSales,
     ticketQuantityToReduce,
+    clubIncomeToReduce,
     vipQuantityToReduce,
     totalRevenueToReduce,
 }: ReduceTicketSalesByQuantityParams) {
-    const eventFee = currentTicketSales.eventFee;
-
     currentTicketSales.ticketsSold -= ticketQuantityToReduce;
     currentTicketSales.vipsSold -= vipQuantityToReduce;
     currentTicketSales.totalRevenue -= totalRevenueToReduce;
-
-    currentTicketSales.clubIncome -= await getClubIncome(totalRevenueToReduce, eventFee);
+    currentTicketSales.clubIncome -= clubIncomeToReduce;
 }

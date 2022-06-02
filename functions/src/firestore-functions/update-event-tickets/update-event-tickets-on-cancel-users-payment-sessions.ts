@@ -9,6 +9,8 @@ import {
 import { reduceTicketSalesByQuantity } from '../update-ticket-sales/reduce-ticket-sales-by-quantity';
 import { revertTicketQuantityFromPools } from '../update-ticket-pools/revert-ticket-quantity-from-pools';
 import * as functions from 'firebase-functions';
+import { getClubIncome } from '../../utils/get-club-income';
+import { reduceClubSalesByQuantity } from '../update-club-sales/reduce-club-sales-by-quantity';
 
 interface UpdateEventTicketsOnCancelUsersPaymentSessionsParams {
     event: Event;
@@ -35,11 +37,24 @@ export async function updateEventTicketsOnCancelUsersPaymentSessions({
 
         if (!tickets) return;
 
+        const eventFee = tickets.ticketSales.eventFee;
+        const canceledClubIncome = getClubIncome(canceledFunds, eventFee);
+        const isExclusiveEvent = tickets.ticketSales.isExclusiveEvent;
+
         await reduceTicketSalesByQuantity({
             currentTicketSales: tickets.ticketSales,
             totalRevenueToReduce: canceledFunds,
             ticketQuantityToReduce: canceledTicketSessionsQuantity,
             vipQuantityToReduce: canceledVipSessionsQuantity,
+            clubIncomeToReduce: canceledClubIncome,
+        });
+
+        await reduceClubSalesByQuantity({
+            clubId: event.clubId,
+            isExclusiveEvent,
+            ticketQuantityToReduce: canceledTicketSessionsQuantity,
+            vipQuantityToReduce: canceledVipSessionsQuantity,
+            revenueToReduce: canceledFunds,
         });
 
         await revertTicketQuantityFromPools(tickets, canceledTicketSessionsQuantity);

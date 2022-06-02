@@ -45,19 +45,19 @@ export async function createTicketPaymentSheet(
 
     const vipPrice = isVip ? await getVipPrice({ clubId: event.clubId, eventId }) : 0;
 
-    const clubIncome = event.price + vipPrice;
+    const revenue = event.price + vipPrice;
 
     const promotionCodeAmountOff = promotionCode
         ? await getPromotionCode({ promotionCode }, context).then((code) => code.amountOff)
         : 0;
 
     const serviceFeeAmount = await getServiceFeeAmount(
-        clubIncome - promotionCodeAmountOff,
+        revenue - promotionCodeAmountOff,
         event.currency
     );
 
     const paymentSheetAmount = getTicketPaymentSheetAmount({
-        clubIncome,
+        revenue,
         serviceFeeAmount,
         promotionCodeAmountOff,
     });
@@ -85,7 +85,7 @@ export async function createTicketPaymentSheet(
             userId,
             promotionCode,
             isVip,
-            clubIncome,
+            revenue,
             serviceFeeAmount: serviceFeeAmount,
             promotionCodeAmountOff,
             status: 'requires_payment_method',

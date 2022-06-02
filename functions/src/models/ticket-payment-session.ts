@@ -12,7 +12,7 @@ export interface TicketPaymentSession {
     isVip: boolean;
     cancelTicketReservationTaskId: string;
     isRefunded: boolean;
-    clubIncome: number;
+    revenue: number;
     serviceFeeAmount: number;
     promotionCodeAmountOff: number;
     promotionCode?: string;

@@ -1,6 +1,6 @@
 export interface ClubSales {
-    totalIncome: number;
-    exclusiveEventsIncome: number;
+    totalRevenue: number;
+    exclusiveEventsRevenue: number;
     ticketsSold: number;
     vipsSold: number;
     exclusiveTicketsSold: number;

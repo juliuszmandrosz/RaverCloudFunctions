@@ -9,6 +9,8 @@ import {
 import * as functions from 'firebase-functions';
 import { reduceTicketSalesBySingleTransaction } from '../update-ticket-sales/reduce-ticket-sales-by-single-transaction';
 import { revertSingleTicketFromPools } from '../update-ticket-pools/revert-single-ticket-from-pools';
+import { getClubIncome } from '../../utils/get-club-income';
+import { reduceClubSalesBySingleTransaction } from '../update-club-sales/reduce-club-sales-by-single-transaction';
 
 interface UpdateEventTicketsOnCancelReservationParams {
     event: Event;
@@ -33,10 +35,22 @@ export async function updateEventTicketsOnCancelReservation({
 
         if (!tickets) return;
 
+        const eventFee = tickets.ticketSales.eventFee;
+        const canceledClubIncome = getClubIncome(canceledAmount, eventFee);
+        const isExclusiveEvent = tickets.ticketSales.isExclusiveEvent;
+
         await reduceTicketSalesBySingleTransaction({
             tickets: tickets,
             isVip,
-            amountToReduce: canceledAmount,
+            totalRevenueToReduce: canceledAmount,
+            clubIncomeToReduce: canceledClubIncome,
+        });
+
+        await reduceClubSalesBySingleTransaction({
+            revenueToReduce: canceledAmount,
+            isVip,
+            clubId: event.clubId,
+            isExclusiveEvent,
         });
 
         await revertSingleTicketFromPools(tickets);
