@@ -55,7 +55,7 @@ export async function createVipPaymentSheet(
         clubId: ticket.clubId,
     });
 
-    const amount = await getAmount(vipPrice, context, promotionCode);
+    const amount = await getAmount({ vipPrice, context, promotionCode, currency: event.currency });
 
     const paymentSheet = await createPaymentSheetForUser(
         {
@@ -85,11 +85,14 @@ export async function createVipPaymentSheet(
     return paymentSheet;
 }
 
-async function getAmount(
-    vipPrice: number,
-    context: functions.https.CallableContext,
-    promotionCode?: string
-) {
+interface GetAmountParams {
+    vipPrice: number;
+    currency: string;
+    context: functions.https.CallableContext;
+    promotionCode?: string;
+}
+
+async function getAmount({ vipPrice, currency, context, promotionCode }: GetAmountParams) {
     let amount = vipPrice;
 
     if (promotionCode) {
@@ -103,7 +106,7 @@ async function getAmount(
         amount -= result.amountOff;
     }
 
-    const fee = await getUserFee(amount);
+    const fee = await getUserFee(amount, currency);
 
     amount += fee;
 

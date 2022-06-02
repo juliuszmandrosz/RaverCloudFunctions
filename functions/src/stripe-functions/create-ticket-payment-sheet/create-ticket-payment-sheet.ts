@@ -47,6 +47,7 @@ export async function createTicketPaymentSheet(
         eventPrice: event.price,
         vipPrice,
         isVip,
+        currency: event.currency,
         context,
         promotionCode,
     });

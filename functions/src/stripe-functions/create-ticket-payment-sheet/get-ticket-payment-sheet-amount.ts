@@ -6,6 +6,7 @@ interface GetTicketPaymentSheetAmountParams {
     eventPrice: number;
     vipPrice: number;
     isVip: boolean;
+    currency: string;
     context: functions.https.CallableContext;
     promotionCode?: string;
 }
@@ -14,6 +15,7 @@ export async function getTicketPaymentSheetAmount({
     eventPrice,
     vipPrice,
     isVip,
+    currency,
     context,
     promotionCode,
 }: GetTicketPaymentSheetAmountParams) {
@@ -32,7 +34,7 @@ export async function getTicketPaymentSheetAmount({
         eventPrice += vipPrice;
     }
 
-    const fee = await getUserFee(eventPrice);
+    const fee = await getUserFee(eventPrice, currency);
 
     eventPrice += fee;
 

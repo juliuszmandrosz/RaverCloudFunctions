@@ -1,6 +1,8 @@
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { getEventCostsDocRef, tryGetEventCostsData } from '../get-data/get-event-costs-data';
-import { tryGetStripeFee } from '../../utils/stripe-utils/get-stripe-fee';
+import { getUserFee } from '../../utils/stripe-utils/get-user-fee';
+import { tryGetTicketPaymentSessionData } from '../get-data/get-ticket-payment-session-data';
+import { tryGetVipPaymentSession } from '../get-data/get-vip-payment-session.data';
 
 export interface UpdateEventCostsOnTicketReturnParams {
     eventId: string;
@@ -16,16 +18,21 @@ export async function updateEventCostsOnTicketReturn(
         const eventCostsDocRef = getEventCostsDocRef(params.clubId, params.eventId);
         const eventCosts = await tryGetEventCostsData(params.clubId, params.eventId);
 
-        const ticketStripeFee = await tryGetStripeFee(params.ticketPaymentSessionId);
+        const ticketPaymentSession = await tryGetTicketPaymentSessionData(
+            params.ticketPaymentSessionId
+        );
 
-        let vipStripeFee = 0;
+        const ticketFee = await getUserFee(ticketPaymentSession.amount, eventCosts.currency);
+
+        let vipFee = 0;
 
         if (params.vipPaymentSessionId) {
-            vipStripeFee = await tryGetStripeFee(params.vipPaymentSessionId);
+            const vipPaymentSession = await tryGetVipPaymentSession(params.vipPaymentSessionId);
+            vipFee = await getUserFee(vipPaymentSession.amount, eventCosts.currency);
         }
 
-        eventCosts.eventPostponeBalance -= ticketStripeFee;
-        eventCosts.eventPostponeBalance -= vipStripeFee;
+        eventCosts.eventPostponeBalance -= ticketFee;
+        eventCosts.eventPostponeBalance -= vipFee;
 
         transaction.update(eventCostsDocRef, eventCosts);
     });

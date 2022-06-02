@@ -4,12 +4,12 @@ import {
     getEventCostsOrReturnNotFound,
 } from '../get-data/get-event-costs-data';
 import * as functions from 'firebase-functions';
-import { getStripeFeeOrReturnNotFound } from '../../utils/stripe-utils/get-stripe-fee';
+import { getUserFee } from '../../utils/stripe-utils/get-user-fee';
 
 export interface UpdateEventCostsOnUserPaymentParams {
     eventId: string;
     clubId: string;
-    paymentSessionId: string;
+    amount: number;
     response: functions.Response;
 }
 
@@ -27,14 +27,9 @@ export async function updateEventCostsOnUserPayment(
 
         if (!eventCosts) return;
 
-        const stripeFee = await getStripeFeeOrReturnNotFound(
-            params.paymentSessionId,
-            params.response
-        );
+        const userFee = await getUserFee(params.amount, eventCosts.currency);
 
-        if (!stripeFee) return;
-
-        eventCosts.paymentProcessorFeeBalance += stripeFee;
+        eventCosts.paymentProcessorFeeBalance += userFee;
 
         transaction.update(eventCostsDocRef, eventCosts);
     });
