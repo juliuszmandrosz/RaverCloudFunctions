@@ -1,5 +1,4 @@
 export const stripeCustomers = 'stripeCustomers';
-export const stripeConnectedAccounts = 'stripeConnectedAccounts';
 export const clubs = 'clubs';
 export const events = 'events';
 export const tickets = 'tickets';
@@ -14,10 +13,6 @@ export const partners = 'partners';
 export const selectors = 'selectors';
 export const ticketPaymentSessions = 'ticketPaymentSessions';
 export const vipPaymentSessions = 'vipPaymentSessions';
-export const cancelEventPaymentSessions = 'cancelEventPaymentSessions';
-export const postponeEventPaymentSessions = 'postponeEventPaymentSessions';
-export const payouts = 'payouts';
-export const eventsPayoutTasks = 'eventsPayoutTasks';
 export const selectorsAccessCodes = 'selectorsAccessCodes';
 export const partnersAccessCodes = 'partnersAccessCodes';
 export const newReview = 'clubs/{clubId}/reviews/{reviewId}';

@@ -16,6 +16,5 @@ export interface TicketPaymentSession {
     isRefunded: boolean;
     promotionCodeAmountOff: number;
     promotionCode?: string;
-    transferId?: string;
     paymentDateTime?: Timestamp;
 }

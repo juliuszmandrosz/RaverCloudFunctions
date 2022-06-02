@@ -7,7 +7,6 @@ import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { ticketPaymentSessions } from '../../constants/collections';
 import { TicketPaymentSession } from '../../models/ticket-payment-session';
 import { createCancelTicketReservationTask } from '../../cloud-tasks/create-cancel-ticket-reservation-task/create-cancel-ticket-reservation-task';
-import { v1 } from 'uuid';
 import { updateEventOnTicketPayment } from '../../firestore-functions/update-event/update-event-on-ticket-payment';
 import { getTicketPaymentSheetAmount } from './get-ticket-payment-sheet-amount';
 import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
@@ -54,14 +53,10 @@ export async function createTicketPaymentSheet(
 
     const promotionCodeAmountOff = event.price + (isVip ? vipPrice : 0) - amount;
 
-    const transferGroupId = v1();
-
     const paymentSheet = await createPaymentSheetForUser(
         {
-            transferGroupId,
             amount,
             description: event.eventName,
-            partnerId: event.clubId,
             currency: event.currency,
         },
         context
@@ -76,7 +71,6 @@ export async function createTicketPaymentSheet(
         .collection(ticketPaymentSessions)
         .doc(paymentSheet.paymentIntentId)
         .set({
-            transferGroupId,
             cancelTicketReservationTaskId,
             eventId: event.id,
             userId,

@@ -13,7 +13,6 @@ export interface VipPaymentSession {
     status: Stripe.PaymentIntent.Status;
     isRefunded: boolean;
     promotionCodeAmountOff: number;
-    transferId?: string;
     paymentDateTime?: Timestamp;
     promotionCode?: string;
 }

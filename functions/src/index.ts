@@ -65,20 +65,18 @@ exports.createVipPaymentSheet = functions.https.onCall(async (data, context) => 
     ).createVipPaymentSheet(data, context);
 });
 
-exports.createEventCancelationPaymentSheet = functions.https.onCall(async (data, context) => {
-    return (
-        await import(
-            './stripe-functions/create-event-cancelation-payment-sheet/create-event-cancelation-payment-sheet'
-        )
-    ).createEventCancelationPaymentSheet(data, context);
+exports.cancelEvent = functions.https.onCall(async (data, context) => {
+    return (await import('./stripe-functions/cancel-event/cancel-event')).cancelEvent(
+        data,
+        context
+    );
 });
 
-exports.createPostponeEventPaymentSheet = functions.https.onCall(async (data, context) => {
-    return (
-        await import(
-            './stripe-functions/create-postpone-event-payment-sheet/create-postpone-event-payment-sheet'
-        )
-    ).createPostponeEventPaymentSheet(data, context);
+exports.postponeEvent = functions.https.onCall(async (data, context) => {
+    return (await import('./stripe-functions/postpone-event/postpone-event')).postponeEvent(
+        data,
+        context
+    );
 });
 
 exports.checkUserClaim = functions.https.onCall(async (data, context) => {
@@ -161,54 +159,6 @@ exports.cancelTicketReservationOnClosingPaymentSheet = functions.https.onCall(
         ).cancelTicketReservationOnClosingPaymentSheet(data, context);
     }
 );
-
-exports.payOutToPartnerOnCloudTaskCallback = functions.https.onRequest(
-    async (request, response) => {
-        await (
-            await import(
-                './stripe-functions/pay-out-to-partner/pay-out-to-partner-on-cloud-task-callback'
-            )
-        ).payOutToPartnerOnCloudTaskCallback(request, response);
-    }
-);
-
-exports.cancelEventCancelationOnCloudTaskCallback = functions.https.onRequest(
-    async (request, response) => {
-        await (
-            await import(
-                './firestore-functions/cancel-event-cancelation/cancel-event-cancelation-on-cloud-task-callback'
-            )
-        ).cancelEventCancelationOnCloudTaskCallback(request, response);
-    }
-);
-
-exports.cancelEventCancelationOnClosingPaymentSheet = functions.https.onCall(
-    async (data, context) => {
-        return (
-            await import(
-                './firestore-functions/cancel-event-cancelation/cancel-event-cancelation-on-closing-payment-sheet'
-            )
-        ).cancelEventCancelationOnClosingPaymentSheet(data, context);
-    }
-);
-
-exports.cancelEventPostponeOnCloudTaskCallback = functions.https.onRequest(
-    async (request, response) => {
-        await (
-            await import(
-                './firestore-functions/cancel-event-postpone/cancel-event-postpone-on-cloud-task-callback'
-            )
-        ).cancelEventPostponeOnCloudTaskCallback(request, response);
-    }
-);
-
-exports.cancelEventPostponeOnClosingPaymentSheet = functions.https.onCall(async (data, context) => {
-    return (
-        await import(
-            './firestore-functions/cancel-event-postpone/cancel-event-postpone-on-closing-payment-sheet'
-        )
-    ).cancelEventPostponeOnClosingPaymentSheet(data, context);
-});
 
 exports.checkIfAccountExists = functions.https.onCall(async (data, context) => {
     return (

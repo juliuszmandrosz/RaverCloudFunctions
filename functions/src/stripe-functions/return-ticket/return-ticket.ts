@@ -65,7 +65,6 @@ export async function returnTicket(
 
     await refundPayment({
         paymentIntentId: ticketPayment.id,
-        transferId: ticketPayment.transferId!,
     });
 
     await getTicketPaymentSessionDocRef(ticketPayment.id).update({
@@ -75,7 +74,6 @@ export async function returnTicket(
     if (vipPayment) {
         await refundPayment({
             paymentIntentId: vipPayment.id,
-            transferId: vipPayment.transferId!,
         });
 
         await getVipPaymentSessionDocRef(vipPayment.id).update({
