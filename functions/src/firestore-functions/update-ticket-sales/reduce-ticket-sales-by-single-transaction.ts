@@ -1,19 +1,19 @@
 import { EventTickets } from '../../models/event-tickets';
-import { getClubIncome } from '../../utils/get-club-income';
 
 interface ReduceTicketSalesBySingleTransactionParams {
     tickets: EventTickets;
-    amountToReduce: number;
+    totalRevenueToReduce: number;
+    clubIncomeToReduce: number;
     isVip: boolean;
 }
 
 export async function reduceTicketSalesBySingleTransaction({
     tickets,
-    amountToReduce,
+    totalRevenueToReduce,
+    clubIncomeToReduce,
     isVip,
 }: ReduceTicketSalesBySingleTransactionParams) {
     const ticketSales = tickets.ticketSales;
-    const eventFee = ticketSales.eventFee;
 
     ticketSales.ticketsSold--;
 
@@ -21,6 +21,6 @@ export async function reduceTicketSalesBySingleTransaction({
         ticketSales.vipsSold--;
     }
 
-    ticketSales.totalRevenue -= amountToReduce;
-    ticketSales.clubIncome -= await getClubIncome(amountToReduce, eventFee);
+    ticketSales.totalRevenue -= totalRevenueToReduce;
+    ticketSales.clubIncome -= clubIncomeToReduce;
 }

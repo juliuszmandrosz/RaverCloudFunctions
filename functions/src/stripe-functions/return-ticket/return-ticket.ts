@@ -83,10 +83,10 @@ export async function returnTicket(
 
     await getTicketDocRef(userId, ticketId).update({ isReturned: true } as Ticket);
 
-    let returnedClubIncome = ticketPayment.clubIncome;
+    let returnedRevenue = ticketPayment.revenue;
 
     if (vipPayment) {
-        returnedClubIncome += vipPayment.clubIncome;
+        returnedRevenue += vipPayment.revenue;
     }
 
     await updateEventOnTicketReturn({
@@ -94,6 +94,6 @@ export async function returnTicket(
         isVip: ticket.isVip,
         vipPaymentSessionId: vipPayment?.id,
         ticketPaymentSessionId: ticketPayment.id,
-        returnedClubIncome,
+        returnedRevenue,
     });
 }

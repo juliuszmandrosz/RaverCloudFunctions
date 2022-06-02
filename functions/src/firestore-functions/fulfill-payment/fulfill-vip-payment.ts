@@ -8,7 +8,7 @@ import { getVipPaymentSessionDataOrUndefined } from '../get-data/get-vip-payment
 import { vipPaymentSessions } from '../../constants/collections';
 import { VipPaymentSession } from '../../models/vip-payment-session';
 import { updateEventCostsOnUserPayment } from '../update-event-costs/update-event-costs-on-user-payment';
-import { updateTicketSalesOnVipPayment } from '../update-ticket-sales/update-ticket-sales-on-vip-payment';
+import { updateEventTicketsOnVipPayment } from '../update-event-tickets/update-event-tickets-on-vip-payment';
 
 export async function fulfillVipPayment(
     paymentSessionId: string,
@@ -29,7 +29,7 @@ export async function fulfillVipPayment(
     const ticketDocRef = getTicketDocRef(vipPaymentSession.userId, vipPaymentSession.ticketId);
 
     const newTicketPrice =
-        ticket.price + vipPaymentSession.clubIncome - vipPaymentSession.promotionCodeAmountOff;
+        ticket.price + vipPaymentSession.revenue - vipPaymentSession.promotionCodeAmountOff;
 
     await ticketDocRef.update({
         isVip: true,
@@ -45,7 +45,11 @@ export async function fulfillVipPayment(
             status: 'succeeded',
         } as VipPaymentSession);
 
-    await updateTicketSalesOnVipPayment(ticket, vipPaymentSession.clubIncome, response);
+    await updateEventTicketsOnVipPayment({
+        ticket,
+        vipPrice: vipPaymentSession.revenue,
+        response,
+    });
 
     await updateEventCostsOnUserPayment({
         amount: vipPaymentSession.serviceFeeAmount,
