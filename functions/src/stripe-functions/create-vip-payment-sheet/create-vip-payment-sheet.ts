@@ -13,6 +13,7 @@ import { getVipPrice } from '../../firestore-functions/get-vip-price/get-vip-pri
 import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
 import { throwEventCanceledError } from '../../errors/throw-event-canceled-error';
 import { throwEventPostponedError } from '../../errors/throw-event-postponed-errors';
+import { getUserFee } from '../../utils/stripe-utils/get-user-fee';
 
 export async function createVipPaymentSheet(
     data: CreateVipPaymentSheetRequest,
@@ -101,6 +102,10 @@ async function getAmount(
         // TODO - add currency support for codes
         amount -= result.amountOff;
     }
+
+    const fee = await getUserFee(amount);
+
+    amount += fee;
 
     return amount;
 }
