@@ -9,7 +9,6 @@ import {
     getPartnerAccessCodeDocRef,
     tryGetPartnerAccessCodeData,
 } from '../../get-data/get-partner-access-code-data';
-import { getClubDocRef, tryGetClubData } from '../../get-data/get-club-data';
 import { addStripeCustomer } from '../../../stripe-functions/add-stripe-customer/add-stripe-customer';
 
 export async function addPartner(
@@ -39,35 +38,19 @@ export async function addPartner(
 
     await setPartnerClaim({ email });
 
-    await usePartnerAccessCode(accessCode, partnerId);
+    const accessCodeData = await usePartnerAccessCode(accessCode);
 
-    await partnerDocRef.set({ email } as Partner);
+    await partnerDocRef.set({ email, clubId: accessCodeData.clubId } as Partner);
 
     await addStripeCustomer({ userId: partnerId, userEmail: email });
 }
 
-async function usePartnerAccessCode(accessCode: string, partnerId: string) {
+async function usePartnerAccessCode(accessCode: string) {
     const accessCodeData = await tryGetPartnerAccessCodeData(accessCode);
 
     await removeAccessCode(accessCode);
 
-    await addRegisteredClub(accessCodeData.clubId, partnerId);
-
-    await removeExistingClub(accessCodeData.clubId);
-
     return accessCodeData;
-}
-
-async function addRegisteredClub(currentClubId: string, partnerId: string) {
-    let clubData = await tryGetClubData(currentClubId);
-    clubData.isRegistered = true;
-
-    await getClubDocRef(partnerId).set(clubData);
-}
-
-async function removeExistingClub(clubId: string) {
-    const clubDocRef = getClubDocRef(clubId);
-    await clubDocRef.delete();
 }
 
 async function removeAccessCode(accessCode: string) {

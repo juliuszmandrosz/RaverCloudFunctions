@@ -35,7 +35,7 @@ export async function addSelector(
         throw new functions.https.HttpsError('already-exists', message);
     }
 
-    const selector: Selector = { clubId: accessCodeData.partnerId, email: selectorEmail };
+    const selector: Selector = { clubId: accessCodeData.clubId, email: selectorEmail };
 
     await selectorDocRef.set(selector);
 

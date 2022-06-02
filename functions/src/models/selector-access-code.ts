@@ -3,6 +3,6 @@ import Timestamp = firestore.Timestamp;
 
 export interface SelectorAccessCode {
     code: string;
-    partnerId: string;
+    clubId: string;
     expirationDateTime: Timestamp;
 }
