@@ -16,3 +16,6 @@ export const vipPaymentSessions = 'vipPaymentSessions';
 export const selectorsAccessCodes = 'selectorsAccessCodes';
 export const partnersAccessCodes = 'partnersAccessCodes';
 export const newReview = 'clubs/{clubId}/reviews/{reviewId}';
+export const partnersDiscounts = 'partnerDiscounts';
+export const clubsSales = 'clubsSales';
+export const collectedDiscounts = 'collectedDiscounts';
