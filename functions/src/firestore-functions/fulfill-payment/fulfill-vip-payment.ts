@@ -48,7 +48,7 @@ export async function fulfillVipPayment(
     await updateTicketSalesOnVipPayment(ticket, vipPaymentSession.clubIncome, response);
 
     await updateEventCostsOnUserPayment({
-        amount: vipPaymentSession.userFeeAmount,
+        amount: vipPaymentSession.serviceFeeAmount,
         eventId: ticket.eventId,
         clubId: ticket.clubId,
         response,

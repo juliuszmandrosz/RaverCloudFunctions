@@ -12,7 +12,7 @@ import { getVipPrice } from '../../firestore-functions/get-vip-price/get-vip-pri
 import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
 import { throwEventCanceledError } from '../../errors/throw-event-canceled-error';
 import { throwEventPostponedError } from '../../errors/throw-event-postponed-errors';
-import { getUserFee } from '../../utils/stripe-utils/get-user-fee';
+import { getServiceFeeAmount } from '../../utils/stripe-utils/get-service-fee-amount';
 import { getVipPaymentSheetAmount } from './get-vip-payment-sheet-amount';
 import { getPromotionCode } from '../../firestore-functions/get-promotion-code/get-promotion-code';
 
@@ -60,12 +60,15 @@ export async function createVipPaymentSheet(
         ? await getPromotionCode({ promotionCode }, context).then((code) => code.amountOff)
         : 0;
 
-    const userFeeAmount = await getUserFee(vipPrice - promotionCodeAmountOff, event.currency);
+    const serviceFeeAmount = await getServiceFeeAmount(
+        vipPrice - promotionCodeAmountOff,
+        event.currency
+    );
 
     const paymentSheetAmount = await getVipPaymentSheetAmount({
         vipPrice,
         promotionCodeAmountOff,
-        userFeeAmount,
+        serviceFeeAmount,
     });
 
     const paymentSheet = await createPaymentSheetForUser(
@@ -86,7 +89,7 @@ export async function createVipPaymentSheet(
             promotionCode,
             clubIncome: vipPrice,
             promotionCodeAmountOff,
-            userFeeAmount,
+            serviceFeeAmount: serviceFeeAmount,
             status: 'requires_payment_method',
             eventId: ticket.eventId,
             isRefunded: false,

@@ -14,9 +14,11 @@ export async function reduceTicketSalesByQuantity({
     vipQuantityToReduce,
     totalRevenueToReduce,
 }: ReduceTicketSalesByQuantityParams) {
+    const eventFee = currentTicketSales.eventFee;
+
     currentTicketSales.ticketsSold -= ticketQuantityToReduce;
     currentTicketSales.vipsSold -= vipQuantityToReduce;
     currentTicketSales.totalRevenue -= totalRevenueToReduce;
 
-    currentTicketSales.clubIncome -= await getClubIncome(totalRevenueToReduce);
+    currentTicketSales.clubIncome -= await getClubIncome(totalRevenueToReduce, eventFee);
 }

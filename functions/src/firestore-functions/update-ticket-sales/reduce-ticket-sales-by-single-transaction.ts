@@ -13,6 +13,7 @@ export async function reduceTicketSalesBySingleTransaction({
     isVip,
 }: ReduceTicketSalesBySingleTransactionParams) {
     const ticketSales = tickets.ticketSales;
+    const eventFee = ticketSales.eventFee;
 
     ticketSales.ticketsSold--;
 
@@ -21,5 +22,5 @@ export async function reduceTicketSalesBySingleTransaction({
     }
 
     ticketSales.totalRevenue -= amountToReduce;
-    ticketSales.clubIncome -= await getClubIncome(amountToReduce);
+    ticketSales.clubIncome -= await getClubIncome(amountToReduce, eventFee);
 }

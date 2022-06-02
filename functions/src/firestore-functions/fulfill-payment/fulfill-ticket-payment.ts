@@ -61,7 +61,7 @@ export async function fulfillTicketPayment(
     await updateEventCostsOnUserPayment({
         eventId: event.id,
         clubId: event.clubId,
-        amount: ticketPaymentSession.userFeeAmount,
+        amount: ticketPaymentSession.serviceFeeAmount,
         response,
     });
 }

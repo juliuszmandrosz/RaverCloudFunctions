@@ -13,7 +13,7 @@ import { tryGetEventData } from '../../firestore-functions/get-data/get-event-da
 import { throwEventCanceledError } from '../../errors/throw-event-canceled-error';
 import { throwEventPostponedError } from '../../errors/throw-event-postponed-errors';
 import { getVipPrice } from '../../firestore-functions/get-vip-price/get-vip-price';
-import { getUserFee } from '../../utils/stripe-utils/get-user-fee';
+import { getServiceFeeAmount } from '../../utils/stripe-utils/get-service-fee-amount';
 import { getPromotionCode } from '../../firestore-functions/get-promotion-code/get-promotion-code';
 
 export async function createTicketPaymentSheet(
@@ -51,11 +51,14 @@ export async function createTicketPaymentSheet(
         ? await getPromotionCode({ promotionCode }, context).then((code) => code.amountOff)
         : 0;
 
-    const userFeeAmount = await getUserFee(clubIncome - promotionCodeAmountOff, event.currency);
+    const serviceFeeAmount = await getServiceFeeAmount(
+        clubIncome - promotionCodeAmountOff,
+        event.currency
+    );
 
     const paymentSheetAmount = getTicketPaymentSheetAmount({
         clubIncome,
-        userFeeAmount,
+        serviceFeeAmount,
         promotionCodeAmountOff,
     });
 
@@ -83,7 +86,7 @@ export async function createTicketPaymentSheet(
             promotionCode,
             isVip,
             clubIncome,
-            userFeeAmount,
+            serviceFeeAmount: serviceFeeAmount,
             promotionCodeAmountOff,
             status: 'requires_payment_method',
             isRefunded: false,

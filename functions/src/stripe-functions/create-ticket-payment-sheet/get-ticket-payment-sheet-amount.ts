@@ -1,19 +1,19 @@
 interface GetTicketPaymentSheetAmountParams {
     clubIncome: number;
-    userFeeAmount: number;
+    serviceFeeAmount: number;
     promotionCodeAmountOff: number;
 }
 
 export function getTicketPaymentSheetAmount({
     clubIncome,
-    userFeeAmount,
+    serviceFeeAmount,
     promotionCodeAmountOff,
 }: GetTicketPaymentSheetAmountParams): number {
     let amount = 0;
 
     amount += clubIncome;
 
-    amount += userFeeAmount;
+    amount += serviceFeeAmount;
 
     amount -= promotionCodeAmountOff;
 

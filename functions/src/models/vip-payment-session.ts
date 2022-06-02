@@ -11,7 +11,7 @@ export interface VipPaymentSession {
     status: Stripe.PaymentIntent.Status;
     isRefunded: boolean;
     clubIncome: number;
-    userFeeAmount: number;
+    serviceFeeAmount: number;
     promotionCodeAmountOff: number;
     paymentDateTime?: Timestamp;
     promotionCode?: string;
