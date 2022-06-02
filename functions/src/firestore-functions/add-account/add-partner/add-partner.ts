@@ -4,13 +4,11 @@ import { firestoreDatabase } from '../../../modules/firebase-admin-module';
 import { partners } from '../../../constants/collections';
 import { setPartnerClaim } from '../../../auth-functions/set-claim/set-partner-claim';
 import { Partner } from '../../../models/partner';
-import { StripeConnectedAccount } from '../../../models/stripe-connected-account';
 import { AddPartnerRequest } from './add-partner-request';
 import {
     getPartnerAccessCodeDocRef,
     tryGetPartnerAccessCodeData,
 } from '../../get-data/get-partner-access-code-data';
-import { getConnectedAccountDocRef } from '../../get-data/get-connected-account-data';
 import { getClubDocRef, tryGetClubData } from '../../get-data/get-club-data';
 import { addStripeCustomer } from '../../../stripe-functions/add-stripe-customer/add-stripe-customer';
 
@@ -53,19 +51,11 @@ async function usePartnerAccessCode(accessCode: string, partnerId: string) {
 
     await removeAccessCode(accessCode);
 
-    await addConnectedAccountToFirestore(partnerId, accessCodeData.connectedAccountId);
-
     await addRegisteredClub(accessCodeData.clubId, partnerId);
 
     await removeExistingClub(accessCodeData.clubId);
 
     return accessCodeData;
-}
-
-async function addConnectedAccountToFirestore(partnerId: string, connectedAccountId: string) {
-    await getConnectedAccountDocRef(partnerId).set({
-        connectedAccountId: connectedAccountId,
-    } as StripeConnectedAccount);
 }
 
 async function addRegisteredClub(currentClubId: string, partnerId: string) {

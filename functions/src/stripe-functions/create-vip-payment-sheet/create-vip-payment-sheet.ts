@@ -6,7 +6,6 @@ import { CreatePaymentSheetForUserResponse } from '../create-payment-sheet-for-u
 import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
 import { FunctionsErrorDetails } from '../../errors/functions-error-details';
 import { tryGetTicketData } from '../../firestore-functions/get-data/get-ticket-data';
-import { v1 } from 'uuid';
 import { VipPaymentSession } from '../../models/vip-payment-session';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { vipPaymentSessions } from '../../constants/collections';
@@ -57,15 +56,11 @@ export async function createVipPaymentSheet(
 
     const amount = await getAmount(vipPrice, context, promotionCode);
 
-    const transferGroupId = v1();
-
     const paymentSheet = await createPaymentSheetForUser(
         {
-            transferGroupId,
             amount,
             currency: ticket.currency,
             description: ticket.eventName,
-            partnerId: ticket.clubId,
         },
         context
     );
@@ -76,7 +71,6 @@ export async function createVipPaymentSheet(
         .collection(vipPaymentSessions)
         .doc(paymentSheet.paymentIntentId)
         .set({
-            transferGroupId,
             userId,
             ticketId,
             promotionCode,

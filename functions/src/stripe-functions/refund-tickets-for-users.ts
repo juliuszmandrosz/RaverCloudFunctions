@@ -16,7 +16,7 @@ export async function refundTicketsForUsers(eventId: string) {
     let vipSessionsDocRefs: DocumentReference[] = [];
 
     for (const vipSession of sessions.vipSessions) {
-        await refundPayment({ paymentIntentId: vipSession.id, transferId: vipSession.transferId! });
+        await refundPayment({ paymentIntentId: vipSession.id });
 
         vipSessionsDocRefs.push(getVipPaymentSessionDocRef(vipSession.id));
     }
@@ -24,7 +24,6 @@ export async function refundTicketsForUsers(eventId: string) {
     for (const ticketSession of sessions.ticketSessions) {
         await refundPayment({
             paymentIntentId: ticketSession.id,
-            transferId: ticketSession.transferId!,
         });
 
         ticketSessionsDocRefs.push(getTicketPaymentSessionDocRef(ticketSession.id));

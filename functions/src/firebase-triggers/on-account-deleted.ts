@@ -7,12 +7,10 @@ import {
     promotionCodes,
     rewards,
     selectors,
-    stripeConnectedAccounts,
     stripeCustomers,
     tickets,
     users,
 } from '../constants/collections';
-import { StripeConnectedAccount } from '../models/stripe-connected-account';
 import { Selector } from '../models/selector';
 import { deleteQueryBatch } from '../utils/delete-query-batch';
 
@@ -25,7 +23,6 @@ export async function onAccountDeleted(
     await removeUser(accountId);
     await removeStripeCustomer(accountId);
     await removePartner(accountId);
-    await removeStripeConnectedAccount(accountId);
     await removeSelector(accountId);
 }
 
@@ -46,21 +43,6 @@ async function removeUser(userId: string) {
     await deleteQueryBatch(rewardsQuery);
 
     await userRef.delete();
-}
-
-async function removeStripeConnectedAccount(partnerId: string) {
-    const stripeConnectedAccountRef = firestoreDatabase()
-        .collection(stripeConnectedAccounts)
-        .doc(partnerId);
-
-    const stripeConnectedAccountDoc = await stripeConnectedAccountRef.get();
-
-    if (!stripeConnectedAccountDoc.exists) return;
-
-    const connectedAccount = stripeConnectedAccountDoc.data() as StripeConnectedAccount;
-    await stripe.accounts.del(connectedAccount.connectedAccountId);
-
-    await stripeConnectedAccountRef.delete();
 }
 
 async function removePartner(partnerId: string) {

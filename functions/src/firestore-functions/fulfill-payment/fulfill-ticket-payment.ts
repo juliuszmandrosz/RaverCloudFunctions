@@ -5,10 +5,6 @@ import { v1 } from 'uuid';
 import { getTicketPaymentSessionDataOrUndefined } from '../get-data/get-ticket-payment-session-data';
 import { tasksClient } from '../../modules/cloud-tasks-module';
 import { getEventDataOrReturnNotFound } from '../get-data/get-event-data';
-import { getConnectedAccountDataOrReturnNotFound } from '../get-data/get-connected-account-data';
-import { applyPromotionCode } from '../apply-promotion-code/apply-promotion-code';
-import { getTransferAmount } from '../../utils/stripe-utils/get-transfer-amount';
-import { stripe } from '../../modules/stripe-module';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { ticketPaymentSessions, tickets, users } from '../../constants/collections';
 import { TicketPaymentSession } from '../../models/ticket-payment-session';
@@ -29,37 +25,12 @@ export async function fulfillTicketPayment(
 
     if (!event) return;
 
-    const connectedAccount = await getConnectedAccountDataOrReturnNotFound(event.clubId, response);
-
-    if (!connectedAccount) return;
-
-    const promotionCodeAmountOff = ticketPaymentSession.promotionCode
-        ? await applyPromotionCode({
-              promotionCode: ticketPaymentSession.promotionCode,
-              userId: ticketPaymentSession.userId,
-          }).then((code) => code.amountOff)
-        : 0;
-
-    const transferAmount = await getTransferAmount(
-        ticketPaymentSession.amount,
-        promotionCodeAmountOff
-    );
-
-    const transfer = await stripe.transfers.create({
-        amount: transferAmount,
-        currency: event.currency,
-        destination: connectedAccount.connectedAccountId,
-        transfer_group: ticketPaymentSession.transferGroupId,
-        description: event.eventName,
-    });
-
     const ticketId = v1();
 
     await firestoreDatabase()
         .collection(ticketPaymentSessions)
         .doc(ticketPaymentSession.id)
         .update({
-            transferId: transfer.id,
             status: 'succeeded',
             paymentDateTime: Timestamp.now(),
             ticketId: ticketId,
