@@ -1,4 +1,5 @@
 export interface ClubSales {
+    currency: string;
     totalRevenue: number;
     exclusiveEventsRevenue: number;
     ticketsSold: number;
