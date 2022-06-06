@@ -101,7 +101,10 @@ exports.checkSelectorClaim = functions.https.onCall(async (data, context) => {
 });
 
 exports.addUser = functions.https.onCall(async (data, context) => {
-    return (await import('./firestore-functions/add-account/add-user')).addUser(data, context);
+    return (await import('./firestore-functions/add-account/add-user/add-user')).addUser(
+        data,
+        context
+    );
 });
 
 exports.addPartner = functions.https.onCall(async (data, context) => {
@@ -196,4 +199,10 @@ exports.useSelectorAccessCode = functions.https.onCall(async (data, context) => 
     return (
         await import('./firestore-functions/use-selector-access-code/use-selector-access-code')
     ).useSelectorAccessCode(data, context);
+});
+
+exports.updateInvoiceData = functions.https.onCall(async (data, context) => {
+    return (
+        await import('./stripe-functions/update-invoice-data/update-invoice-data')
+    ).updateInvoiceData(data, context);
 });

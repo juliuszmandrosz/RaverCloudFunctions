@@ -9,4 +9,5 @@ export type FunctionsErrorDetails =
     | 'event-postponed'
     | 'cancel-time-expired'
     | 'postpone-time-expired'
-    | 'postpone-time-too-short';
+    | 'postpone-time-too-short'
+    | 'invalid-vat-number';

@@ -10,6 +10,7 @@ import { ticketPaymentSessions, tickets, users } from '../../constants/collectio
 import { TicketPaymentSession } from '../../models/ticket-payment-session';
 import { updateEventCostsOnUserPayment } from '../update-event-costs/update-event-costs-on-user-payment';
 import { Ticket } from '../../models/ticket';
+import { sendInvoiceForCustomer } from '../../stripe-functions/send-invoice-for-customer/send-invoice-for-customer';
 
 export async function fulfillTicketPayment(
     paymentSessionId: string,
@@ -64,4 +65,17 @@ export async function fulfillTicketPayment(
         amount: ticketPaymentSession.serviceFeeAmount,
         response,
     });
+
+    if (ticketPaymentSession.sendInvoice) {
+        const eventStartDate = Timestamp.fromMillis(event.eventStartDateTime);
+
+        const description = `${event.eventName}\n${eventStartDate.toDate().toLocaleDateString()}`;
+
+        await sendInvoiceForCustomer({
+            customerId: ticketPaymentSession.stripeCustomerId,
+            description,
+            amount: ticketPaymentSession.revenue + ticketPaymentSession.serviceFeeAmount,
+            currency: event.currency,
+        });
+    }
 }

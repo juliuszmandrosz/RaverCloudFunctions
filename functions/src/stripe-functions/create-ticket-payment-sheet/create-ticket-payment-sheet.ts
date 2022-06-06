@@ -30,6 +30,7 @@ export async function createTicketPaymentSheet(
     const isVip = data?.isVip ?? false;
     const promotionCode = data?.promotionCode;
     const userId = context.auth!.uid;
+    const sendInvoice = data?.sendInvoice ?? false;
 
     const event = await tryGetEventData(eventId);
 
@@ -90,6 +91,8 @@ export async function createTicketPaymentSheet(
             promotionCodeAmountOff,
             status: 'requires_payment_method',
             isRefunded: false,
+            sendInvoice,
+            stripeCustomerId: paymentSheet.customerId,
         } as TicketPaymentSession);
 
     return paymentSheet;
