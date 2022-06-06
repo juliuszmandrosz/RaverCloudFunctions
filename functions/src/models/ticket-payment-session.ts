@@ -6,6 +6,7 @@ export interface TicketPaymentSession {
     /// Payment intent id
     id: string;
     userId: string;
+    stripeCustomerId: string;
     eventId: string;
     ticketId: string;
     status: Stripe.PaymentIntent.Status;
@@ -15,6 +16,7 @@ export interface TicketPaymentSession {
     revenue: number;
     serviceFeeAmount: number;
     promotionCodeAmountOff: number;
+    sendInvoice: boolean;
     promotionCode?: string;
     paymentDateTime?: Timestamp;
 }

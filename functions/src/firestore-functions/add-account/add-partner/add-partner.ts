@@ -22,6 +22,7 @@ export async function addPartner(
     const partnerId = context.auth!.token.uid;
     const email = context.auth!.token.email!;
     const accessCode = data?.accessCode;
+    const locale = data?.locale;
 
     if (!accessCode) {
         const message = 'The function must be called with access code';
@@ -42,7 +43,7 @@ export async function addPartner(
 
     await partnerDocRef.set({ email, clubId: accessCodeData.clubId } as Partner);
 
-    await addStripeCustomer({ userId: partnerId, userEmail: email });
+    await addStripeCustomer({ userId: partnerId, userEmail: email, locale });
 }
 
 async function usePartnerAccessCode(accessCode: string) {
