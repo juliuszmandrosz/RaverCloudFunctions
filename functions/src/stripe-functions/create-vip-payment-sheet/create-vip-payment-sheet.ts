@@ -15,6 +15,7 @@ import { throwEventPostponedError } from '../../errors/throw-event-postponed-err
 import { getServiceFeeAmount } from '../../utils/stripe-utils/get-service-fee-amount';
 import { getVipPaymentSheetAmount } from './get-vip-payment-sheet-amount';
 import { getPromotionCode } from '../../firestore-functions/get-promotion-code/get-promotion-code';
+import { getStripeCustomerIdFromContext } from '../../utils/stripe-utils/get-stripe-customer-id-from-context';
 
 export async function createVipPaymentSheet(
     data: CreateVipPaymentSheetRequest,
@@ -26,7 +27,9 @@ export async function createVipPaymentSheet(
 
     const ticketId = data?.ticketId;
     const promotionCode = data?.promotionCode;
+    const sendInvoice = data?.sendInvoice ?? false;
     const userId = context.auth!.uid;
+    const stripeCustomerId = await getStripeCustomerIdFromContext(context);
 
     if (!ticketId) {
         const message = 'The function must be called with ticket id';
@@ -93,6 +96,8 @@ export async function createVipPaymentSheet(
             status: 'requires_payment_method',
             eventId: ticket.eventId,
             isRefunded: false,
+            stripeCustomerId,
+            sendInvoice,
         } as VipPaymentSession);
 
     return paymentSheet;
