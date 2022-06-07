@@ -31,6 +31,7 @@ export async function updateInvoiceData(
     if (!isCompany) {
         await getStripeCustomerDocRef(userId).update({
             name,
+            vatNumber: '',
         } as StripeCustomer);
 
         return;
