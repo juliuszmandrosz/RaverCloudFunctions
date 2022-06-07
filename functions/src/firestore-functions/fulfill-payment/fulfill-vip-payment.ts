@@ -9,6 +9,7 @@ import { vipPaymentSessions } from '../../constants/collections';
 import { VipPaymentSession } from '../../models/vip-payment-session';
 import { updateEventCostsOnUserPayment } from '../update-event-costs/update-event-costs-on-user-payment';
 import { updateEventTicketsOnVipPayment } from '../update-event-tickets/update-event-tickets-on-vip-payment';
+import { sendInvoiceForCustomer } from '../../stripe-functions/send-invoice-for-customer/send-invoice-for-customer';
 
 export async function fulfillVipPayment(
     paymentSessionId: string,
@@ -57,4 +58,19 @@ export async function fulfillVipPayment(
         clubId: ticket.clubId,
         response,
     });
+
+    if (vipPaymentSession.sendInvoice) {
+        const eventStartDate = ticket.eventStartDateTime;
+
+        const description = `VIP ${ticket.eventName}\n${eventStartDate
+            .toDate()
+            .toLocaleDateString()}`;
+
+        await sendInvoiceForCustomer({
+            customerId: vipPaymentSession.stripeCustomerId,
+            description,
+            amount: vipPaymentSession.revenue + vipPaymentSession.serviceFeeAmount,
+            currency: ticket.currency,
+        });
+    }
 }
