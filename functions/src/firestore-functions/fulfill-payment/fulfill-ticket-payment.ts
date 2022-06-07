@@ -74,7 +74,10 @@ export async function fulfillTicketPayment(
         await sendInvoiceForCustomer({
             customerId: ticketPaymentSession.stripeCustomerId,
             description,
-            amount: ticketPaymentSession.revenue + ticketPaymentSession.serviceFeeAmount,
+            amount:
+                ticketPaymentSession.revenue +
+                ticketPaymentSession.serviceFeeAmount -
+                ticketPaymentSession.promotionCodeAmountOff,
             currency: event.currency,
         });
     }

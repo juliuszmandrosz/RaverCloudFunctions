@@ -69,7 +69,10 @@ export async function fulfillVipPayment(
         await sendInvoiceForCustomer({
             customerId: vipPaymentSession.stripeCustomerId,
             description,
-            amount: vipPaymentSession.revenue + vipPaymentSession.serviceFeeAmount,
+            amount:
+                vipPaymentSession.revenue +
+                vipPaymentSession.serviceFeeAmount -
+                vipPaymentSession.promotionCodeAmountOff,
             currency: ticket.currency,
         });
     }
