@@ -53,12 +53,6 @@ exports.onClubUpdated = functions.firestore
         ).onClubUpdated(snapshot, context);
     });
 
-exports.createTicketPaymentSheet = functions.https.onCall(async (data, context) => {
-    return (
-        await import('./stripe-functions/create-ticket-payment-sheet/create-ticket-payment-sheet')
-    ).createTicketPaymentSheet(data, context);
-});
-
 exports.createVipPaymentSheet = functions.https.onCall(async (data, context) => {
     return (
         await import('./stripe-functions/create-vip-payment-sheet/create-vip-payment-sheet')
