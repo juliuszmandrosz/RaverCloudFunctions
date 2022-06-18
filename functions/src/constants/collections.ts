@@ -17,5 +17,3 @@ export const selectorsAccessCodes = 'selectorsAccessCodes';
 export const partnersAccessCodes = 'partnersAccessCodes';
 export const newReview = 'clubs/{clubId}/reviews/{reviewId}';
 export const clubsSales = 'clubsSales';
-export const partnersDiscounts = 'partnerDiscounts';
-export const appliedDiscounts = 'appliedDiscounts';
