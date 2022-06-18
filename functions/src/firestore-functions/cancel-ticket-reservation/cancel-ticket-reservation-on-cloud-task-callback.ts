@@ -22,6 +22,8 @@ export async function cancelTicketReservationOnCloudTaskCallback(
 
     const sessionDocRef = getTicketPaymentSessionDocRef(sessionId);
 
+    if (session.status === 'canceled') return;
+
     await sessionDocRef.update({ status: 'canceled' } as TicketPaymentSession);
 
     await stripe.paymentIntents.cancel(session.id);

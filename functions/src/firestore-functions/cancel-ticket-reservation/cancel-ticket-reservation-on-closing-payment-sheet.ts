@@ -26,6 +26,8 @@ export async function cancelTicketReservationOnClosingPaymentSheet(
 
     const session = await tryGetTicketPaymentSessionData(sessionId);
 
+    if (session.status === 'canceled') return;
+
     const sessionDocRef = getTicketPaymentSessionDocRef(sessionId);
 
     await tasksClient.deleteTask({ name: session.cancelTicketReservationTaskId });
