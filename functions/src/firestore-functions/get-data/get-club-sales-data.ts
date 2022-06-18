@@ -17,6 +17,21 @@ export async function tryGetClubSalesData(clubId: string, transaction?: Transact
     return clubSalesDoc.data() as ClubSales;
 }
 
+export async function getClubSalesOrReturnNotFound(
+    clubId: string,
+    response: functions.Response,
+    transaction?: Transaction
+) {
+    const clubSalesDoc = await getClubSalesDoc(clubId, transaction);
+
+    if (!clubSalesDoc.exists) {
+        response.status(404).send(message);
+        return;
+    }
+
+    return clubSalesDoc.data() as ClubSales;
+}
+
 async function getClubSalesDoc(clubId: string, transaction?: Transaction) {
     const clubSalesDocRef = getClubSalesDocRef(clubId);
 

@@ -8,7 +8,6 @@ import {
 } from '../get-data/get-event-tickets-data';
 import { getClubIncome } from '../../utils/get-club-income';
 import { updateTicketSalesOnVipPayment } from '../update-ticket-sales/update-ticket-sales-on-vip-payment';
-import { updateClubSalesOnVipPayment } from '../update-club-sales/update-club-sales-on-vip-payment';
 
 interface UpdateEventTicketsOnVipPaymentParams {
     ticket: Ticket;
@@ -34,15 +33,8 @@ export async function updateEventTicketsOnVipPayment({
 
         const eventFee = tickets.ticketSales.eventFee;
         const clubIncome = getClubIncome(vipPrice, eventFee);
-        const isExclusiveEvent = tickets.ticketSales.isExclusiveEvent;
 
         await updateTicketSalesOnVipPayment({ tickets, clubIncome, vipPrice });
-
-        await updateClubSalesOnVipPayment({
-            isExclusiveEvent,
-            clubId: ticket.clubId,
-            revenue: vipPrice,
-        });
 
         transaction.update(eventTicketsDocRef, tickets);
 

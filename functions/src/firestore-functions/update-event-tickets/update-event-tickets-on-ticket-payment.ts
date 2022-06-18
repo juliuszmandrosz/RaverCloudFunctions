@@ -7,7 +7,6 @@ import { getCurrentOrLastPool } from '../../utils/get-current-or-last-pool';
 import { getClubIncome } from '../../utils/get-club-income';
 import { updateTicketSalesOnTicketPayment } from '../update-ticket-sales/update-ticket-sales-on-ticket-payment';
 import { updateTicketPoolsOnTicketPayment } from '../update-ticket-pools/update-ticket-pools-on-ticket-payment';
-import { updateClubSalesOnTicketPayment } from '../update-club-sales/update-club-sales-on-ticket-payment';
 
 /// Returns event tickets after update
 export async function updateEventTicketsOnTicketPayment(
@@ -22,16 +21,8 @@ export async function updateEventTicketsOnTicketPayment(
         const eventFee = tickets.ticketSales.eventFee;
         const totalRevenue = getTotalRevenue({ isVip, vipPrice, ticketPrice: event.price });
         const clubIncome = getClubIncome(totalRevenue, eventFee);
-        const isExclusiveEvent = tickets.ticketSales.isExclusiveEvent;
 
         updateTicketSalesOnTicketPayment({ tickets, isVip, totalRevenue, clubIncome });
-
-        await updateClubSalesOnTicketPayment({
-            isExclusiveEvent,
-            clubId: event.clubId,
-            revenue: totalRevenue,
-            isVip,
-        });
 
         await updateTicketPoolsOnTicketPayment(tickets);
 

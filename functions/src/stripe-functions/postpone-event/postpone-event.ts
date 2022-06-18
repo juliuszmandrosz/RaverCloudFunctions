@@ -11,6 +11,7 @@ import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 import { updateEventOnEventPostpone } from '../../firestore-functions/update-event/update-event-on-event-postpone';
 import { updateTicketsOnEventPostpone } from '../../firestore-functions/update-tickets/update-tickets-on-event-postpone';
+import { extendUpdateClubSalesTaskOnEventPostpone } from '../../cloud-tasks/update-club-sales-on-event-end-task/extend-update-club-sales-task-on-event-postpone';
 
 export async function postponeEvent(
     data: PostponeEventRequest,
@@ -56,6 +57,11 @@ export async function postponeEvent(
     await updateTicketsOnEventPostpone({
         eventId: event.id,
         newEventStartDateTime: Timestamp.fromMillis(newEventStartTimestamp),
+        newEventEndDateTime: Timestamp.fromMillis(newEventEndTimestamp),
+    });
+
+    await extendUpdateClubSalesTaskOnEventPostpone({
+        event,
         newEventEndDateTime: Timestamp.fromMillis(newEventEndTimestamp),
     });
 }

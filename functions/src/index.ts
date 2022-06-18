@@ -193,3 +193,13 @@ exports.updateInvoiceData = functions
             await import('./stripe-functions/update-invoice-data/update-invoice-data')
         ).updateInvoiceData(data, context);
     });
+
+exports.updateClubSalesOnEventEndCallback = functions
+    .region('europe-central2')
+    .https.onRequest(async (request, response) => {
+        await (
+            await import(
+                './firestore-functions/update-club-sales/update-club-sales-on-event-end-callback'
+            )
+        ).updateClubSalesOnEventEndCallback(request, response);
+    });

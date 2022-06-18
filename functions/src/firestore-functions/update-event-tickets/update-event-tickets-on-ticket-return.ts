@@ -5,7 +5,6 @@ import { getEventTicketsDocRef, tryGetEventTicketsData } from '../get-data/get-e
 import { reduceTicketSalesBySingleTransaction } from '../update-ticket-sales/reduce-ticket-sales-by-single-transaction';
 import { revertSingleTicketFromPools } from '../update-ticket-pools/revert-single-ticket-from-pools';
 import { getClubIncome } from '../../utils/get-club-income';
-import { reduceClubSalesBySingleTransaction } from '../update-club-sales/reduce-club-sales-by-single-transaction';
 
 interface UpdateEventTicketsOnTicketReturnParams {
     event: Event;
@@ -25,20 +24,12 @@ export async function updateEventTicketsOnTicketReturn({
 
         const eventFee = tickets.ticketSales.eventFee;
         const clubIncomeToReduce = getClubIncome(returnedRevenue, eventFee);
-        const isExclusiveEvent = tickets.ticketSales.isExclusiveEvent;
 
         await reduceTicketSalesBySingleTransaction({
             tickets,
             totalRevenueToReduce: returnedRevenue,
             isVip,
             clubIncomeToReduce,
-        });
-
-        await reduceClubSalesBySingleTransaction({
-            isExclusiveEvent,
-            clubId: event.clubId,
-            isVip,
-            revenueToReduce: returnedRevenue,
         });
 
         await revertSingleTicketFromPools(tickets);
