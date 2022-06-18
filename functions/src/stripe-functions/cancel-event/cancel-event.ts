@@ -12,6 +12,7 @@ import { refundTicketsForUsers } from '../refund-tickets-for-users';
 import { updateEventOnEventCancelation } from '../../firestore-functions/update-event/update-event-on-event-cancelation';
 import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-users-payment-sessions/cancel-users-payment-sessions';
 import { updateTicketsOnEventCancelation } from '../../firestore-functions/update-tickets/update-tickets-on-event-cancelation';
+import { cancelUpdateClubSalesTask } from '../../cloud-tasks/update-club-sales-on-event-end-task/cancel-update-club-sales-task';
 
 export async function cancelEvent(
     data: CancelEventRequest,
@@ -46,6 +47,7 @@ export async function cancelEvent(
     const refundedSessions = await refundTicketsForUsers(event.id);
     await updateTicketsOnEventCancelation(refundedSessions.ticketSessions);
     await updateEventOnEventCancelation({ event });
+    await cancelUpdateClubSalesTask(eventId);
 }
 
 function checkIfRequestIsValid(request: CancelEventRequest) {
