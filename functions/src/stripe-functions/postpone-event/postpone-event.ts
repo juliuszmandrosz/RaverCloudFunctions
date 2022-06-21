@@ -1,10 +1,9 @@
 import * as functions from 'firebase-functions';
 import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
 import { checkPartnerClaim } from '../../auth-functions/check-claim/check-partner-claim';
-import { Event } from '../../models/event';
 import * as moment from 'moment';
 import { FunctionsErrorDetails } from '../../errors/functions-error-details';
-import { getEventDocRef, tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
+import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
 import { PostponeEventRequest } from './postpone-event-request';
 import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-users-payment-sessions/cancel-users-payment-sessions';
 import { firestore } from 'firebase-admin';
@@ -45,8 +44,6 @@ export async function postponeEvent(
     }
 
     await cancelUsersPaymentSessions({ eventId });
-
-    await getEventDocRef(eventId).update({ isBeingPostponed: true } as Event);
 
     await updateEventOnEventPostpone({
         event,
