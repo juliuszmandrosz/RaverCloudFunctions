@@ -37,14 +37,14 @@ export async function updateEventTicketsOnCancelReservation({
         const eventFee = tickets.ticketSales.eventFee;
         const canceledClubIncome = getClubIncome(canceledAmount, eventFee);
 
-        await reduceTicketSalesBySingleTransaction({
+        reduceTicketSalesBySingleTransaction({
             tickets: tickets,
             isVip,
             totalRevenueToReduce: canceledAmount,
             clubIncomeToReduce: canceledClubIncome,
         });
 
-        await revertSingleTicketFromPools(tickets);
+        revertSingleTicketFromPools(tickets);
 
         transaction.update(eventTicketsDocRef, tickets);
 

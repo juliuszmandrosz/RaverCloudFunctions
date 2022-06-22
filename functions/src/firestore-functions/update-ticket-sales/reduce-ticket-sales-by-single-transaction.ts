@@ -7,7 +7,7 @@ interface ReduceTicketSalesBySingleTransactionParams {
     isVip: boolean;
 }
 
-export async function reduceTicketSalesBySingleTransaction({
+export function reduceTicketSalesBySingleTransaction({
     tickets,
     totalRevenueToReduce,
     clubIncomeToReduce,

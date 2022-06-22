@@ -4,7 +4,7 @@ import { restorePool } from './restore-pool';
 import { getCurrentOrLastPool } from '../../utils/get-current-or-last-pool';
 import { resetPool } from './reset-pool';
 
-export async function revertSingleTicketFromPools(tickets: EventTickets) {
+export function revertSingleTicketFromPools(tickets: EventTickets) {
     tickets.isSoldOut = false;
 
     const ticketPools = tickets.ticketPools;
