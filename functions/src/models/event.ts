@@ -5,6 +5,7 @@ export interface Event {
     clubName: string;
     eventStartDateTime: number;
     eventEndDateTime: number;
+    originalStartDateTime: number;
     attending: number;
     minAge: number;
     price: number;

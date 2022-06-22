@@ -31,7 +31,7 @@ export async function cancelEvent(
     const event = await tryGetEventData(eventId);
     const eventStartDateTime = moment(event.eventStartDateTime);
 
-    if (eventStartDateTime.isBefore(moment().add(1, 'day'))) {
+    if (eventStartDateTime.isBefore(moment().add(3, 'hours'))) {
         const message = 'Time to cancel event has expired';
         const details: FunctionsErrorDetails = 'cancel-time-expired';
         throw new functions.https.HttpsError('deadline-exceeded', message, details);

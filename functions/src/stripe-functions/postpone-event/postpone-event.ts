@@ -29,17 +29,25 @@ export async function postponeEvent(
     await checkPartnerClaim({ email: context.auth?.token.email! });
 
     const event = await tryGetEventData(eventId);
-    const eventStartDateTime = moment(event.eventStartDateTime);
+    const eventStartMoment = moment(event.eventStartDateTime);
+    const originalStartMoment = moment(event.originalStartDateTime);
+    const newEventMoment = moment(newEventStartTimestamp);
 
-    if (eventStartDateTime.isBefore(moment().add(1, 'day'))) {
+    if (eventStartMoment.isBefore(moment().add(3, 'hours'))) {
         const message = 'Time to postpone event has expired';
         const details: FunctionsErrorDetails = 'postpone-time-expired';
         throw new functions.https.HttpsError('deadline-exceeded', message, details);
     }
 
-    if (moment(newEventStartTimestamp).isBefore(eventStartDateTime.add(1, 'day'))) {
+    if (newEventMoment.isBefore(eventStartMoment.add(1, 'day'))) {
         const message = 'The minimum time by which an event can be postponed is 24 hours';
         const details: FunctionsErrorDetails = 'postpone-time-too-short';
+        throw new functions.https.HttpsError('invalid-argument', message, details);
+    }
+
+    if (newEventMoment.isAfter(originalStartMoment.add(150, 'days'))) {
+        const message = 'The maximum start date time is 150 days from original start date';
+        const details: FunctionsErrorDetails = 'postpone-date-too-late';
         throw new functions.https.HttpsError('invalid-argument', message, details);
     }
 
