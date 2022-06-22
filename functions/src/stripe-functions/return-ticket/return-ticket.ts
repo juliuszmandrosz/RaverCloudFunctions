@@ -1,6 +1,5 @@
 import * as functions from 'firebase-functions';
 import { ReturnTicketRequest } from './return-ticket-request';
-import * as moment from 'moment';
 import { FunctionsErrorDetails } from '../../errors/functions-error-details';
 import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
 import {
@@ -20,6 +19,8 @@ import { refundPayment } from '../refund-payment/refund-payment';
 import { TicketPaymentSession } from '../../models/ticket-payment-session';
 import { VipPaymentSession } from '../../models/vip-payment-session';
 import { Ticket } from '../../models/ticket';
+import { firestore } from 'firebase-admin';
+import Timestamp = firestore.Timestamp;
 
 export async function returnTicket(
     data: ReturnTicketRequest,
@@ -49,9 +50,7 @@ export async function returnTicket(
         throw new functions.https.HttpsError('permission-denied', message);
     }
 
-    const eventStartDateTime = moment(ticket.eventStartDateTime.toMillis());
-
-    if (eventStartDateTime.isBefore(moment().add(1, 'day'))) {
+    if (ticket.eventStartDateTime < Timestamp.now()) {
         const message = 'Time to return ticket has expired';
         const details: FunctionsErrorDetails = 'return-time-expired';
         throw new functions.https.HttpsError('deadline-exceeded', message, details);
