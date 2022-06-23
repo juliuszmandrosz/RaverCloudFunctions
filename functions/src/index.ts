@@ -76,14 +76,6 @@ exports.postponeEvent = functions.region('europe-central2').https.onCall(async (
     );
 });
 
-exports.checkSelectorClaim = functions
-    .region('europe-central2')
-    .https.onCall(async (data, context) => {
-        return (
-            await import('./auth-functions/check-claim/check-selector-claim')
-        ).checkSelectorClaim(data, context);
-    });
-
 exports.addSelector = functions.region('europe-central2').https.onCall(async (data, context) => {
     return (
         await import('./firestore-functions/add-account/add-selector/add-selector')
@@ -140,22 +132,6 @@ exports.cancelTicketReservationOnClosingPaymentSheet = functions
                 './firestore-functions/cancel-ticket-reservation/cancel-ticket-reservation-on-closing-payment-sheet'
             )
         ).cancelTicketReservationOnClosingPaymentSheet(data, context);
-    });
-
-exports.checkIfAccountExists = functions
-    .region('europe-central2')
-    .https.onCall(async (data, context) => {
-        return (
-            await import('./auth-functions/check-account/check-if-account-exists')
-        ).checkIfAccountExists(data, context);
-    });
-
-exports.checkIfAccountNotExists = functions
-    .region('europe-central2')
-    .https.onCall(async (data, context) => {
-        return (
-            await import('./auth-functions/check-account/check-if-account-not-exists')
-        ).checkIfAccountNotExists(data, context);
     });
 
 exports.checkSelectorAccessCode = functions
