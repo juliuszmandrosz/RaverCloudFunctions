@@ -76,12 +76,6 @@ exports.postponeEvent = functions.region('europe-central2').https.onCall(async (
     );
 });
 
-exports.addSelector = functions.region('europe-central2').https.onCall(async (data, context) => {
-    return (
-        await import('./firestore-functions/add-account/add-selector/add-selector')
-    ).addSelector(data, context);
-});
-
 exports.onAccountDeleted = functions
     .region('europe-central2')
     .auth.user()
