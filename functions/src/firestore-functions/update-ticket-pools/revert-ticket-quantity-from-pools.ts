@@ -8,6 +8,8 @@ export async function revertTicketQuantityFromPools(
     tickets: EventTickets,
     ticketQuantityToRevert: number
 ) {
+    if (ticketQuantityToRevert === 0) return;
+
     tickets.isSoldOut = false;
 
     const ticketPools = tickets.ticketPools;

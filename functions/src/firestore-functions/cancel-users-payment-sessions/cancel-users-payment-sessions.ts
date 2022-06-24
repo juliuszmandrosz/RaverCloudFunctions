@@ -16,6 +16,8 @@ export async function cancelUsersPaymentSessions({
 
     await cancelUsersVipPaymentSessions(eventId);
 
+    if (cancelTicketsSessionsResponse.canceledTicketSessionsQuantity === 0) return;
+
     await updateEventOnCancelUsersPaymentSessions({
         eventId,
         canceledTicketSessionsQuantity:
