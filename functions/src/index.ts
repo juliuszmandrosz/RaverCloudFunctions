@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import { newClub, newEvent, newReview } from './constants/collections';
+import { newClub, newEvent, newEventTickets, newReview } from './constants/collections';
 
 export const env = functions.config();
 
@@ -172,4 +172,13 @@ exports.updateClubSalesOnEventEndCallback = functions
                 './firestore-functions/update-club-sales/update-club-sales-on-event-end-callback'
             )
         ).updateClubSalesOnEventEndCallback(request, response);
+    });
+
+exports.onEventTicketsUpdated = functions
+    .region('europe-central2')
+    .firestore.document(newEventTickets)
+    .onUpdate(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/on-event-tickets-updated')
+        ).onEventTicketsUpdated(snapshot, context);
     });

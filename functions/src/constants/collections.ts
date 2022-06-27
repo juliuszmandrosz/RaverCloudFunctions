@@ -19,3 +19,4 @@ export const newReview = 'clubs/{clubId}/reviews/{reviewId}';
 export const clubsSales = 'clubsSales';
 export const eventReviews = 'eventReview';
 export const updateClubSalesTasks = 'updateClubSalesTasks';
+export const newEventTickets = 'clubs/{clubId}/eventTickets/{eventId}';
