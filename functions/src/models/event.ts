@@ -11,6 +11,7 @@ export interface Event {
     price: number;
     currency: string;
     allowedOutfit: string;
+    eventPhotoUrl: string;
     musicalGenres: string[];
     _geoloc: { [key: string]: number };
     urlLinks: { [key: string]: string };
@@ -20,5 +21,4 @@ export interface Event {
     isBeingPostponed: boolean;
     artistName?: string;
     description?: string;
-    photos?: string[];
 }

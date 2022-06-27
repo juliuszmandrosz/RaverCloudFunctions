@@ -5,4 +5,6 @@ export interface User {
     favoriteClubIds: string[];
     /// key - clubId, value - number of entries
     attendance: { [key: string]: number };
+    pushNotificationTokens: string[];
+    locale: string;
 }
