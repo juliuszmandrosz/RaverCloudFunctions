@@ -5,9 +5,9 @@ import { createUpdateClubSalesOnEventEndTask } from '../cloud-tasks/update-club-
 import { Event } from '../models/event';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
-import { firebaseMessaging, firestoreDatabase } from '../modules/firebase-admin-module';
-import { users } from '../constants/collections';
+import { firebaseMessaging } from '../modules/firebase-admin-module';
 import { User } from '../models/user';
+import { getClubFollowers } from '../cloud-messages/get-club-followers';
 
 export async function onEventAdded(
     snapshot: functions.firestore.DocumentSnapshot,
@@ -17,7 +17,7 @@ export async function onEventAdded(
     const event = snapshot.data() as Event;
     event.id = snapshot.id;
     await createUpdateClubSalesTask(event);
-    await sendPushNotificationsToClubFollowers(event);
+    await sendCloudMessageToClubFollowers(event);
 }
 
 async function addEventToAlgolia(snapshot: DocumentSnapshot) {
@@ -34,21 +34,14 @@ async function createUpdateClubSalesTask(event: Event) {
     });
 }
 
-async function sendPushNotificationsToClubFollowers(event: Event) {
-    const clubFollowers = await firestoreDatabase()
-        .collection(users)
-        .where('favoriteClubIds', 'array-contains', event.clubId)
-        .get();
+async function sendCloudMessageToClubFollowers(event: Event) {
+    const clubFollowers = await getClubFollowers(event.clubId);
 
     for (const follower of clubFollowers.docs) {
         const user = follower.data() as User;
         const userTokens = user.pushNotificationTokens;
         if (!userTokens || userTokens?.length === 0) continue;
-        const title =
-            user.locale === 'pl'
-                ? `Nowe wydarzenie w klubie ${event.clubName}!`
-                : `New event at the ${event.clubName} club!`;
-
+        const title = getCloudMessageTitle(user.locale, event.clubName);
         await firebaseMessaging().sendToDevice(
             userTokens,
             {
@@ -67,4 +60,10 @@ async function sendPushNotificationsToClubFollowers(event: Event) {
             }
         );
     }
+}
+
+function getCloudMessageTitle(locale: string, clubName: string) {
+    return locale === 'pl'
+        ? `Nowe wydarzenie w klubie ${clubName}!`
+        : `New event at the ${clubName} club!`;
 }

@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import { newClub, newEvent, newEventTickets, newReview } from './constants/collections';
+import { newClub, newEvent, newEventTickets, newReview, newReward } from './constants/collections';
 
 export const env = functions.config();
 
@@ -181,4 +181,13 @@ exports.onEventTicketsUpdated = functions
         await (
             await import('./firebase-triggers/on-event-tickets-updated')
         ).onEventTicketsUpdated(snapshot, context);
+    });
+
+exports.onRewardAdded = functions
+    .region('europe-central2')
+    .firestore.document(newReward)
+    .onCreate(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/on-reward-added')
+        ).onRewardAdded(snapshot, context);
     });

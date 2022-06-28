@@ -7,6 +7,7 @@ import { Event } from '../models/event';
 import { tryGetEventData } from '../firestore-functions/get-data/get-event-data';
 import { firestore } from 'firebase-admin';
 import DocumentSnapshot = firestore.DocumentSnapshot;
+import { getEventFollowers } from '../cloud-messages/get-event-followers';
 
 export async function onEventTicketsUpdated(
     change: functions.Change<DocumentSnapshot>,
@@ -18,23 +19,18 @@ export async function onEventTicketsUpdated(
     if (beforeUpdate.isSoldOut && !afterUpdate.isSoldOut) {
         const eventId = context.params.eventId;
         const event = await tryGetEventData(eventId);
-        await sendPushNotificationsToEventFollowers(event);
+        await sendCloudMessageToEventFollowers(event);
     }
 }
 
-async function sendPushNotificationsToEventFollowers(event: Event) {
+async function sendCloudMessageToEventFollowers(event: Event) {
     const eventFollowers = await getEventFollowers(event.id);
-
     for (const follower of eventFollowers.docs) {
         if (await checkIfUserAlreadyHasTicket(follower.id, event.id)) continue;
         const user = follower.data() as User;
         const userTokens = user.pushNotificationTokens;
         if (!userTokens || userTokens?.length === 0) continue;
-        const title =
-            user.locale === 'pl'
-                ? 'Pojawiły się nowe bilety na wydarzenie!'
-                : 'New event tickets are out!';
-
+        const title = getCloudMessageTitle(user.locale);
         await firebaseMessaging().sendToDevice(
             userTokens,
             {
@@ -66,9 +62,8 @@ async function checkIfUserAlreadyHasTicket(userId: string, eventId: string) {
     return userTicket.docs.length > 0;
 }
 
-async function getEventFollowers(eventId: string) {
-    return firestoreDatabase()
-        .collection(users)
-        .where('favoriteEventIds', 'array-contains', eventId)
-        .get();
+function getCloudMessageTitle(locale: string) {
+    return locale === 'pl'
+        ? 'Pojawiły się nowe bilety na wydarzenie!'
+        : 'New event tickets are out!';
 }
