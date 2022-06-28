@@ -19,6 +19,11 @@ export async function onEventUpdated(
 
     if (!beforeUpdate.isCanceled && afterUpdate.isCanceled) {
         await sendCloudMessageWithCanceledEventInfoToTicketHolders(afterUpdate);
+        return;
+    }
+
+    if (beforeUpdate.eventStartDateTime !== afterUpdate.eventStartDateTime) {
+        await sendCloudMessageWithPostponedEventInfoToTicketHolders(afterUpdate);
     }
 }
 
@@ -34,6 +39,31 @@ async function sendCloudMessageWithCanceledEventInfoToTicketHolders(event: Event
         const userTokens = user.pushNotificationTokens;
         if (!userTokens || userTokens?.length === 0) continue;
         const title = getCanceledEventCloudMessageTitle(user.locale);
+        await firebaseMessaging().sendToDevice(
+            userTokens,
+            {
+                notification: {
+                    title,
+                    body: event.eventName,
+                },
+                data: {
+                    eventId: event.id,
+                },
+            },
+            {
+                priority: 'high',
+                contentAvailable: true,
+            }
+        );
+    }
+}
+
+async function sendCloudMessageWithPostponedEventInfoToTicketHolders(event: Event) {
+    const ticketHolders = await getTicketHolders(event.id);
+    for (const user of ticketHolders) {
+        const userTokens = user.pushNotificationTokens;
+        if (!userTokens || userTokens?.length === 0) continue;
+        const title = getPostponedEventCloudMessageTitle(user.locale);
         await firebaseMessaging().sendToDevice(
             userTokens,
             {
@@ -69,4 +99,8 @@ function getCanceledEventCloudMessageTitle(locale: string) {
     return locale === 'pl'
         ? 'Wydarzenie zostało odwołane, Twój bilet został zwrócony'
         : 'The event has been canceled, your ticket has been refunded';
+}
+
+function getPostponedEventCloudMessageTitle(locale: string) {
+    return locale === 'pl' ? 'Wydarzenie zostało przełożone' : 'The event has been postponed';
 }
