@@ -16,7 +16,7 @@ export async function tryGetEventData(eventId: string, transaction?: Transaction
         throwInvalidEventError();
     }
 
-    return createEventData(eventDoc, eventId);
+    return getEventData(eventDoc, eventId);
 }
 
 export async function getEventDataOrReturnNotFound(
@@ -31,7 +31,7 @@ export async function getEventDataOrReturnNotFound(
         return;
     }
 
-    return createEventData(eventDoc, eventId);
+    return getEventData(eventDoc, eventId);
 }
 
 export function getEventDocRef(eventId: string) {
@@ -43,7 +43,7 @@ async function getEventDoc(eventId: string, transaction?: Transaction) {
     return transaction ? transaction.get(eventDocRef) : eventDocRef.get();
 }
 
-function createEventData(eventDoc: DocumentSnapshot, eventId: string) {
+function getEventData(eventDoc: DocumentSnapshot, eventId: string) {
     const event = eventDoc.data() as Event;
     event.id = eventId;
 
