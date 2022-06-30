@@ -1,13 +1,213 @@
 rules_version = '2';
 service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+    match /databases/{database}/documents {
+        function isAuthenticated() {
+            return request.auth != null;
+        }
+
+        function isUser() {
+            return isAuthenticated() && hasUserClaim();
+        }
+
+        function isPartner() {
+            return isAuthenticated() && hasPartnerClaim();
+        }
+
+        function isSelector() {
+            return isAuthenticated() && hasSelectorClaim();
+        }
+
+        function hasUserClaim() {
+            return 'isUser' in request.auth.token && request.auth.token.isUser == true;
+        }
+
+
+        function hasPartnerClaim() {
+            return 'isPartner' in request.auth.token && request.auth.token.isPartner == true;
+        }
+
+        function hasSelectorClaim() {
+            return 'isSelector' in request.auth.token && request.auth.token.isSelector == true;
+        }
+
+        function getPartner() {
+            return get(/databases/$(database)/documents/partners/$(request.auth.uid));
+        }
+
+        function getSelector() {
+            return get(/databases/$(database)/documents/selectors/$(request.auth.uid));
+        }
+
+        function isPartnerFromClub(clubId) {
+            return clubId == getPartner().data.clubId;
+        }
+
+        function isRequestFromCurrentAccount(accountId) {
+            return request.auth.uid == accountId;
+        }
+
+        function isNullOrEmpty(fieldName) {
+            return !('userOpinion' in request.resource.data) || getLength(fieldName) == 0;
+        }
+
+        function isNotEmpty(fieldName) {
+            return request.resource.data[fieldName] is string && getLength(fieldName) > 0;
+        }
+
+        function getLength(fieldName) {
+            return request.resource.data[fieldName].size();
+        }
+
+
+        match /availableFilters/{filters} {
+            allow read: if isAuthenticated();
+            allow write: if false;
+        }
+
+        match /clubs/{clubId} {
+            allow read: if isAuthenticated();
+            allow write: if isPartner() && isPartnerFromClub(clubId);
+
+            match /appliedDiscounts/{discountId} {
+                allow read, create: if isPartner() && isPartnerFromClub(clubId);
+            }
+
+            match /eventCosts/{eventId} {
+                allow read: if isPartner() && isPartnerFromClub(clubId);
+                allow write: if false;
+            }
+
+            match /eventReview/{eventId} {
+                allow read: if isPartner() && isPartnerFromClub(clubId);
+                allow write: if false;
+            }
+
+            match /eventTickets/{eventId} {
+                allow read: if isAuthenticated();
+                allow update: if isPartner()
+                                 && isPartnerFromClub(clubId)
+                                 && request.resource.data.ticketSales == resource.data.ticketSales;
+            }
+
+            match /reviews/{reviewId} {
+                function getUserRate() {
+                    return request.resource.data.userRate;
+                }
+
+
+                allow read: if isAuthenticated();
+                // TODO - check if user has expired ticket and event has ended
+                allow create: if isUser()
+                                 && getUserRate() >= 1
+                                 && getUserRate() <= 5
+                                 && (isNullOrEmpty('userOpinion') || getLength('userOpinion') <= 1000);
+            }
+
+            match /rewards/{rewardId} {
+                allow read: if isAuthenticated();
+                allow write: if isPartner() && isPartnerFromClub(clubId);
+            }
+
+            match /selectors/{selectorId} {
+                allow read, write: if isPartner() && isPartnerFromClub(clubId);
+            }
+        }
+
+        match /clubsSales/{clubId} {
+            allow read: if isPartner() && isPartnerFromClub(clubId);
+            allow write: if false;
+        }
+
+        match /currencyParams/{currency} {
+            allow read: if isAuthenticated();
+            allow write: if false;
+        }
+
+        match /events/{eventId} {
+            function isValidEvent() {
+                return isValidArtistName();
+            }
+
+            function isValidConcertInfo() {
+                return !isConcert() || isConcert() && isValidArtistName();
+            }
+
+            function isValidArtistName() {
+                return isConcert() && isNotEmpty('artistName')
+                       && getLength('artistName') <= 100;
+            }
+
+            function getArtistName() {
+                return request.resource.data.artistName;
+            }
+
+            function isConcert() {
+                return request.resource.data.isConcert;
+            }
+
+
+            allow read: if isAuthenticated();
+            // TODO - check partner claim
+            allow write: if isValidEvent() && isPartnerFromClub(request.resource.data.clubId);
+        }
+
+        match /partners/{partnerId} {
+            allow read, write: if isAuthenticated() && isRequestFromCurrentAccount(partnerId);
+        }
+
+        match /partnersAccessCodes/{code} {
+            allow read: if true;
+            allow write: if isAuthenticated();
+        }
+
+        match /partnersDiscounts/{code} {
+            allow read: if isPartner();
+            allow write: if false;
+        }
+
+        match /reviewReports/{reportId} {
+            allow read: if isAuthenticated();
+            allow write: if isAuthenticated() && isRequestFromCurrentAccount(request.resource.data.reporterId);
+        }
+
+        match /selectors/{selectorId} {
+            allow read, write: if isAuthenticated() && isRequestFromCurrentAccount(selectorId);
+        }
+
+        match /selectorsAccessCodes/{code} {
+            allow read: if true;
+            allow create: if isPartner() && isPartnerFromClub(request.resource.data.clubId);
+            allow delete: if isAuthenticated();
+        }
+
+        match /stripeCustomers/{customerId} {
+            allow read, write: if isAuthenticated() && isRequestFromCurrentAccount(customerId);
+        }
+
+        match /ticketPaymentSessions/{sessionId} {
+            allow read, write: if false;
+        }
+
+        match /updateClubSalesTask/{eventId} {
+            allow read, write: if false;
+        }
+
+        match /users/{userId} {
+            allow read, write: if isAuthenticated() && isRequestFromCurrentAccount(userId);
+
+            match /promotionCodes/{code} {
+                // TODO - add check if redemptions is not reduced nor expiration time changed
+                allow read, update: if isUser() && isRequestFromCurrentAccount(userId);
+            }
+
+            match /tickets/{ticketId} {
+                allow read: if isUser() && isRequestFromCurrentAccount(userId);
+                allow update: if isSelector() && getSelector().data.clubId == resource.data.clubId;
+            }
+        }
+
+        match /vipPaymentSessions/{sessionId} {
+            allow read, write: if false;
+        }
     }
-  }
-  match /databases/{database}/documents {
-    match /events/{event} {
-      allow read, write: if request.auth.token.isPartner;
-    }
-  }
 }

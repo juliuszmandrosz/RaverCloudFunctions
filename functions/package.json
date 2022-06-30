@@ -7,13 +7,15 @@
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "npm run build && firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "test": "firebase emulators:exec --only firestore 'jest'"
   },
   "engines": {
     "node": "16"
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@firebase/rules-unit-testing": "^2.0.3",
     "@google-cloud/tasks": "^2.6.0",
     "algoliasearch": "^4.13.0",
     "firebase-admin": "^10.0.2",
@@ -26,6 +28,9 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.18.6",
+    "@babel/preset-typescript": "^7.18.6",
+    "@types/jest": "^28.1.4",
     "@types/randomstring": "^1.1.8",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.18.0",
@@ -33,6 +38,7 @@
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.25.4",
     "firebase-functions-test": "^0.2.0",
+    "ts-jest": "^28.0.5",
     "typescript": "^4.5.4"
   },
   "private": true,
