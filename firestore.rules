@@ -47,7 +47,7 @@ service cloud.firestore {
         }
 
         function isNullOrEmpty(fieldName) {
-            return !('userOpinion' in request.resource.data) || getLength(fieldName) == 0;
+            return !(fieldName in request.resource.data) || getLength(fieldName) == 0;
         }
 
         function isNotEmpty(fieldName) {
@@ -94,13 +94,18 @@ service cloud.firestore {
                     return request.resource.data.userRate;
                 }
 
+                function getUserTicket() {
+                    return get(/databases/$(database)/documents/users/$(request.auth.uid)/tickets/$(request.resource.data.ticketId)).data;
+                }
+
 
                 allow read: if isAuthenticated();
-                // TODO - check if user has expired ticket and event has ended
                 allow create: if isUser()
                                  && getUserRate() >= 1
                                  && getUserRate() <= 5
-                                 && (isNullOrEmpty('userOpinion') || getLength('userOpinion') <= 1000);
+                                 && (isNullOrEmpty('userOpinion') || getLength('userOpinion') <= 1000)
+                                 && getUserTicket().isExpired
+                                 && getUserTicket().eventEndDateTime < request.time;
             }
 
             match /rewards/{rewardId} {

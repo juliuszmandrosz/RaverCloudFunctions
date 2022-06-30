@@ -7,4 +7,5 @@ export interface Review {
     userRate: number;
     eventId: string;
     eventName: string;
+    ticketId: string;
 }

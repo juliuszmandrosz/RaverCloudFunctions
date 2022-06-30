@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import { v1 } from 'uuid';
 import * as firebase from '@firebase/rules-unit-testing';
-import { serverTimestamp as st } from 'firebase/firestore';
 import { Review } from '../src/models/review';
-
-const serverTimestamp = () => st();
+import { Ticket } from '../src/models/ticket';
+import { EventTickets } from '../src/models/event-tickets';
+import { serverTimestamp } from 'firebase/firestore';
 
 let testEnv: firebase.RulesTestEnvironment;
 
@@ -33,16 +33,27 @@ async function setClubForPartner(partnerId: string, clubId: string) {
     });
 }
 
-async function setEventTickets(clubId: string, eventId: string) {
+interface SetEventTicketsParams {
+    clubId: string;
+    eventId: string;
+    eventTickets: EventTickets;
+}
+
+async function setEventTickets({ clubId, eventId, eventTickets }: SetEventTicketsParams) {
     await testEnv.withSecurityRulesDisabled(async (context) => {
-        await context
-            .firestore()
-            .doc(`clubs/${clubId}/eventTickets/${eventId}`)
-            .set({
-                ticketSales: {
-                    clubIncome: 50,
-                },
-            });
+        await context.firestore().doc(`clubs/${clubId}/eventTickets/${eventId}`).set(eventTickets);
+    });
+}
+
+interface SetTicketForUserParams {
+    userId: string;
+    ticketId: string;
+    ticket: Ticket;
+}
+
+async function setTicketForUser({ userId, ticketId, ticket }: SetTicketForUserParams) {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+        await context.firestore().doc(`users/${userId}/tickets/${ticketId}`).set(ticket);
     });
 }
 
@@ -286,9 +297,10 @@ describe('event tickets', () => {
         const clubId = v1();
         const eventId = v1();
         const partnerId = v1();
+        const eventTickets = { ticketSales: { clubIncome: 50 } } as EventTickets;
 
         await setClubForPartner(partnerId, clubId);
-        await setEventTickets(clubId, eventId);
+        await setEventTickets({ clubId, eventId, eventTickets });
 
         const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
         await firebase.assertSucceeds(
@@ -300,8 +312,9 @@ describe('event tickets', () => {
         const clubId = v1();
         const eventId = v1();
         const partnerId = v1();
+        const eventTickets = { ticketSales: { clubIncome: 50 } } as EventTickets;
 
-        await setEventTickets(clubId, eventId);
+        await setEventTickets({ clubId, eventId, eventTickets });
 
         const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
         await firebase.assertFails(
@@ -313,9 +326,10 @@ describe('event tickets', () => {
         const clubId = v1();
         const eventId = v1();
         const partnerId = v1();
+        const eventTickets = { ticketSales: { clubIncome: 50 } } as EventTickets;
 
         await setClubForPartner(partnerId, clubId);
-        await setEventTickets(clubId, eventId);
+        await setEventTickets({ clubId, eventId, eventTickets });
 
         const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
         await firebase.assertFails(
@@ -383,20 +397,72 @@ describe('reviews', () => {
         const userId = v1();
         const clubId = v1();
         const reviewId = v1();
+        const ticketId = v1();
+
+        const ticket = {
+            isExpired: true,
+            eventEndDateTime: serverTimestamp(),
+        } as Ticket;
+
+        await setTicketForUser({ userId, ticketId, ticket });
 
         const context = testEnv.authenticatedContext(userId, { isUser: true });
         await firebase.assertSucceeds(
             context
                 .firestore()
                 .doc(`clubs/${clubId}/reviews/${reviewId}`)
-                .set({ userRate: 5, userOpinion: '' } as Review)
+                .set({ userRate: 5, userOpinion: '', ticketId } as Review)
         );
     });
 
-    it('should deny create with user claim, user rate in range 1 and 5 and user opinion with more than 1000 characters', async () => {
+    it('should allow create with user claim, expired ticket, user rate in range 1 and 5 and user opinion with less or equal 1000 characters', async () => {
         const userId = v1();
         const clubId = v1();
         const reviewId = v1();
+        const ticketId = v1();
+
+        const ticket = {
+            isExpired: true,
+            eventEndDateTime: serverTimestamp(),
+        } as Ticket;
+
+        await setTicketForUser({ userId, ticketId, ticket });
+
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertSucceeds(
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/reviews/${reviewId}`)
+                .set({ userRate: 5, userOpinion: '#'.repeat(1000), ticketId: ticketId } as Review)
+        );
+    });
+
+    it('should deny create with user claim, without expired ticket, user rate in range 1 and 5 and user opinion with less or equal 1000 characters', async () => {
+        const userId = v1();
+        const clubId = v1();
+        const reviewId = v1();
+        const ticketId = v1();
+        const ticket = { isExpired: false } as Ticket;
+
+        await setTicketForUser({ userId, ticketId, ticket });
+
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/reviews/${reviewId}`)
+                .set({ userRate: 5, userOpinion: '#'.repeat(1000), ticketId: ticketId } as Review)
+        );
+    });
+
+    it('should deny create with user claim, expired ticket, user rate in range 1 and 5 and user opinion with more than 1000 characters', async () => {
+        const userId = v1();
+        const clubId = v1();
+        const reviewId = v1();
+        const ticketId = v1();
+        const ticket = { isExpired: true } as Ticket;
+
+        await setTicketForUser({ userId, ticketId, ticket });
 
         const context = testEnv.authenticatedContext(userId, { isUser: true });
         await firebase.assertFails(
@@ -406,6 +472,7 @@ describe('reviews', () => {
                 .set({
                     userRate: 5,
                     userOpinion: '#'.repeat(1001),
+                    ticketId,
                 } as Review)
         );
     });
@@ -414,10 +481,17 @@ describe('reviews', () => {
         const userId = v1();
         const clubId = v1();
         const reviewId = v1();
+        const ticketId = v1();
+        const ticket = { isExpired: true } as Ticket;
+
+        await setTicketForUser({ userId, ticketId, ticket });
 
         const context = testEnv.authenticatedContext(userId, { isUser: true });
         await firebase.assertFails(
-            context.firestore().doc(`clubs/${clubId}/reviews/${reviewId}`).set({ userRate: 0 })
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/reviews/${reviewId}`)
+                .set({ userRate: 0, ticketId } as Review)
         );
     });
 
