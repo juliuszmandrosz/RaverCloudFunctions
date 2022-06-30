@@ -50,8 +50,12 @@ service cloud.firestore {
             return !(fieldName in request.resource.data) || getLength(fieldName) == 0;
         }
 
-        function isNotEmpty(fieldName) {
+        function isNotEmptyString(fieldName) {
             return request.resource.data[fieldName] is string && getLength(fieldName) > 0;
+        }
+
+        function isNonNegativeNumber(fieldName) {
+            return request.resource.data[fieldName] is number && request.resource.data[fieldName] >= 0;
         }
 
         function getLength(fieldName) {
@@ -110,11 +114,16 @@ service cloud.firestore {
 
             match /rewards/{rewardId} {
                 allow read: if isAuthenticated();
-                allow write: if isPartner() && isPartnerFromClub(clubId);
+                allow create: if isPartner()
+                                 && isPartnerFromClub(clubId)
+                                 && isNonNegativeNumber('requiredEntries')
+                                 && isNotEmptyString('description');
+                allow delete: if isPartner()
+                                 && isPartnerFromClub(clubId);
             }
 
             match /selectors/{selectorId} {
-                allow read, write: if isPartner() && isPartnerFromClub(clubId);
+                allow read, create, delete: if isPartner() && isPartnerFromClub(clubId);
             }
         }
 
@@ -138,7 +147,7 @@ service cloud.firestore {
             }
 
             function isValidArtistName() {
-                return isConcert() && isNotEmpty('artistName')
+                return isConcert() && isNotEmptyString('artistName')
                        && getLength('artistName') <= 100;
             }
 
@@ -153,7 +162,7 @@ service cloud.firestore {
 
             allow read: if isAuthenticated();
             // TODO - check partner claim
-            allow write: if isValidEvent() && isPartnerFromClub(request.resource.data.clubId);
+            allow write: if isPartner() && isValidEvent() && isPartnerFromClub(request.resource.data.clubId);
         }
 
         match /partners/{partnerId} {

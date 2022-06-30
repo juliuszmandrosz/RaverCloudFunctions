@@ -5,6 +5,7 @@ import { Review } from '../src/models/review';
 import { Ticket } from '../src/models/ticket';
 import { EventTickets } from '../src/models/event-tickets';
 import { serverTimestamp } from 'firebase/firestore';
+import { Reward } from '../src/models/reward';
 
 let testEnv: firebase.RulesTestEnvironment;
 
@@ -529,17 +530,166 @@ describe('reviews', () => {
     });
 });
 
+describe('rewards', () => {
+    it('should allow read with authenticated context', async () => {
+        const userId = v1();
+        const clubId = v1();
+        const rewardId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertSucceeds(
+            context.firestore().doc(`clubs/${clubId}/rewards/${rewardId}`).get()
+        );
+    });
+
+    it('should allow read with unauthenticated context', async () => {
+        const clubId = v1();
+        const rewardId = v1();
+        const context = testEnv.unauthenticatedContext();
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/rewards/${rewardId}`).get()
+        );
+    });
+
+    it('should allow create on own club with partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const rewardId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertSucceeds(
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/rewards/${rewardId}`)
+                .set({ requiredEntries: 1, description: '#' } as Reward)
+        );
+    });
+
+    it('should deny create on own club with partner claim and negative number of entries', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const rewardId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/rewards/${rewardId}`)
+                .set({ requiredEntries: -1, description: '#' } as Reward)
+        );
+    });
+
+    it('should deny create on own club with partner claim and empty description', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const rewardId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/rewards/${rewardId}`)
+                .set({ requiredEntries: 1, description: '' } as Reward)
+        );
+    });
+
+    it('should deny create on own club without partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const rewardId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId);
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/rewards/${rewardId}`)
+                .set({ requiredEntries: 1, description: '#' } as Reward)
+        );
+    });
+
+    it('should deny create on other club with partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const rewardId = v1();
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/rewards/${rewardId}`)
+                .set({ requiredEntries: 1, description: '#' } as Reward)
+        );
+    });
+
+    it('should allow delete on own club with partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const rewardId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`clubs/${clubId}/rewards/${rewardId}`).delete()
+        );
+    });
+
+    it('should deny delete on own club without partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const rewardId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId);
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/rewards/${rewardId}`).delete()
+        );
+    });
+
+    it('should deny delete on other club with partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const rewardId = v1();
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/rewards/${rewardId}`).delete()
+        );
+    });
+
+    it('should deny update', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const rewardId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/rewards/${rewardId}`).update({})
+        );
+    });
+});
+
 describe('users', () => {
     it('should allow write on own document for user', async () => {
-        const uid = v1();
-        const context = testEnv.authenticatedContext(uid);
-        await firebase.assertSucceeds(context.firestore().doc(`users/${uid}`).set({}));
+        const userId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).set({}));
     });
 
     it('should deny write on other document for user', async () => {
+        const userId = v1();
         const context = testEnv.authenticatedContext(v1());
-        const uid = v1();
-        await firebase.assertFails(context.firestore().doc(`users/${uid}`).set({}));
+        await firebase.assertFails(context.firestore().doc(`users/${userId}`).set({}));
     });
 
     it('should deny write with unauthenticated context', async () => {
@@ -548,9 +698,9 @@ describe('users', () => {
     });
 
     it('should allow read on own document for user', async () => {
-        const uid = v1();
-        const context = testEnv.authenticatedContext(uid);
-        await firebase.assertSucceeds(context.firestore().doc(`users/${uid}`).get());
+        const userId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).get());
     });
 
     it('should deny read on other document for user', async () => {
