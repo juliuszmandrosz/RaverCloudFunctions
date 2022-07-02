@@ -1205,6 +1205,44 @@ describe('stripe customers', () => {
     });
 });
 
+describe('ticket payment sessions', () => {
+    it('should deny read', async () => {
+        const userId = v1();
+        const sessionId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`ticketPaymentSessions/${sessionId}`).get()
+        );
+    });
+
+    it('should deny create', async () => {
+        const userId = v1();
+        const sessionId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`ticketPaymentSessions/${sessionId}`).set({})
+        );
+    });
+
+    it('should deny update', async () => {
+        const userId = v1();
+        const sessionId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`ticketPaymentSessions/${sessionId}`).update({})
+        );
+    });
+
+    it('should deny delete', async () => {
+        const userId = v1();
+        const sessionId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`ticketPaymentSessions/${sessionId}`).delete()
+        );
+    });
+});
+
 describe('users', () => {
     it('should allow read on own document with user claim', async () => {
         const userId = v1();
