@@ -851,6 +851,31 @@ describe('club selectors', () => {
     });
 });
 
+describe('clubs sales', () => {
+    it('should allow read on own club with partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        await setClubForPartner(partnerId, clubId);
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertSucceeds(context.firestore().doc(`clubsSales/${clubId}`).get());
+    });
+
+    it('should deny read on other club with partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(context.firestore().doc(`clubsSales/${clubId}`).get());
+    });
+
+    it('should deny write', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        await setClubForPartner(partnerId, clubId);
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(context.firestore().doc(`clubsSales/${clubId}`).set({}));
+    });
+});
+
 describe('users', () => {
     it('should allow write on own document for user', async () => {
         const userId = v1();

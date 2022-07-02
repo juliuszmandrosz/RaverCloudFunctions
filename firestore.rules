@@ -133,12 +133,10 @@ service cloud.firestore {
 
         match /clubsSales/{clubId} {
             allow read: if isPartner() && isPartnerFromClub(clubId);
-            allow write: if false;
         }
 
         match /currencyParams/{currency} {
             allow read: if isAuthenticated();
-            allow write: if false;
         }
 
         match /events/{eventId} {
