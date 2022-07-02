@@ -939,6 +939,43 @@ describe('partners', () => {
     });
 });
 
+describe('partners access codes', () => {
+    it('should allow read with unauthenticated context', async () => {
+        const accessCode = v1();
+        const context = testEnv.unauthenticatedContext();
+        await firebase.assertSucceeds(
+            context.firestore().doc(`partnersAccessCodes/${accessCode}`).get()
+        );
+    });
+
+    it('should deny create', async () => {
+        const userId = v1();
+        const accessCode = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`partnersAccessCodes/${accessCode}`).set({})
+        );
+    });
+
+    it('should deny update', async () => {
+        const userId = v1();
+        const accessCode = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`partnersAccessCodes/${accessCode}`).update({})
+        );
+    });
+
+    it('should deny delete', async () => {
+        const userId = v1();
+        const accessCode = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`partnersAccessCodes/${accessCode}`).delete()
+        );
+    });
+});
+
 describe('users', () => {
     it('should allow read on own document for user', async () => {
         const userId = v1();
