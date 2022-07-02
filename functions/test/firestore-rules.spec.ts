@@ -976,6 +976,53 @@ describe('partners access codes', () => {
     });
 });
 
+describe('partners discounts', () => {
+    it('should allow read with partner claim', async () => {
+        const partnerId = v1();
+        const discountId = v1();
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`partnersDiscounts/${discountId}`).get()
+        );
+    });
+
+    it('should deny read without partner claim', async () => {
+        const partnerId = v1();
+        const discountId = v1();
+        const context = testEnv.authenticatedContext(partnerId);
+        await firebase.assertFails(
+            context.firestore().doc(`partnersDiscounts/${discountId}`).get()
+        );
+    });
+
+    it('should deny create', async () => {
+        const partnerId = v1();
+        const discountId = v1();
+        const context = testEnv.authenticatedContext(partnerId, { partnerId: true });
+        await firebase.assertFails(
+            context.firestore().doc(`partnersDiscounts/${discountId}`).set({})
+        );
+    });
+
+    it('should deny update', async () => {
+        const partnerId = v1();
+        const discountId = v1();
+        const context = testEnv.authenticatedContext(partnerId, { partnerId: true });
+        await firebase.assertFails(
+            context.firestore().doc(`partnersDiscounts/${discountId}`).update({})
+        );
+    });
+
+    it('should deny delete', async () => {
+        const partnerId = v1();
+        const discountId = v1();
+        const context = testEnv.authenticatedContext(partnerId, { partnerId: true });
+        await firebase.assertFails(
+            context.firestore().doc(`partnersDiscounts/${discountId}`).delete()
+        );
+    });
+});
+
 describe('users', () => {
     it('should allow read on own document for user', async () => {
         const userId = v1();

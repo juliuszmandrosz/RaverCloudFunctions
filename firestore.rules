@@ -174,9 +174,8 @@ service cloud.firestore {
             allow read: if true;
         }
 
-        match /partnersDiscounts/{code} {
+        match /partnersDiscounts/{discountId} {
             allow read: if isPartner();
-            allow write: if false;
         }
 
         match /reviewReports/{reportId} {
