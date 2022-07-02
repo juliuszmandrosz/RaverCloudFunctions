@@ -1098,6 +1098,60 @@ describe('selectors', () => {
     });
 });
 
+describe('selectors access codes', () => {
+    it('should allow read with unauthenticated context', async () => {
+        const accessCode = v1();
+        const context = testEnv.unauthenticatedContext();
+        await firebase.assertSucceeds(
+            context.firestore().doc(`selectorsAccessCodes/${accessCode}`).get()
+        );
+    });
+
+    it('should allow create with access to club and partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const accessCode = v1();
+        await setClubForPartner(partnerId, clubId);
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`selectorsAccessCodes/${accessCode}`).set({ clubId: clubId })
+        );
+    });
+
+    it('should deny create without access to club and partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const accessCode = v1();
+        await setClubForPartner(partnerId, clubId);
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`selectorsAccessCodes/${accessCode}`).set({ clubId: v1() })
+        );
+    });
+
+    it('should deny update', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const accessCode = v1();
+        await setClubForPartner(partnerId, clubId);
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`selectorsAccessCodes/${accessCode}`).update({})
+        );
+    });
+
+    it('should deny delete', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const accessCode = v1();
+        await setClubForPartner(partnerId, clubId);
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`selectorsAccessCodes/${accessCode}`).delete()
+        );
+    });
+});
+
 describe('users', () => {
     it('should allow read on own document with user claim', async () => {
         const userId = v1();
