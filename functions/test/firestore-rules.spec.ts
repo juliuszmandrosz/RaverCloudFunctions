@@ -221,7 +221,31 @@ describe('event costs', () => {
         );
     });
 
-    it('should deny write', async () => {
+    it('should allow create on own club with partner claim', async () => {
+        const clubId = v1();
+        const eventId = v1();
+        const partnerId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`clubs/${clubId}/eventCosts/${eventId}`).set({})
+        );
+    });
+
+    it('should deny create on other club with partner claim', async () => {
+        const clubId = v1();
+        const eventId = v1();
+        const partnerId = v1();
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/eventCosts/${eventId}`).set({})
+        );
+    });
+
+    it('should deny update', async () => {
         const clubId = v1();
         const eventId = v1();
         const partnerId = v1();
@@ -230,7 +254,20 @@ describe('event costs', () => {
 
         const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
         await firebase.assertFails(
-            context.firestore().doc(`clubs/${clubId}/eventCosts/${eventId}`).set({})
+            context.firestore().doc(`clubs/${clubId}/eventCosts/${eventId}`).update({})
+        );
+    });
+
+    it('should deny delete', async () => {
+        const clubId = v1();
+        const eventId = v1();
+        const partnerId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/eventCosts/${eventId}`).update({})
         );
     });
 });
@@ -260,7 +297,31 @@ describe('event review', () => {
         );
     });
 
-    it('should deny write', async () => {
+    it('should allow create on own club with partner claim', async () => {
+        const clubId = v1();
+        const eventId = v1();
+        const partnerId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`clubs/${clubId}/eventReview/${eventId}`).set({})
+        );
+    });
+
+    it('should deny create on other club with partner claim', async () => {
+        const clubId = v1();
+        const eventId = v1();
+        const partnerId = v1();
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/eventReview/${eventId}`).set({})
+        );
+    });
+
+    it('should deny update', async () => {
         const clubId = v1();
         const eventId = v1();
         const partnerId = v1();
@@ -269,7 +330,20 @@ describe('event review', () => {
 
         const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
         await firebase.assertFails(
-            context.firestore().doc(`clubs/${clubId}/eventReview/${eventId}`).set({})
+            context.firestore().doc(`clubs/${clubId}/eventReview/${eventId}`).update({})
+        );
+    });
+
+    it('should deny delete', async () => {
+        const clubId = v1();
+        const eventId = v1();
+        const partnerId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/eventReview/${eventId}`).delete()
         );
     });
 });
@@ -323,6 +397,33 @@ describe('event tickets', () => {
         );
     });
 
+    it('should allow create on own club with partner claim', async () => {
+        const clubId = v1();
+        const eventId = v1();
+        const partnerId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`clubs/${clubId}/eventTickets/${eventId}`).set({})
+        );
+    });
+
+    it('should deny create on other club with partner claim', async () => {
+        const clubId = v1();
+        const eventId = v1();
+        const partnerId = v1();
+        const eventTickets = { ticketSales: { clubIncome: 50 } } as EventTickets;
+
+        await setEventTickets({ clubId, eventId, eventTickets });
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/eventTickets/${eventId}`).set({})
+        );
+    });
+
     it('should deny update if ticket sales has changed', async () => {
         const clubId = v1();
         const eventId = v1();
@@ -342,19 +443,6 @@ describe('event tickets', () => {
                         clubIncome: 100,
                     },
                 })
-        );
-    });
-
-    it('should deny create', async () => {
-        const clubId = v1();
-        const eventId = v1();
-        const partnerId = v1();
-
-        await setClubForPartner(partnerId, clubId);
-
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
-        await firebase.assertFails(
-            context.firestore().doc(`clubs/${clubId}/eventTickets/${eventId}`).set({})
         );
     });
 
@@ -675,6 +763,19 @@ describe('rewards', () => {
         const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/rewards/${rewardId}`).update({})
+        );
+    });
+});
+
+describe('club selectors', () => {
+    it('should allow read on own club with partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const selectorId = v1();
+        await setClubForPartner(partnerId, clubId);
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).get()
         );
     });
 });

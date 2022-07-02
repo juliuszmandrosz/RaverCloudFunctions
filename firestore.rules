@@ -42,6 +42,10 @@ service cloud.firestore {
             return clubId == getPartner().data.clubId;
         }
 
+        function isSelectorFromClub(clubId) {
+            return clubId == getSelector().data.clubId;
+        }
+
         function isRequestFromCurrentAccount(accountId) {
             return request.auth.uid == accountId;
         }
@@ -77,17 +81,16 @@ service cloud.firestore {
             }
 
             match /eventCosts/{eventId} {
-                allow read: if isPartner() && isPartnerFromClub(clubId);
-                allow write: if false;
+                allow read, create: if isPartner() && isPartnerFromClub(clubId);
             }
 
             match /eventReview/{eventId} {
-                allow read: if isPartner() && isPartnerFromClub(clubId);
-                allow write: if false;
+                allow read, create: if isPartner() && isPartnerFromClub(clubId);
             }
 
             match /eventTickets/{eventId} {
                 allow read: if isAuthenticated();
+                allow create: if isPartner() && isPartnerFromClub(clubId);
                 allow update: if isPartner()
                                  && isPartnerFromClub(clubId)
                                  && request.resource.data.ticketSales == resource.data.ticketSales;
@@ -123,7 +126,8 @@ service cloud.firestore {
             }
 
             match /selectors/{selectorId} {
-                allow read, create, delete: if isPartner() && isPartnerFromClub(clubId);
+                allow read: if isPartner() && isPartnerFromClub(clubId) || isSelector() && isRequestFromCurrentAccount(selectorId);
+                allow delete: if isPartner() && isPartnerFromClub(clubId);
             }
         }
 
@@ -161,7 +165,6 @@ service cloud.firestore {
 
 
             allow read: if isAuthenticated();
-            // TODO - check partner claim
             allow write: if isPartner() && isValidEvent() && isPartnerFromClub(request.resource.data.clubId);
         }
 
