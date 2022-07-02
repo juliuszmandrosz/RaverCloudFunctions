@@ -193,7 +193,7 @@ service cloud.firestore {
         }
 
         match /stripeCustomers/{customerId} {
-            allow read, write: if isAuthenticated() && isRequestFromCurrentAccount(customerId);
+            allow read, update: if isAuthenticated() && isRequestFromCurrentAccount(customerId);
         }
 
         match /ticketPaymentSessions/{sessionId} {

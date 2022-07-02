@@ -1152,6 +1152,59 @@ describe('selectors access codes', () => {
     });
 });
 
+describe('stripe customers', () => {
+    it('should allow read on own document', async () => {
+        const customerId = v1();
+        const context = testEnv.authenticatedContext(customerId);
+        await firebase.assertSucceeds(
+            context.firestore().doc(`stripeCustomers/${customerId}`).get()
+        );
+    });
+
+    it('should deny read on other document', async () => {
+        const customerId = v1();
+        const context = testEnv.authenticatedContext(customerId);
+        await firebase.assertFails(context.firestore().doc(`stripeCustomers/${v1()}`).get());
+    });
+
+    it('should allow update on own document', async () => {
+        const customerId = v1();
+        const context = testEnv.authenticatedContext(customerId);
+        await testEnv.withSecurityRulesDisabled(async (context) => {
+            await context.firestore().doc(`stripeCustomers/${customerId}`).set({});
+        });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`stripeCustomers/${customerId}`).update({})
+        );
+    });
+
+    it('should deny update on other document', async () => {
+        const customerId = v1();
+        const otherId = v1();
+        const context = testEnv.authenticatedContext(customerId);
+        await testEnv.withSecurityRulesDisabled(async (context) => {
+            await context.firestore().doc(`stripeCustomers/${otherId}`).set({});
+        });
+        await firebase.assertFails(context.firestore().doc(`stripeCustomers/${otherId}`).get());
+    });
+
+    it('should deny create', async () => {
+        const customerId = v1();
+        const context = testEnv.authenticatedContext(customerId);
+        await firebase.assertFails(
+            context.firestore().doc(`stripeCustomers/${customerId}`).set({})
+        );
+    });
+
+    it('should deny delete', async () => {
+        const customerId = v1();
+        const context = testEnv.authenticatedContext(customerId);
+        await firebase.assertFails(
+            context.firestore().doc(`stripeCustomers/${customerId}`).delete()
+        );
+    });
+});
+
 describe('users', () => {
     it('should allow read on own document with user claim', async () => {
         const userId = v1();
