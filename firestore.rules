@@ -167,7 +167,7 @@ service cloud.firestore {
         }
 
         match /partners/{partnerId} {
-            allow read, write: if isAuthenticated() && isRequestFromCurrentAccount(partnerId);
+            allow read: if isPartner() && isRequestFromCurrentAccount(partnerId);
         }
 
         match /partnersAccessCodes/{code} {
@@ -182,11 +182,11 @@ service cloud.firestore {
 
         match /reviewReports/{reportId} {
             allow read: if isAuthenticated();
-            allow write: if isAuthenticated() && isRequestFromCurrentAccount(request.resource.data.reporterId);
+            allow create: if isAuthenticated() && isRequestFromCurrentAccount(request.resource.data.reporterId);
         }
 
         match /selectors/{selectorId} {
-            allow read, write: if isAuthenticated() && isRequestFromCurrentAccount(selectorId);
+            allow read, write: if isSelector() && isRequestFromCurrentAccount(selectorId);
         }
 
         match /selectorsAccessCodes/{code} {
@@ -208,7 +208,8 @@ service cloud.firestore {
         }
 
         match /users/{userId} {
-            allow read, write: if isAuthenticated() && isRequestFromCurrentAccount(userId);
+            // TODO - add attendance rule
+            allow read, write: if isUser() && isRequestFromCurrentAccount(userId);
 
             match /promotionCodes/{code} {
                 // TODO - add check if redemptions is not reduced nor expiration time changed

@@ -907,38 +907,42 @@ describe('currency params', () => {
     });
 });
 
+describe('partners', () => {
+    it('should allow read on own document with partner claim', async () => {
+        const partnerId = v1();
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertSucceeds(context.firestore().doc(`partners/${partnerId}`).get());
+    });
+
+    it('should deny read on other document with partner claim', async () => {
+        const partnerId = v1();
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(context.firestore().doc(`partners/${v1()}`).get());
+    });
+
+    it('should deny create', async () => {
+        const partnerId = v1();
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(context.firestore().doc(`partners/${v1()}`).set({}));
+    });
+
+    it('should deny update', async () => {
+        const partnerId = v1();
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(context.firestore().doc(`partners/${v1()}`).update({}));
+    });
+
+    it('should deny delete', async () => {
+        const partnerId = v1();
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(context.firestore().doc(`partners/${v1()}`).delete());
+    });
+});
+
 describe('users', () => {
-    it('should allow write on own document for user', async () => {
-        const userId = v1();
-        const context = testEnv.authenticatedContext(userId);
-        await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).set({}));
-    });
-
-    it('should deny write on other document for user', async () => {
-        const userId = v1();
-        const context = testEnv.authenticatedContext(v1());
-        await firebase.assertFails(context.firestore().doc(`users/${userId}`).set({}));
-    });
-
-    it('should deny write with unauthenticated context', async () => {
-        const context = testEnv.unauthenticatedContext();
-        await firebase.assertFails(context.firestore().doc(`users/${v1()}`).set({}));
-    });
-
     it('should allow read on own document for user', async () => {
         const userId = v1();
-        const context = testEnv.authenticatedContext(userId);
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
         await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).get());
-    });
-
-    it('should deny read on other document for user', async () => {
-        const context = testEnv.authenticatedContext(v1());
-        const uid = v1();
-        await firebase.assertFails(context.firestore().doc(`users/${uid}`).get());
-    });
-
-    it('should deny read with unauthenticated context', async () => {
-        const context = testEnv.unauthenticatedContext();
-        await firebase.assertFails(context.firestore().doc(`users/${v1()}`).get());
     });
 });
