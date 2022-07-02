@@ -1288,3 +1288,41 @@ describe('users', () => {
         await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).get());
     });
 });
+
+describe('vip payment sessions', () => {
+    it('should deny read', async () => {
+        const userId = v1();
+        const sessionId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`vipPaymentSessions/${sessionId}`).get()
+        );
+    });
+
+    it('should deny create', async () => {
+        const userId = v1();
+        const sessionId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`vipPaymentSessions/${sessionId}`).set({})
+        );
+    });
+
+    it('should deny update', async () => {
+        const userId = v1();
+        const sessionId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`vipPaymentSessions/${sessionId}`).update({})
+        );
+    });
+
+    it('should deny delete', async () => {
+        const userId = v1();
+        const sessionId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`vipPaymentSessions/${sessionId}`).delete()
+        );
+    });
+});
