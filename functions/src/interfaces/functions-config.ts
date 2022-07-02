@@ -2,6 +2,7 @@ export interface FunctionsConfig {
     project: Project;
     algolia: Algolia;
     stripe: Stripe;
+    typesense: Typesense;
 }
 
 interface Project {
@@ -21,4 +22,9 @@ interface Stripe {
     test_key: string;
     pi_requires_action_secret: string;
     pi_succeeded_secret: string;
+}
+
+interface Typesense {
+    cluster_id: string;
+    api_key: string;
 }

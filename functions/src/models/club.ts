@@ -9,6 +9,6 @@ export interface Club {
     locationString: string;
     aboutUs?: string;
     phoneNumber: string;
-    location: { [key: string]: number };
+    location: number[];
     socialMedia: { [key: string]: string };
 }

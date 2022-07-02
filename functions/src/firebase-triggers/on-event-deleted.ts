@@ -1,10 +1,13 @@
-import * as functions from 'firebase-functions'
-import {eventIndex} from '../modules/algolia-module';
+import * as functions from 'firebase-functions';
+import { eventCollection } from '../modules/typesense-module';
 
-export function onEventDeleted(
+export async function onEventDeleted(
     snapshot: functions.firestore.DocumentSnapshot,
     _: functions.EventContext
 ) {
-    return eventIndex.deleteObject(snapshot.id);
+    await deleteEventFromTypesense(snapshot.id);
 }
 
+async function deleteEventFromTypesense(eventId: string) {
+    await eventCollection.documents(eventId).delete();
+}

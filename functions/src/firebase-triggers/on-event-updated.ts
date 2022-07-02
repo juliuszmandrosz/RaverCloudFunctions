@@ -1,21 +1,21 @@
 import * as functions from 'firebase-functions';
-import { eventIndex } from '../modules/algolia-module';
 import { firebaseMessaging, firestoreDatabase } from '../modules/firebase-admin-module';
 import { tickets } from '../constants/collections';
 import { Event } from '../models/event';
 import { tryGetUserData } from '../firestore-functions/get-data/get-user-data';
 import { firestore } from 'firebase-admin';
 import DocumentSnapshot = firestore.DocumentSnapshot;
+import { eventCollection } from '../modules/typesense-module';
 
 export async function onEventUpdated(
     change: functions.Change<DocumentSnapshot>,
     _: functions.EventContext
 ) {
-    await updateEventInAlgolia(change.after);
-
     const beforeUpdate = change.before.data() as Event;
     const afterUpdate = change.after.data() as Event;
     afterUpdate.id = change.after.id;
+
+    await updateEventInTypesense(afterUpdate);
 
     if (!beforeUpdate.isCanceled && afterUpdate.isCanceled) {
         await sendCloudMessageWithCanceledEventInfoToTicketHolders(afterUpdate);
@@ -27,10 +27,8 @@ export async function onEventUpdated(
     }
 }
 
-async function updateEventInAlgolia(snapshot: DocumentSnapshot) {
-    const data = snapshot.data()!;
-    data.objectID = snapshot.id;
-    eventIndex.saveObject(data);
+async function updateEventInTypesense(event: Event) {
+    await eventCollection.documents(event.id).update(event);
 }
 
 async function sendCloudMessageWithCanceledEventInfoToTicketHolders(event: Event) {

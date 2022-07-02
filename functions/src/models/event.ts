@@ -13,7 +13,7 @@ export interface Event {
     allowedOutfit: string;
     eventPhotoUrl: string;
     musicalGenres: string[];
-    _geoloc: { [key: string]: number };
+    location: number[];
     urlLinks: { [key: string]: string };
     cityId: string;
     isConcert: boolean;

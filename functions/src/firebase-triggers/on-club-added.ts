@@ -1,12 +1,17 @@
-import * as functions from 'firebase-functions'
-import {clubIndex} from '../modules/algolia-module';
+import * as functions from 'firebase-functions';
+import { Club } from '../models/club';
+import { clubCollection } from '../modules/typesense-module';
 
-export function onClubAdded(
+export async function onClubAdded(
     snapshot: functions.firestore.DocumentSnapshot,
     _: functions.EventContext
 ) {
-    const data = snapshot.data()!;
-    data.objectID = snapshot.id;
-    return clubIndex.saveObject(data)
+    const club = snapshot.data() as Club;
+    club.id = snapshot.id;
+
+    await addClubToTypesense(club);
 }
 
+async function addClubToTypesense(club: Club) {
+    await clubCollection.documents().create(club);
+}
