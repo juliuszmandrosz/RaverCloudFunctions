@@ -1023,6 +1023,49 @@ describe('partners discounts', () => {
     });
 });
 
+describe('review reports', () => {
+    it('should allow read with authenticated context', async () => {
+        const userId = v1();
+        const reportId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertSucceeds(context.firestore().doc(`reviewReports/${reportId}`).get());
+    });
+
+    it('should deny read with unauthenticated context', async () => {
+        const reportId = v1();
+        const context = testEnv.unauthenticatedContext();
+        await firebase.assertFails(context.firestore().doc(`reviewReports/${reportId}`).get());
+    });
+
+    it('should allow create with own reporter id', async () => {
+        const userId = v1();
+        const reportId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertSucceeds(
+            context.firestore().doc(`reviewReports/${reportId}`).set({
+                reporterId: userId,
+            })
+        );
+    });
+
+    it('should deny create without own reporter id', async () => {
+        const userId = v1();
+        const reportId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`reviewReports/${reportId}`).set({
+                reporterId: v1(),
+            })
+        );
+    });
+
+    it('should deny create with unauthenticated context', async () => {
+        const reportId = v1();
+        const context = testEnv.unauthenticatedContext();
+        await firebase.assertFails(context.firestore().doc(`reviewReports/${reportId}`).set({}));
+    });
+});
+
 describe('users', () => {
     it('should allow read on own document for user', async () => {
         const userId = v1();
