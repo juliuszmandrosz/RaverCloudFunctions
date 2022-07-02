@@ -876,6 +876,37 @@ describe('clubs sales', () => {
     });
 });
 
+describe('currency params', () => {
+    it('should allow read with authenticated context', async () => {
+        const userId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertSucceeds(context.firestore().doc(`currencyParams/pln`).get());
+    });
+
+    it('should deny read with unauthenticated context', async () => {
+        const context = testEnv.unauthenticatedContext();
+        await firebase.assertFails(context.firestore().doc(`currencyParams/pln`).get());
+    });
+
+    it('should deny create', async () => {
+        const userId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(context.firestore().doc(`currencyParams/pln`).set({}));
+    });
+
+    it('should deny update', async () => {
+        const userId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(context.firestore().doc(`currencyParams/pln`).update({}));
+    });
+
+    it('should deny delete', async () => {
+        const userId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(context.firestore().doc(`currencyParams/pln`).delete());
+    });
+});
+
 describe('users', () => {
     it('should allow write on own document for user', async () => {
         const userId = v1();
