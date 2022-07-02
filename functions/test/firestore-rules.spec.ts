@@ -1243,6 +1243,44 @@ describe('ticket payment sessions', () => {
     });
 });
 
+describe('update clubs sales task', () => {
+    it('should deny read', async () => {
+        const userId = v1();
+        const eventId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`updateClubSalesTasks/${eventId}`).get()
+        );
+    });
+
+    it('should deny create', async () => {
+        const userId = v1();
+        const eventId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`updateClubSalesTasks/${eventId}`).set({})
+        );
+    });
+
+    it('should deny update', async () => {
+        const userId = v1();
+        const eventId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`updateClubSalesTasks/${eventId}`).update({})
+        );
+    });
+
+    it('should deny delete', async () => {
+        const userId = v1();
+        const eventId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().doc(`updateClubSalesTasks/${eventId}`).delete()
+        );
+    });
+});
+
 describe('users', () => {
     it('should allow read on own document with user claim', async () => {
         const userId = v1();

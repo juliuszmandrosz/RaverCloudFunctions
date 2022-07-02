@@ -200,7 +200,7 @@ service cloud.firestore {
             allow read, write: if false;
         }
 
-        match /updateClubSalesTask/{eventId} {
+        match /updateClubSalesTasks/{eventId} {
             allow read, write: if false;
         }
 
