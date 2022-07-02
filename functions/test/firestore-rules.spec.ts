@@ -778,6 +778,77 @@ describe('club selectors', () => {
             context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).get()
         );
     });
+
+    it('should deny read on other club with partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const selectorId = v1();
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).get()
+        );
+    });
+
+    it('should allow read on own document as selector with selector claim', async () => {
+        const clubId = v1();
+        const selectorId = v1();
+        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).get()
+        );
+    });
+
+    it('should deny read on other document as selector with selector claim', async () => {
+        const clubId = v1();
+        const selectorId = v1();
+        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/selectors/${v1()}`).get()
+        );
+    });
+
+    it('should allow delete on own club with partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const selectorId = v1();
+        await setClubForPartner(partnerId, clubId);
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).delete()
+        );
+    });
+
+    it('should deny delete on other club with partner claim', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const selectorId = v1();
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).delete()
+        );
+    });
+
+    it('should deny create', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const selectorId = v1();
+        await setClubForPartner(partnerId, clubId);
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).set({})
+        );
+    });
+
+    it('should deny update', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const selectorId = v1();
+        await setClubForPartner(partnerId, clubId);
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).update({})
+        );
+    });
 });
 
 describe('users', () => {
