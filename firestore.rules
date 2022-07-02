@@ -184,7 +184,7 @@ service cloud.firestore {
         }
 
         match /selectors/{selectorId} {
-            allow read, write: if isSelector() && isRequestFromCurrentAccount(selectorId);
+            allow read: if isSelector() && isRequestFromCurrentAccount(selectorId);
         }
 
         match /selectorsAccessCodes/{code} {

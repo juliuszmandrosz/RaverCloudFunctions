@@ -998,7 +998,7 @@ describe('partners discounts', () => {
     it('should deny create', async () => {
         const partnerId = v1();
         const discountId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { partnerId: true });
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
         await firebase.assertFails(
             context.firestore().doc(`partnersDiscounts/${discountId}`).set({})
         );
@@ -1007,7 +1007,7 @@ describe('partners discounts', () => {
     it('should deny update', async () => {
         const partnerId = v1();
         const discountId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { partnerId: true });
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
         await firebase.assertFails(
             context.firestore().doc(`partnersDiscounts/${discountId}`).update({})
         );
@@ -1016,7 +1016,7 @@ describe('partners discounts', () => {
     it('should deny delete', async () => {
         const partnerId = v1();
         const discountId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { partnerId: true });
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
         await firebase.assertFails(
             context.firestore().doc(`partnersDiscounts/${discountId}`).delete()
         );
@@ -1066,8 +1066,40 @@ describe('review reports', () => {
     });
 });
 
+describe('selectors', () => {
+    it('should allow read on own document with selector claim', async () => {
+        const selectorId = v1();
+        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        await firebase.assertSucceeds(context.firestore().doc(`selectors/${selectorId}`).get());
+    });
+
+    it('should deny read on other document with selector claim', async () => {
+        const selectorId = v1();
+        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        await firebase.assertFails(context.firestore().doc(`selectors/${v1()}`).get());
+    });
+
+    it('should deny create', async () => {
+        const selectorId = v1();
+        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        await firebase.assertFails(context.firestore().doc(`selectors/${selectorId}`).set({}));
+    });
+
+    it('should deny update', async () => {
+        const selectorId = v1();
+        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        await firebase.assertFails(context.firestore().doc(`selectors/${selectorId}`).update({}));
+    });
+
+    it('should deny delete', async () => {
+        const selectorId = v1();
+        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        await firebase.assertFails(context.firestore().doc(`selectors/${selectorId}`).delete());
+    });
+});
+
 describe('users', () => {
-    it('should allow read on own document for user', async () => {
+    it('should allow read on own document with user claim', async () => {
         const userId = v1();
         const context = testEnv.authenticatedContext(userId, { isUser: true });
         await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).get());
