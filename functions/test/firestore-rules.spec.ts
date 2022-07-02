@@ -6,6 +6,7 @@ import { Ticket } from '../src/models/ticket';
 import { EventTickets } from '../src/models/event-tickets';
 import { serverTimestamp } from 'firebase/firestore';
 import { Reward } from '../src/models/reward';
+import { User } from '../src/models/user';
 
 let testEnv: firebase.RulesTestEnvironment;
 
@@ -43,6 +44,20 @@ interface SetEventTicketsParams {
 async function setEventTickets({ clubId, eventId, eventTickets }: SetEventTicketsParams) {
     await testEnv.withSecurityRulesDisabled(async (context) => {
         await context.firestore().doc(`clubs/${clubId}/eventTickets/${eventId}`).set(eventTickets);
+    });
+}
+
+interface SetUserDocumentParams {
+    userId: string;
+    attendance: { [key: string]: number };
+}
+
+async function setUserDocument({ userId, attendance }: SetUserDocumentParams) {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+        await context
+            .firestore()
+            .doc(`users/${userId}`)
+            .set({ attendance } as User);
     });
 }
 
@@ -1286,6 +1301,57 @@ describe('users', () => {
         const userId = v1();
         const context = testEnv.authenticatedContext(userId, { isUser: true });
         await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).get());
+    });
+
+    it('should deny read on other document with user claim', async () => {
+        const userId = v1();
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(context.firestore().doc(`users/${v1()}`).get());
+    });
+
+    it('should allow read with selector claim', async () => {
+        const userId = v1();
+        const selectorId = v1();
+        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).get());
+    });
+
+    it('should allow update on own document with user claim', async () => {
+        const userId = v1();
+        const attendance = { '123': 1 };
+        await setUserDocument({ userId, attendance });
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).update({}));
+    });
+
+    it('should deny update on other document with user claim', async () => {
+        const userId = v1();
+        const attendance = { '123': 1 };
+        await setUserDocument({ userId, attendance });
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(context.firestore().doc(`users/${v1()}`).update({}));
+    });
+
+    it('should deny update on own document with user claim when attendance has changed', async () => {
+        const userId = v1();
+        const attendance = { '123': 1 };
+        await setUserDocument({ userId, attendance });
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`users/${userId}`)
+                .update({ attendance: { '123': 5 } })
+        );
+    });
+
+    it('should allow update with selector claim', async () => {
+        const userId = v1();
+        const selectorId = v1();
+        const attendance = { '123': 1 };
+        await setUserDocument({ userId, attendance });
+        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).update({}));
     });
 });
 

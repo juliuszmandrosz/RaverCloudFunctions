@@ -205,12 +205,15 @@ service cloud.firestore {
         }
 
         match /users/{userId} {
-            // TODO - add attendance rule
-            allow read, write: if isUser() && isRequestFromCurrentAccount(userId);
+            allow read: if isUser() && isRequestFromCurrentAccount(userId)
+                           || isSelector();
+            allow update: if (isUser()
+                              && isRequestFromCurrentAccount(userId)
+                              && request.resource.data.attendance == resource.data.attendance)
+                             || isSelector();
 
             match /promotionCodes/{code} {
-                // TODO - add check if redemptions is not reduced nor expiration time changed
-                allow read, update: if isUser() && isRequestFromCurrentAccount(userId);
+                allow read: if isUser() && isRequestFromCurrentAccount(userId);
             }
 
             match /tickets/{ticketId} {
