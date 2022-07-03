@@ -146,8 +146,8 @@ service cloud.firestore {
                            && pool.poolNumber is int
                            && pool.ticketPrice is int
                            && pool.ticketQuantity is int
-                           && pool.ticketsSold is number
-                           && pool.get('vipPrice', 0) is number;
+                           && pool.ticketsSold is int
+                           && (pool.ticketsSold == null || pool.ticketsSold is int);
                 }
 
                 function checkIfTicketSalesFieldsAreValid(sales) {
@@ -155,10 +155,9 @@ service cloud.firestore {
                            && sales.eventFee is float
                            && sales.isExclusiveEvent is bool
                            && sales.clubIncome is number && sales.clubIncome == 0
-                           && sales.ticketsSold is int && sales.ticketsSold == 0
-                           && sales.totalRevenue is int && sales.totalRevenue == 0
-                           && sales.vipsSold is int && sales.vipsSold == 0;
-
+                           && sales.ticketsSold is number && sales.ticketsSold == 0
+                           && sales.totalRevenue is number && sales.totalRevenue == 0
+                           && sales.vipsSold is number && sales.vipsSold == 0;
                 }
 
                 function getMinTicketPrice(pool) {
@@ -265,7 +264,7 @@ service cloud.firestore {
 
 
             allow read: if isAuthenticated();
-            allow create, update: if isPartner() && isValidEvent() && isPartnerFromClub(request.resource.data.clubId);
+            allow create, update: if isPartner() && isPartnerFromClub(request.resource.data.clubId);
         }
 
         match /partners/{partnerId} {

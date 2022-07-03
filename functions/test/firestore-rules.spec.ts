@@ -415,13 +415,14 @@ describe('event tickets', () => {
         return [
             {
                 currency: 'pln',
-                isCurrent: false,
+                isCurrent: true,
                 isSoldOut: false,
                 isVipEnabled: false,
                 poolNumber: 1,
                 ticketPrice: 20,
                 ticketQuantity: 20,
-                ticketsSold: 20,
+                ticketsSold: 0,
+                vipPrice: null,
             } as TicketPool,
         ];
     }
