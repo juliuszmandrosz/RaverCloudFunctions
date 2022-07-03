@@ -30,6 +30,10 @@ service cloud.firestore {
             return 'isSelector' in request.auth.token && request.auth.token.isSelector == true;
         }
 
+        function getUser() {
+            return get(/databases/$(database)/documents/users/$(request.auth.uid));
+        }
+
         function getPartner() {
             return get(/databases/$(database)/documents/partners/$(request.auth.uid));
         }
@@ -72,6 +76,10 @@ service cloud.firestore {
 
         function checkIfFieldHasNotChanged(fieldName) {
             return !request.resource.data.diff(resource.data).affectedKeys().hasAny([fieldName]);
+        }
+
+        function checkIfRequestContainsField(fieldName) {
+            return fieldName in request.resource.data;
         }
 
         match /availableFilters/{filters} {
@@ -213,12 +221,13 @@ service cloud.firestore {
 
         match /users/{userId} {
             function isUsernameValid() {
-                return isNullOrEmpty('username')
-                       || getLength('username') >= 3 && getLength('username') <= 20;
+                return !checkIfRequestContainsField('username')
+                       || (getLength('username') >= 3 && getLength('username') <= 20);
             }
 
-            allow read: if isUser() && isRequestFromCurrentAccount(userId)
-                           || isSelector();
+            allow get: if isUser() && isRequestFromCurrentAccount(userId)
+                          || isSelector();
+            allow list: if isUser();
             allow update: if (isUser()
                               && isRequestFromCurrentAccount(userId)
                               && checkIfFieldHasNotChanged('attendance')

@@ -1328,16 +1328,38 @@ describe('update clubs sales task', () => {
 });
 
 describe('users', () => {
-    it('should allow read on own document with user claim', async () => {
+    it('should allow get on own document with user claim', async () => {
         const userId = v1();
         const context = testEnv.authenticatedContext(userId, { isUser: true });
         await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).get());
     });
 
-    it('should deny read on other document with user claim', async () => {
+    it('should allow get on own document with user claim', async () => {
+        const userId = v1();
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).get());
+    });
+
+    it('should deny get on other document with user claim', async () => {
         const userId = v1();
         const context = testEnv.authenticatedContext(userId, { isUser: true });
         await firebase.assertFails(context.firestore().doc(`users/${v1()}`).get());
+    });
+
+    it('should allow query with user claim', async () => {
+        const userId = v1();
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertSucceeds(
+            context.firestore().collection('users').where('username', '==', '123').get()
+        );
+    });
+
+    it('should deny query without user claim', async () => {
+        const userId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertFails(
+            context.firestore().collection('users').where('username', '==', '123').get()
+        );
     });
 
     it('should allow read with selector claim', async () => {
