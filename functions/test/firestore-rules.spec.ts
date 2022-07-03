@@ -1286,25 +1286,14 @@ describe('selectors access codes', () => {
         );
     });
 
-    it('should allow create with access to club and partner claim', async () => {
-        const partnerId = v1();
-        const clubId = v1();
-        const accessCode = v1();
-        await setClubForPartner(partnerId, clubId);
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
-        await firebase.assertSucceeds(
-            context.firestore().doc(`selectorsAccessCodes/${accessCode}`).set({ clubId: clubId })
-        );
-    });
-
-    it('should deny create without access to club and partner claim', async () => {
+    it('should deny create with access to club and partner claim', async () => {
         const partnerId = v1();
         const clubId = v1();
         const accessCode = v1();
         await setClubForPartner(partnerId, clubId);
         const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
         await firebase.assertFails(
-            context.firestore().doc(`selectorsAccessCodes/${accessCode}`).set({ clubId: v1() })
+            context.firestore().doc(`selectorsAccessCodes/${accessCode}`).set({ clubId: clubId })
         );
     });
 

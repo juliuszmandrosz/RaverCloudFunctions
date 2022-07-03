@@ -290,7 +290,6 @@ service cloud.firestore {
 
         match /selectorsAccessCodes/{code} {
             allow read: if true;
-            allow create: if isPartner() && isPartnerFromClub(request.resource.data.clubId);
         }
 
         match /stripeCustomers/{customerId} {
