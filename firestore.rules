@@ -70,6 +70,9 @@ service cloud.firestore {
             return request.resource.data.diff(resource.data).affectedKeys().hasOnly([fieldName]);
         }
 
+        function checkIfFieldHasNotChanged(fieldName) {
+            return !request.resource.data.diff(resource.data).affectedKeys().hasAny([fieldName]);
+        }
 
         match /availableFilters/{filters} {
             allow read: if isAuthenticated();
@@ -96,7 +99,7 @@ service cloud.firestore {
                 allow create: if isPartner() && isPartnerFromClub(clubId);
                 allow update: if isPartner()
                                  && isPartnerFromClub(clubId)
-                                 && request.resource.data.ticketSales == resource.data.ticketSales;
+                                 && checkIfFieldHasNotChanged('ticketSales');
             }
 
             match /reviews/{reviewId} {
@@ -209,11 +212,17 @@ service cloud.firestore {
         }
 
         match /users/{userId} {
+            function isUsernameValid() {
+                return isNullOrEmpty('username')
+                       || getLength('username') >= 3 && getLength('username') <= 20;
+            }
+
             allow read: if isUser() && isRequestFromCurrentAccount(userId)
                            || isSelector();
             allow update: if (isUser()
                               && isRequestFromCurrentAccount(userId)
-                              && request.resource.data.attendance == resource.data.attendance)
+                              && checkIfFieldHasNotChanged('attendance')
+                              && isUsernameValid())
                              || isSelector() && checkIfOnlyOneFieldHasChanged('attendance');
 
             match /promotionCodes/{code} {

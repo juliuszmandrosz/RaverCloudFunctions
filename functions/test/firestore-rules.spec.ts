@@ -1355,6 +1355,58 @@ describe('users', () => {
         await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).update({}));
     });
 
+    it('should allow update on own document with user claim and username between 3 and 20 characters', async () => {
+        const userId = v1();
+        const attendance = { '123': 1 };
+        await setUserDocument({ userId, attendance });
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertSucceeds(
+            context
+                .firestore()
+                .doc(`users/${userId}`)
+                .update({ username: '#'.repeat(10) } as User)
+        );
+    });
+
+    it('should deny update on own document with user claim when attendance has changed', async () => {
+        const userId = v1();
+        const attendance = { '123': 1 };
+        await setUserDocument({ userId, attendance });
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`users/${userId}`)
+                .update({ username: '#', attendance: { '123': 2 } })
+        );
+    });
+
+    it('should deny update on own document with user claim when username is lower than 3 characters', async () => {
+        const userId = v1();
+        const attendance = { '123': 1 };
+        await setUserDocument({ userId, attendance });
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`users/${userId}`)
+                .update({ username: '#' } as User)
+        );
+    });
+
+    it('should deny update on own document with user claim when username is greater than 20 characters', async () => {
+        const userId = v1();
+        const attendance = { '123': 1 };
+        await setUserDocument({ userId, attendance });
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`users/${userId}`)
+                .update({ username: '#'.repeat(21) } as User)
+        );
+    });
+
     it('should deny update on other document with user claim', async () => {
         const userId = v1();
         const attendance = { '123': 1 };
