@@ -121,14 +121,14 @@ describe('clubs', () => {
         await firebase.assertFails(context.firestore().doc(`clubs/${clubId}`).get());
     });
 
-    it('should allow write on own club with partner claim', async () => {
+    it('should deny write on own club with partner claim', async () => {
         const clubId = v1();
         const partnerId = v1();
 
         await setClubForPartner(partnerId, clubId);
 
         const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
-        await firebase.assertSucceeds(context.firestore().doc(`clubs/${clubId}`).set({}));
+        await firebase.assertFails(context.firestore().doc(`clubs/${clubId}`).set({}));
     });
 
     it('should deny write on own club without partner claim', async () => {
