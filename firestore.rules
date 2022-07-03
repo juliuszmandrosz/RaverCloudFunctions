@@ -124,7 +124,8 @@ service cloud.firestore {
                 allow create: if isPartner()
                                  && isPartnerFromClub(clubId)
                                  && isNonNegativeNumber('requiredEntries')
-                                 && isNotEmptyString('description');
+                                 && isNotEmptyString('description')
+                                 && getLength('description') <= 1000;
                 allow delete: if isPartner()
                                  && isPartnerFromClub(clubId);
             }
@@ -214,7 +215,7 @@ service cloud.firestore {
             allow update: if (isUser()
                               && isRequestFromCurrentAccount(userId)
                               && request.resource.data.attendance == resource.data.attendance)
-                             || isSelector();
+                             || isSelector() && checkIfOnlyOneFieldHasChanged('attendance');
 
             match /promotionCodes/{code} {
                 allow read: if isUser() && isRequestFromCurrentAccount(userId);

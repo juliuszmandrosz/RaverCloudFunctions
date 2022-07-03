@@ -534,7 +534,7 @@ describe('reviews', () => {
         );
     });
 
-    it('should allow create with user claim, expired ticket, user rate in range 1 and 5 and user opinion with less or equal 1000 characters', async () => {
+    it('should allow create with user claim, expired ticket, user rate in range 1 and 5 and user opinion with lesser or equal 1000 characters', async () => {
         const userId = v1();
         const clubId = v1();
         const reviewId = v1();
@@ -668,7 +668,7 @@ describe('rewards', () => {
         );
     });
 
-    it('should allow create on own club with partner claim', async () => {
+    it('should allow create on own club with partner claim and description is lesser or equal than 1000 characters', async () => {
         const partnerId = v1();
         const clubId = v1();
         const rewardId = v1();
@@ -680,7 +680,23 @@ describe('rewards', () => {
             context
                 .firestore()
                 .doc(`clubs/${clubId}/rewards/${rewardId}`)
-                .set({ requiredEntries: 1, description: '#' } as Reward)
+                .set({ requiredEntries: 1, description: '#'.repeat(1000) } as Reward)
+        );
+    });
+
+    it('should deny create on own club with partner claim and description is greater than 1000 characters', async () => {
+        const partnerId = v1();
+        const clubId = v1();
+        const rewardId = v1();
+
+        await setClubForPartner(partnerId, clubId);
+
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/rewards/${rewardId}`)
+                .set({ requiredEntries: 1, description: '#'.repeat(1001) } as Reward)
         );
     });
 
@@ -1360,13 +1376,32 @@ describe('users', () => {
         );
     });
 
-    it('should allow update with selector claim', async () => {
+    it('should allow update with selector claim when only attendance has changed', async () => {
         const userId = v1();
         const selectorId = v1();
         const attendance = { '123': 1 };
         await setUserDocument({ userId, attendance });
         const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
-        await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).update({}));
+        await firebase.assertSucceeds(
+            context
+                .firestore()
+                .doc(`users/${userId}`)
+                .update({ attendance: { '123': 2 } })
+        );
+    });
+
+    it('should allow update with selector claim when not only attendance has changed', async () => {
+        const userId = v1();
+        const selectorId = v1();
+        const attendance = { '123': 1 };
+        await setUserDocument({ userId, attendance });
+        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`users/${userId}`)
+                .update({ username: '#' } as User)
+        );
     });
 
     it('should deny create', async () => {
