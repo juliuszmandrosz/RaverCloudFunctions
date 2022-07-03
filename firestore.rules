@@ -217,7 +217,8 @@ service cloud.firestore {
             }
 
             match /tickets/{ticketId} {
-                allow read: if isUser() && isRequestFromCurrentAccount(userId);
+                allow read: if isUser() && isRequestFromCurrentAccount(userId)
+                               || isSelector();
                 allow update: if isSelector() && getSelector().data.clubId == resource.data.clubId;
             }
         }
