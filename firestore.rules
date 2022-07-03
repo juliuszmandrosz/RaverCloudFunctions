@@ -66,6 +66,10 @@ service cloud.firestore {
             return request.resource.data[fieldName].size();
         }
 
+        function checkIfOnlyOneFieldHasChanged(fieldName) {
+            return request.resource.data.diff(resource.data).affectedKeys().hasOnly([fieldName]);
+        }
+
 
         match /availableFilters/{filters} {
             allow read: if isAuthenticated();
@@ -219,7 +223,11 @@ service cloud.firestore {
             match /tickets/{ticketId} {
                 allow read: if isUser() && isRequestFromCurrentAccount(userId)
                                || isSelector();
-                allow update: if isSelector() && getSelector().data.clubId == resource.data.clubId;
+                allow update: if isSelector() && getSelector().data.clubId == resource.data.clubId
+                                 && checkIfOnlyOneFieldHasChanged('isExpired')
+                                 && request.resource.data.isExpired && !resource.data.isExpired
+                                 || isUser() && isRequestFromCurrentAccount(userId)
+                                    && checkIfOnlyOneFieldHasChanged('reviewId');
             }
         }
 

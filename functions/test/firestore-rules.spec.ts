@@ -7,6 +7,7 @@ import { EventTickets } from '../src/models/event-tickets';
 import { serverTimestamp } from 'firebase/firestore';
 import { Reward } from '../src/models/reward';
 import { User } from '../src/models/user';
+import { Selector } from '../src/models/selector';
 
 let testEnv: firebase.RulesTestEnvironment;
 
@@ -70,6 +71,20 @@ interface SetTicketForUserParams {
 async function setTicketForUser({ userId, ticketId, ticket }: SetTicketForUserParams) {
     await testEnv.withSecurityRulesDisabled(async (context) => {
         await context.firestore().doc(`users/${userId}/tickets/${ticketId}`).set(ticket);
+    });
+}
+
+interface SetSelectorDocumentParams {
+    clubId: string;
+    selectorId: string;
+}
+
+async function setSelectorDocument({ clubId, selectorId }: SetSelectorDocumentParams) {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+        await context
+            .firestore()
+            .doc(`selectors/${selectorId}`)
+            .set({ clubId } as Selector);
     });
 }
 
@@ -1401,6 +1416,146 @@ describe('promotion codes', () => {
         const context = testEnv.authenticatedContext(userId, { isUser: true });
         await firebase.assertFails(
             context.firestore().doc(`users/${userId}/promotionCodes/${code}`).delete()
+        );
+    });
+});
+
+describe('tickets', () => {
+    async function loginAsSelectorAndCreateTicket(userId: string, ticketId: string) {
+        const selectorId = v1();
+        const clubId = v1();
+        const ticket = { clubId, isExpired: false } as Ticket;
+        await setTicketForUser({ userId, ticketId, ticket });
+        await setSelectorDocument({ clubId, selectorId });
+        return testEnv.authenticatedContext(selectorId, { isSelector: true });
+    }
+
+    it('should allow read on own document with user claim', async () => {
+        const userId = v1();
+        const ticketId = v1();
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`users/${userId}/tickets/${ticketId}`).get()
+        );
+    });
+
+    it('should deny read on other document with user claim', async () => {
+        const userId = v1();
+        const ticketId = v1();
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(
+            context.firestore().doc(`users/${v1()}/tickets/${ticketId}`).get()
+        );
+    });
+
+    it('should allow update on own document with user claim when only review id has changed', async () => {
+        const userId = v1();
+        const ticketId = v1();
+        const ticket = {} as Ticket;
+        await setTicketForUser({ userId, ticketId, ticket });
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertSucceeds(
+            context
+                .firestore()
+                .doc(`users/${userId}/tickets/${ticketId}`)
+                .update({ reviewId: '123' } as Ticket)
+        );
+    });
+
+    it('should deny update on own document with user claim when not only review id has changed', async () => {
+        const userId = v1();
+        const ticketId = v1();
+        const ticket = {} as Ticket;
+        await setTicketForUser({ userId, ticketId, ticket });
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`users/${userId}/tickets/${ticketId}`)
+                .update({ isExpired: false } as Ticket)
+        );
+    });
+
+    it('should allow read with selector claim', async () => {
+        const userId = v1();
+        const selectorId = v1();
+        const ticketId = v1();
+        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`users/${userId}/tickets/${ticketId}`).get()
+        );
+    });
+
+    it('should allow update with selector claim and access to club when only is expired has changed to true', async () => {
+        const userId = v1();
+        const ticketId = v1();
+        const context = await loginAsSelectorAndCreateTicket(userId, ticketId);
+        await firebase.assertSucceeds(
+            context
+                .firestore()
+                .doc(`users/${userId}/tickets/${ticketId}`)
+                .update({ isExpired: true } as Ticket)
+        );
+    });
+
+    it('should deny update with selector claim and access to club when not only is expired has changed', async () => {
+        const userId = v1();
+        const ticketId = v1();
+        const context = await loginAsSelectorAndCreateTicket(userId, ticketId);
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`users/${userId}/tickets/${ticketId}`)
+                .update({ isExpired: true, isVip: true } as Ticket)
+        );
+    });
+
+    it('should deny update with selector claim and access to club when is expired has changed to false', async () => {
+        const userId = v1();
+        const ticketId = v1();
+        const context = await loginAsSelectorAndCreateTicket(userId, ticketId);
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`users/${userId}/tickets/${ticketId}`)
+                .update({ isExpired: false } as Ticket)
+        );
+    });
+
+    it('should deny update with selector claim and without access to club', async () => {
+        const userId = v1();
+        const selectorId = v1();
+        const clubId = v1();
+        const ticketId = v1();
+        const ticket = { clubId: v1() } as Ticket;
+        await setTicketForUser({ userId, ticketId, ticket });
+        await setSelectorDocument({ clubId, selectorId });
+        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        await firebase.assertFails(
+            context.firestore().doc(`users/${userId}/tickets/${ticketId}`).update({})
+        );
+    });
+
+    it('should deny update without selector claim and with access to club', async () => {
+        const userId = v1();
+        const selectorId = v1();
+        const clubId = v1();
+        const ticketId = v1();
+        const ticket = { clubId } as Ticket;
+        await setTicketForUser({ userId, ticketId, ticket });
+        await setSelectorDocument({ clubId, selectorId });
+        const context = testEnv.authenticatedContext(selectorId);
+        await firebase.assertFails(
+            context.firestore().doc(`users/${userId}/tickets/${ticketId}`).update({})
+        );
+    });
+
+    it('should deny delete', async () => {
+        const userId = v1();
+        const code = v1();
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(
+            context.firestore().doc(`users/${userId}/tickets/${code}`).delete()
         );
     });
 });
