@@ -1353,6 +1353,56 @@ describe('users', () => {
         const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
         await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).update({}));
     });
+
+    it('should deny create', async () => {
+        const userId = v1();
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(context.firestore().doc(`users/${userId}`).set({}));
+    });
+
+    it('should deny delete', async () => {
+        const userId = v1();
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(context.firestore().doc(`users/${userId}`).delete());
+    });
+});
+
+describe('promotion codes', () => {
+    it('should allow read on own document with user claim', async () => {
+        const userId = v1();
+        const code = v1();
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`users/${userId}/promotionCodes/${code}`).get()
+        );
+    });
+
+    it('should deny read on other document with user claim', async () => {
+        const userId = v1();
+        const code = v1();
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(
+            context.firestore().doc(`users/${v1()}/promotionCodes/${code}`).get()
+        );
+    });
+
+    it('should deny update', async () => {
+        const userId = v1();
+        const code = v1();
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(
+            context.firestore().doc(`users/${userId}/promotionCodes/${code}`).update({})
+        );
+    });
+
+    it('should deny delete', async () => {
+        const userId = v1();
+        const code = v1();
+        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await firebase.assertFails(
+            context.firestore().doc(`users/${userId}/promotionCodes/${code}`).delete()
+        );
+    });
 });
 
 describe('vip payment sessions', () => {
