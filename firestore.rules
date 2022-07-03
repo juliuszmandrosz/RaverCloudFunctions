@@ -75,11 +75,16 @@ service cloud.firestore {
         }
 
         function checkIfFieldHasNotChanged(fieldName) {
-            return !request.resource.data.diff(resource.data).affectedKeys().hasAny([fieldName]);
+            return !(fieldName in resource.data) || !request.resource.data.diff(resource.data).affectedKeys().hasAny([fieldName]);
         }
 
         function checkIfRequestContainsField(fieldName) {
             return fieldName in request.resource.data;
+        }
+
+        function verifyFields(item, required, optional) {
+            let allAllowedFields = required.concat(optional);
+            return item.keys().hasAll(required) && item.keys().hasOnly(allAllowedFields);
         }
 
         match /availableFilters/{filters} {
@@ -103,11 +108,94 @@ service cloud.firestore {
             }
 
             match /eventTickets/{eventId} {
+                function getTicketPools() {
+                    return request.resource.data.ticketPools;
+                }
+
+                function getTicketSales() {
+                    return request.resource.data.ticketSales;
+                }
+
+                function checkIfTicketPoolsAreValid() {
+                    return getTicketPools().size() >= 1
+                           && getTicketPools().size() <= 5
+                           && isTicketPoolValid(getTicketPools()[0])
+                           && (getTicketPools().size() < 2 || isTicketPoolValid(getTicketPools()[1]))
+                           && (getTicketPools().size() < 3 || isTicketPoolValid(getTicketPools()[2]))
+                           && (getTicketPools().size() < 4 || isTicketPoolValid(getTicketPools()[3]))
+                           && (getTicketPools().size() < 5 || isTicketPoolValid(getTicketPools()[4]));
+                }
+
+                function checkIfTicketSalesAreValid() {
+                    return checkIfTicketSalesFieldsAreValid(getTicketSales())
+                           && isEventFeeValid(getTicketSales());
+                }
+
+                function isTicketPoolValid(pool) {
+                    return checkIfTicketPoolFieldsAreValid(pool)
+                           && isTicketQuantityValid(pool)
+                           && isTicketPriceValid(pool)
+                           && isVipPriceValid(pool);
+                }
+
+                function checkIfTicketPoolFieldsAreValid(pool) {
+                    return pool.currency is string
+                           && pool.isCurrent is bool
+                           && pool.isSoldOut is bool
+                           && pool.isVipEnabled is bool
+                           && pool.poolNumber is int
+                           && pool.ticketPrice is int
+                           && pool.ticketQuantity is int
+                           && pool.ticketsSold is number
+                           && pool.get('vipPrice', 0) is number;
+                }
+
+                function checkIfTicketSalesFieldsAreValid(sales) {
+                    return sales.currency is string
+                           && sales.eventFee is float
+                           && sales.isExclusiveEvent is bool
+                           && sales.clubIncome is number && sales.clubIncome == 0
+                           && sales.ticketsSold is int && sales.ticketsSold == 0
+                           && sales.totalRevenue is int && sales.totalRevenue == 0
+                           && sales.vipsSold is int && sales.vipsSold == 0;
+
+                }
+
+                function getMinTicketPrice(pool) {
+                    return get(/databases/$(database)/documents/currencyParams/$(pool.currency)).data.minTicketPrice;
+                }
+
+                function getMaxTicketPrice(pool) {
+                    return get(/databases/$(database)/documents/currencyParams/$(pool.currency)).data.maxTicketPrice;
+                }
+
+                function isTicketQuantityValid(pool) {
+                    return pool.ticketQuantity >= 1 && pool.ticketQuantity <= 100000;
+                }
+
+                function isTicketPriceValid(pool) {
+                    return pool.ticketPrice >= getMinTicketPrice(pool) && pool.ticketPrice <= getMaxTicketPrice(pool);
+                }
+
+                function isVipPriceValid(pool) {
+                    return !pool.isVipEnabled || pool.vipPrice >= getMinTicketPrice(pool) && pool.vipPrice <= getMaxTicketPrice(pool);
+                }
+
+                function isEventFeeValid(sales) {
+                    return sales.isExclusiveEvent || !sales.isExclusiveEvent && sales.eventFee == 0.08;
+                }
+
+
                 allow read: if isAuthenticated();
-                allow create: if isPartner() && isPartnerFromClub(clubId);
+                allow create: if isPartner()
+                                 && isPartnerFromClub(clubId)
+                                 && checkIfTicketPoolsAreValid()
+                                 && checkIfTicketSalesAreValid();
                 allow update: if isPartner()
                                  && isPartnerFromClub(clubId)
-                                 && checkIfFieldHasNotChanged('ticketSales');
+                                 && checkIfFieldHasNotChanged('ticketSales')
+                                 && checkIfTicketPoolsAreValid();
+
             }
 
             match /reviews/{reviewId} {
@@ -156,16 +244,11 @@ service cloud.firestore {
 
         match /events/{eventId} {
             function isValidEvent() {
-                return isValidArtistName();
+                return isValidConcertInfo();
             }
 
             function isValidConcertInfo() {
                 return !isConcert() || isConcert() && isValidArtistName();
-            }
-
-            function isValidArtistName() {
-                return isConcert() && isNotEmptyString('artistName')
-                       && getLength('artistName') <= 100;
             }
 
             function getArtistName() {
@@ -176,9 +259,13 @@ service cloud.firestore {
                 return request.resource.data.isConcert;
             }
 
+            function isValidArtistName() {
+                return isNotEmptyString('artistName') && getLength('artistName') <= 100;
+            }
+
 
             allow read: if isAuthenticated();
-            allow write: if isPartner() && isValidEvent() && isPartnerFromClub(request.resource.data.clubId);
+            allow create, update: if isPartner() && isValidEvent() && isPartnerFromClub(request.resource.data.clubId);
         }
 
         match /partners/{partnerId} {

@@ -8,6 +8,8 @@ import { serverTimestamp } from 'firebase/firestore';
 import { Reward } from '../src/models/reward';
 import { User } from '../src/models/user';
 import { Selector } from '../src/models/selector';
+import { CurrencyParams } from '../src/models/currency-params';
+import { TicketPool } from '../src/models/ticket-pool';
 
 let testEnv: firebase.RulesTestEnvironment;
 
@@ -379,6 +381,61 @@ describe('event review', () => {
 });
 
 describe('event tickets', () => {
+    async function setCurrencyParams() {
+        await testEnv.withSecurityRulesDisabled(async (context) => {
+            await context
+                .firestore()
+                .doc(`currencyParams/pln`)
+                .set({ minTicketPrice: 20, maxTicketPrice: 100 } as CurrencyParams);
+        });
+    }
+
+    function getValidEventTicketsForCreate() {
+        return {
+            ticketPools: getValidTicketPools(),
+            ticketSales: {
+                clubIncome: 0,
+                ticketsSold: 0,
+                isExclusiveEvent: true,
+                eventFee: 0.04,
+                currency: 'pln',
+                vipsSold: 0,
+                totalRevenue: 0,
+            },
+        } as EventTickets;
+    }
+
+    function getValidEventTicketsForUpdate() {
+        return {
+            ticketPools: getValidTicketPools(),
+        } as EventTickets;
+    }
+
+    function getValidTicketPools() {
+        return [
+            {
+                currency: 'pln',
+                isCurrent: false,
+                isSoldOut: false,
+                isVipEnabled: false,
+                poolNumber: 1,
+                ticketPrice: 20,
+                ticketQuantity: 20,
+                ticketsSold: 20,
+            } as TicketPool,
+        ];
+    }
+
+    async function loginAsPartnerAndSetEventTickets(clubId: string, eventId: string) {
+        const partnerId = v1();
+        const eventTickets = { ticketSales: { clubIncome: 50 } } as EventTickets;
+
+        await setClubForPartner(partnerId, clubId);
+        await setEventTickets({ clubId, eventId, eventTickets });
+        await setCurrencyParams();
+        return testEnv.authenticatedContext(partnerId, { isPartner: true });
+    }
+
     it('should allow read with authenticated context', async () => {
         const userId = v1();
         const eventId = v1();
@@ -398,18 +455,91 @@ describe('event tickets', () => {
         );
     });
 
-    it('should allow update on own club with partner claim', async () => {
+    it('should allow update on own club with partner claim and valid event tickets', async () => {
         const clubId = v1();
         const eventId = v1();
-        const partnerId = v1();
-        const eventTickets = { ticketSales: { clubIncome: 50 } } as EventTickets;
-
-        await setClubForPartner(partnerId, clubId);
-        await setEventTickets({ clubId, eventId, eventTickets });
-
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = await loginAsPartnerAndSetEventTickets(clubId, eventId);
         await firebase.assertSucceeds(
-            context.firestore().doc(`clubs/${clubId}/eventTickets/${eventId}`).update({})
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/eventTickets/${eventId}`)
+                .update(getValidEventTicketsForUpdate())
+        );
+    });
+
+    it('should deny update on own club with partner claim and invalid ticket price', async () => {
+        const clubId = v1();
+        const eventId = v1();
+        const context = await loginAsPartnerAndSetEventTickets(clubId, eventId);
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/eventTickets/${eventId}`)
+                .update({
+                    ticketPools: [
+                        {
+                            currency: 'pln',
+                            isCurrent: false,
+                            isSoldOut: false,
+                            isVipEnabled: false,
+                            poolNumber: 1,
+                            ticketPrice: 10,
+                            ticketQuantity: 20,
+                            ticketsSold: 20,
+                        },
+                    ],
+                } as EventTickets)
+        );
+    });
+
+    it('should deny update on own club with partner claim and invalid vip price', async () => {
+        const clubId = v1();
+        const eventId = v1();
+        const context = await loginAsPartnerAndSetEventTickets(clubId, eventId);
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/eventTickets/${eventId}`)
+                .update({
+                    ticketPools: [
+                        {
+                            currency: 'pln',
+                            isCurrent: false,
+                            isSoldOut: false,
+                            isVipEnabled: true,
+                            poolNumber: 1,
+                            ticketPrice: 20,
+                            ticketQuantity: 20,
+                            ticketsSold: 20,
+                            vipPrice: 10,
+                        },
+                    ],
+                } as EventTickets)
+        );
+    });
+
+    it('should deny update on own club with partner claim and invalid ticket quantity', async () => {
+        const clubId = v1();
+        const eventId = v1();
+        const context = await loginAsPartnerAndSetEventTickets(clubId, eventId);
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/eventTickets/${eventId}`)
+                .update({
+                    ticketPools: [
+                        {
+                            currency: 'pln',
+                            isCurrent: false,
+                            isSoldOut: false,
+                            isVipEnabled: false,
+                            poolNumber: 1,
+                            ticketPrice: 20,
+                            ticketQuantity: 0,
+                            ticketsSold: 20,
+                        },
+                    ],
+                } as EventTickets)
         );
     });
 
@@ -431,12 +561,14 @@ describe('event tickets', () => {
         const clubId = v1();
         const eventId = v1();
         const partnerId = v1();
-
         await setClubForPartner(partnerId, clubId);
-
+        await setCurrencyParams();
         const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
         await firebase.assertSucceeds(
-            context.firestore().doc(`clubs/${clubId}/eventTickets/${eventId}`).set({})
+            context
+                .firestore()
+                .doc(`clubs/${clubId}/eventTickets/${eventId}`)
+                .set(getValidEventTicketsForCreate())
         );
     });
 
