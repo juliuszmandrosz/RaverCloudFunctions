@@ -2,6 +2,7 @@ import { Event } from '../../models/event';
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { getEventDocRef, tryGetEventData } from '../get-data/get-event-data';
 import { updateEventTicketsOnTicketPayment } from '../update-event-tickets/update-event-tickets-on-ticket-payment';
+import { toJson } from '../../utils/json-utils';
 
 export async function updateEventOnTicketPayment(eventId: string, isVip: boolean): Promise<void> {
     return firestoreDatabase().runTransaction(async (transaction) => {
@@ -18,9 +19,11 @@ export async function updateEventOnTicketPayment(eventId: string, isVip: boolean
 
         const currentPrice = currentPoolPrice ?? lastPoolPrice;
 
-        transaction.update(eventDocRef, {
+        const updatedEvent = {
             attending: event.attending + 1,
             price: currentPrice,
-        } as Event);
+        } as Event;
+
+        transaction.update(eventDocRef, toJson<Event>(updatedEvent));
     });
 }

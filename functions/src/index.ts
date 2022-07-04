@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions';
 import { newClub, newEvent, newEventTickets, newReview, newReward } from './constants/collections';
+import { CallableContext } from 'firebase-functions/lib/common/providers/https';
 
 export const env = functions.config();
 
@@ -63,6 +64,7 @@ exports.onClubUpdated = functions
     });
 
 exports.cancelEvent = functions.region('europe-central2').https.onCall(async (data, context) => {
+    verifyApp(context);
     return (await import('./stripe-functions/cancel-event/cancel-event')).cancelEvent(
         data,
         context
@@ -70,6 +72,7 @@ exports.cancelEvent = functions.region('europe-central2').https.onCall(async (da
 });
 
 exports.postponeEvent = functions.region('europe-central2').https.onCall(async (data, context) => {
+    verifyApp(context);
     return (await import('./stripe-functions/postpone-event/postpone-event')).postponeEvent(
         data,
         context
@@ -86,6 +89,7 @@ exports.onAccountDeleted = functions
     });
 
 exports.returnTicket = functions.region('europe-central2').https.onCall(async (data, context) => {
+    verifyApp(context);
     return (await import('./stripe-functions/return-ticket/return-ticket')).returnTicket(
         data,
         context
@@ -118,19 +122,10 @@ exports.cancelTicketReservationOnCloudTaskCallback = functions
         ).cancelTicketReservationOnCloudTaskCallback(request, response);
     });
 
-exports.cancelTicketReservationOnClosingPaymentSheet = functions
-    .region('europe-central2')
-    .https.onCall(async (data, context) => {
-        await (
-            await import(
-                './firestore-functions/cancel-ticket-reservation/cancel-ticket-reservation-on-closing-payment-sheet'
-            )
-        ).cancelTicketReservationOnClosingPaymentSheet(data, context);
-    });
-
 exports.checkSelectorAccessCode = functions
     .region('europe-central2')
     .https.onCall(async (data, context) => {
+        verifyApp(context);
         return (
             await import(
                 './firestore-functions/check-selector-access-code/check-selector-access-code'
@@ -141,6 +136,7 @@ exports.checkSelectorAccessCode = functions
 exports.generateAccessCodeForSelector = functions
     .region('europe-central2')
     .https.onCall(async (data, context) => {
+        verifyApp(context);
         return (
             await import(
                 './firestore-functions/generate-access-code-for-selector/generate-access-code-for-selector'
@@ -151,6 +147,7 @@ exports.generateAccessCodeForSelector = functions
 exports.useSelectorAccessCode = functions
     .region('europe-central2')
     .https.onCall(async (data, context) => {
+        verifyApp(context);
         return (
             await import('./firestore-functions/use-selector-access-code/use-selector-access-code')
         ).useSelectorAccessCode(data, context);
@@ -159,6 +156,7 @@ exports.useSelectorAccessCode = functions
 exports.updateInvoiceData = functions
     .region('europe-central2')
     .https.onCall(async (data, context) => {
+        verifyApp(context);
         return (
             await import('./stripe-functions/update-invoice-data/update-invoice-data')
         ).updateInvoiceData(data, context);
@@ -191,3 +189,12 @@ exports.onRewardAdded = functions
             await import('./firebase-triggers/on-reward-added')
         ).onRewardAdded(snapshot, context);
     });
+
+function verifyApp(context: CallableContext) {
+    if (!context.app) {
+        throw new functions.https.HttpsError(
+            'failed-precondition',
+            'The function must be called from an App Check verified app.'
+        );
+    }
+}

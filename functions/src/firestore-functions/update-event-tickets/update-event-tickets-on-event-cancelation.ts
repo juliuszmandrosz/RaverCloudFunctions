@@ -2,6 +2,7 @@ import { EventTickets } from '../../models/event-tickets';
 import { Event } from '../../models/event';
 import { getEventTicketsDocRef, tryGetEventTicketsData } from '../get-data/get-event-tickets-data';
 import { TicketSales } from '../../models/ticket-sales';
+import { toJson } from '../../utils/json-utils';
 
 export async function updateEventTicketsOnEventCancelation(event: Event): Promise<void> {
     const eventTicketsDocRef = getEventTicketsDocRef(event.clubId, event.id);
@@ -10,9 +11,11 @@ export async function updateEventTicketsOnEventCancelation(event: Event): Promis
 
     const currentTicketSales = eventTickets.ticketSales;
 
-    await eventTicketsDocRef.update({
-        ticketSales: resetTicketSales(currentTicketSales),
-    } as EventTickets);
+    await eventTicketsDocRef.update(
+        toJson<EventTickets>({
+            ticketSales: resetTicketSales(currentTicketSales),
+        } as EventTickets)
+    );
 }
 
 function resetTicketSales(ticketSales: TicketSales) {

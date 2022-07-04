@@ -10,6 +10,7 @@ import { reduceTicketSalesByQuantity } from '../update-ticket-sales/reduce-ticke
 import { revertTicketQuantityFromPools } from '../update-ticket-pools/revert-ticket-quantity-from-pools';
 import * as functions from 'firebase-functions';
 import { getClubIncome } from '../../utils/get-club-income';
+import { toJson } from '../../utils/json-utils';
 
 interface UpdateEventTicketsOnCancelUsersPaymentSessionsParams {
     event: Event;
@@ -49,7 +50,7 @@ export async function updateEventTicketsOnCancelUsersPaymentSessions({
 
         await revertTicketQuantityFromPools(tickets, canceledTicketSessionsQuantity);
 
-        transaction.update(eventTicketsDocRef, tickets);
+        transaction.update(eventTicketsDocRef, toJson<EventTickets>(tickets));
 
         return tickets;
     });

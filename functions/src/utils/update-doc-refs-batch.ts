@@ -2,8 +2,9 @@ import { firestoreDatabase } from '../modules/firebase-admin-module';
 import { firestore } from 'firebase-admin';
 import DocumentReference = firestore.DocumentReference;
 import UpdateData = firestore.UpdateData;
+import { toJson } from './json-utils';
 
-export async function updateDocRefsBatch(docRefs: DocumentReference[], data: UpdateData) {
+export async function updateDocRefsBatch<T>(docRefs: DocumentReference[], data: UpdateData<T>) {
     const docRefsToUpdate = docRefs.slice(0, 500);
     const batchSize = docRefsToUpdate.length;
 
@@ -12,7 +13,7 @@ export async function updateDocRefsBatch(docRefs: DocumentReference[], data: Upd
     const batch = firestoreDatabase().batch();
 
     docRefs.forEach((ref) => {
-        batch.update(ref, data);
+        batch.update(ref, toJson(data));
     });
 
     await batch.commit();

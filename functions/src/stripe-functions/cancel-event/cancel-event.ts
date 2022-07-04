@@ -13,6 +13,7 @@ import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-use
 import { updateTicketsOnEventCancelation } from '../../firestore-functions/update-tickets/update-tickets-on-event-cancelation';
 import { cancelUpdateClubSalesTask } from '../../cloud-tasks/update-club-sales-on-event-end-task/cancel-update-club-sales-task';
 import { tryGetPartnerData } from '../../firestore-functions/get-data/get-partner-data';
+import { toJson } from '../../utils/json-utils';
 
 export async function cancelEvent(
     data: CancelEventRequest,
@@ -49,7 +50,7 @@ export async function cancelEvent(
     await firestoreDatabase()
         .collection(events)
         .doc(eventId)
-        .update({ isCanceled: true } as Event);
+        .update(toJson<Event>({ isCanceled: true } as Event));
 
     const refundedSessions = await refundTicketsForUsers(event.id);
     await updateTicketsOnEventCancelation(refundedSessions.ticketSessions);

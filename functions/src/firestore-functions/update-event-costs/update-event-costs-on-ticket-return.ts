@@ -2,6 +2,8 @@ import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { getEventCostsDocRef, tryGetEventCostsData } from '../get-data/get-event-costs-data';
 import { tryGetTicketPaymentSessionData } from '../get-data/get-ticket-payment-session-data';
 import { tryGetVipPaymentSession } from '../get-data/get-vip-payment-session.data';
+import { toJson } from '../../utils/json-utils';
+import { EventCosts } from '../../models/event-costs';
 
 export interface UpdateEventCostsOnTicketReturnParams {
     eventId: string;
@@ -33,6 +35,6 @@ export async function updateEventCostsOnTicketReturn(
         eventCosts.eventPostponeBalance -= ticketFee;
         eventCosts.eventPostponeBalance -= vipFee;
 
-        transaction.update(eventCostsDocRef, eventCosts);
+        transaction.update(eventCostsDocRef, toJson<EventCosts>(eventCosts));
     });
 }

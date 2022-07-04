@@ -7,6 +7,7 @@ import { FunctionsErrorDetails } from '../../errors/functions-error-details';
 import { StripeCustomer } from '../../models/stripe-customer';
 import { getStripeCustomerDocRef } from '../../firestore-functions/get-stripe-customer-data/get-stripe-customer-data';
 import { checkVAT, countries } from 'jsvat';
+import { toJson } from '../../utils/json-utils';
 
 export async function updateInvoiceData(
     data: UpdateInvoiceDataRequest,
@@ -29,10 +30,12 @@ export async function updateInvoiceData(
     await stripe.customers.update(stripeCustomerId, { name });
 
     if (!isCompany) {
-        await getStripeCustomerDocRef(userId).update({
+        const updatedInvoiceData = {
             name,
             vatNumber: '',
-        } as StripeCustomer);
+        } as StripeCustomer;
+
+        await getStripeCustomerDocRef(userId).update(toJson<StripeCustomer>(updatedInvoiceData));
 
         return;
     }
@@ -52,10 +55,12 @@ export async function updateInvoiceData(
         value: vatNumberWithCountryCode,
     });
 
-    await getStripeCustomerDocRef(userId).update({
-        name,
-        vatNumber: vatNumberWithCountryCode,
-    } as StripeCustomer);
+    await getStripeCustomerDocRef(userId).update(
+        toJson<StripeCustomer>({
+            name,
+            vatNumber: vatNumberWithCountryCode,
+        } as StripeCustomer)
+    );
 }
 
 async function validateVatNumber(vatNumberWithCountryCode: string) {

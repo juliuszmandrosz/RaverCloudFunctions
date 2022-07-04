@@ -3,6 +3,7 @@ import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { getEventDocRef, tryGetEventData } from '../get-data/get-event-data';
 import { updateEventTicketsOnTicketReturn } from '../update-event-tickets/update-event-tickets-on-ticket-return';
 import { updateEventCostsOnTicketReturn } from '../update-event-costs/update-event-costs-on-ticket-return';
+import { toJson } from '../../utils/json-utils';
 
 interface UpdateEventOnTicketReturnParams {
     eventId: string;
@@ -42,10 +43,12 @@ export async function updateEventOnTicketReturn({
 
         const currentPoolPrice = ticketPools.find((pool) => pool.isCurrent)!.ticketPrice;
 
-        transaction.update(eventDocRef, {
+        const updatedEvent = {
             attending: event.attending - 1,
             price: currentPoolPrice,
-        } as Event);
+        } as Event;
+
+        transaction.update(eventDocRef, toJson<Event>(updatedEvent));
 
         return event;
     });

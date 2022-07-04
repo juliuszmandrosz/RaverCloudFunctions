@@ -7,6 +7,7 @@ import { getCurrentOrLastPool } from '../../utils/get-current-or-last-pool';
 import { getClubIncome } from '../../utils/get-club-income';
 import { updateTicketSalesOnTicketPayment } from '../update-ticket-sales/update-ticket-sales-on-ticket-payment';
 import { updateTicketPoolsOnTicketPayment } from '../update-ticket-pools/update-ticket-pools-on-ticket-payment';
+import { toJson } from '../../utils/json-utils';
 
 /// Returns event tickets after update
 export async function updateEventTicketsOnTicketPayment(
@@ -26,7 +27,7 @@ export async function updateEventTicketsOnTicketPayment(
 
         await updateTicketPoolsOnTicketPayment(tickets);
 
-        transaction.update(eventTicketsDocRef, tickets);
+        transaction.update(eventTicketsDocRef, toJson<EventTickets>(tickets));
 
         return tickets;
     });

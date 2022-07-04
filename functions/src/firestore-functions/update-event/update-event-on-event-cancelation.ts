@@ -1,6 +1,7 @@
 import { Event } from '../../models/event';
 import { getEventDocRef } from '../get-data/get-event-data';
 import { updateEventTicketsOnEventCancelation } from '../update-event-tickets/update-event-tickets-on-event-cancelation';
+import { toJson } from '../../utils/json-utils';
 
 interface UpdateEventOnEventCancelationParams {
     event: Event;
@@ -13,7 +14,9 @@ export async function updateEventOnEventCancelation({
 
     await updateEventTicketsOnEventCancelation(event);
 
-    await eventDocRef.update({
-        attending: 0,
-    } as Event);
+    await eventDocRef.update(
+        toJson<Event>({
+            attending: 0,
+        } as Event)
+    );
 }

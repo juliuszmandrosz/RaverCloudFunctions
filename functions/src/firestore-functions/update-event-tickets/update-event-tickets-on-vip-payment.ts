@@ -8,6 +8,7 @@ import {
 } from '../get-data/get-event-tickets-data';
 import { getClubIncome } from '../../utils/get-club-income';
 import { updateTicketSalesOnVipPayment } from '../update-ticket-sales/update-ticket-sales-on-vip-payment';
+import { toJson } from '../../utils/json-utils';
 
 interface UpdateEventTicketsOnVipPaymentParams {
     ticket: Ticket;
@@ -36,7 +37,7 @@ export async function updateEventTicketsOnVipPayment({
 
         await updateTicketSalesOnVipPayment({ tickets, clubIncome, vipPrice });
 
-        transaction.update(eventTicketsDocRef, tickets);
+        transaction.update(eventTicketsDocRef, toJson<EventTickets>(tickets));
 
         return tickets;
     });

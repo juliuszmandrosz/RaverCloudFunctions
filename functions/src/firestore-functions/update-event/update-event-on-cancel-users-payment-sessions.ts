@@ -8,6 +8,7 @@ import { updateEventTicketsOnCancelUsersPaymentSessions } from '../update-event-
 import { Event } from '../../models/event';
 import { getCurrentOrLastPool } from '../../utils/get-current-or-last-pool';
 import * as functions from 'firebase-functions';
+import { toJson } from '../../utils/json-utils';
 
 interface UpdateEventOnCancelPaymentSessionsParams {
     eventId: string;
@@ -44,9 +45,12 @@ export async function updateEventOnCancelUsersPaymentSessions({
 
         const currentPoolPrice = getCurrentOrLastPool(eventTickets.ticketPools).ticketPrice;
 
-        transaction.update(eventDocRef, {
-            attending: event.attending - canceledTicketSessionsQuantity,
-            price: currentPoolPrice,
-        } as Event);
+        transaction.update(
+            eventDocRef,
+            toJson<Event>({
+                attending: event.attending - canceledTicketSessionsQuantity,
+                price: currentPoolPrice,
+            } as Event)
+        );
     });
 }

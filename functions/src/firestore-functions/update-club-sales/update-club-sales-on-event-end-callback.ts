@@ -7,6 +7,8 @@ import { UpdateClubSalesOnEventEndRequest } from './update-club-sales-on-event-e
 import { getEventDataOrReturnNotFound } from '../get-data/get-event-data';
 import { createUpdateClubSalesOnEventEndTask } from '../../cloud-tasks/update-club-sales-on-event-end-task/create-update-club-sales-on-event-end-task';
 import { getClubSalesOrReturnNotFound, getClubSalesDocRef } from '../get-data/get-club-sales-data';
+import { toJson } from '../../utils/json-utils';
+import { ClubSales } from '../../models/club-sales';
 
 export async function updateClubSalesOnEventEndCallback(
     request: functions.https.Request,
@@ -55,7 +57,7 @@ export async function updateClubSalesOnEventEndCallback(
         clubSales.exclusiveEventsRevenue += ticketSales.totalRevenue;
     }
 
-    await getClubSalesDocRef(clubId).update(clubSales);
+    await getClubSalesDocRef(clubId).update(toJson<ClubSales>(clubSales));
 
     response.send();
 }

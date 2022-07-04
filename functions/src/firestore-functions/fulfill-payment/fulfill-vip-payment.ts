@@ -10,6 +10,7 @@ import { VipPaymentSession } from '../../models/vip-payment-session';
 import { updateEventCostsOnUserPayment } from '../update-event-costs/update-event-costs-on-user-payment';
 import { updateEventTicketsOnVipPayment } from '../update-event-tickets/update-event-tickets-on-vip-payment';
 import { sendInvoiceForCustomer } from '../../stripe-functions/send-invoice-for-customer/send-invoice-for-customer';
+import { toJson } from '../../utils/json-utils';
 
 export async function fulfillVipPayment(
     paymentSessionId: string,
@@ -32,19 +33,23 @@ export async function fulfillVipPayment(
     const newTicketPrice =
         ticket.price + vipPaymentSession.revenue - vipPaymentSession.promotionCodeAmountOff;
 
-    await ticketDocRef.update({
-        isVip: true,
-        price: newTicketPrice,
-        vipPaymentId: vipPaymentSession.id,
-    } as Ticket);
+    await ticketDocRef.update(
+        toJson<Ticket>({
+            isVip: true,
+            price: newTicketPrice,
+            vipPaymentId: vipPaymentSession.id,
+        } as Ticket)
+    );
 
     await firestoreDatabase()
         .collection(vipPaymentSessions)
         .doc(vipPaymentSession.id)
-        .update({
-            paymentDateTime: Timestamp.now(),
-            status: 'succeeded',
-        } as VipPaymentSession);
+        .update(
+            toJson<VipPaymentSession>({
+                paymentDateTime: Timestamp.now(),
+                status: 'succeeded',
+            } as VipPaymentSession)
+        );
 
     await updateEventTicketsOnVipPayment({
         ticket,

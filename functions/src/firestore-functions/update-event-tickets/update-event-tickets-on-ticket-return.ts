@@ -5,6 +5,7 @@ import { getEventTicketsDocRef, tryGetEventTicketsData } from '../get-data/get-e
 import { reduceTicketSalesBySingleTransaction } from '../update-ticket-sales/reduce-ticket-sales-by-single-transaction';
 import { revertSingleTicketFromPools } from '../update-ticket-pools/revert-single-ticket-from-pools';
 import { getClubIncome } from '../../utils/get-club-income';
+import { toJson } from '../../utils/json-utils';
 
 interface UpdateEventTicketsOnTicketReturnParams {
     event: Event;
@@ -34,7 +35,7 @@ export async function updateEventTicketsOnTicketReturn({
 
         await revertSingleTicketFromPools(tickets);
 
-        transaction.update(eventTicketsDocRef, tickets);
+        transaction.update(eventTicketsDocRef, toJson<EventTickets>(tickets));
 
         return tickets;
     });

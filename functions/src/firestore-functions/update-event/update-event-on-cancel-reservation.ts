@@ -7,6 +7,7 @@ import {
 } from '../get-data/get-event-data';
 import * as functions from 'firebase-functions';
 import { updateEventTicketsOnCancelReservation } from '../update-event-tickets/update-event-tickets-on-cancel-reservation';
+import { toJson } from '../../utils/json-utils';
 
 interface UpdateEventOnCancelReservationParams {
     eventId: string;
@@ -44,10 +45,13 @@ export async function updateEventOnCancelReservation({
 
         const currentPoolPrice = ticketPools.find((pool) => pool.isCurrent)!.ticketPrice;
 
-        transaction.update(eventDocRef, {
-            attending: event.attending - 1,
-            price: currentPoolPrice,
-        } as Event);
+        transaction.update(
+            eventDocRef,
+            toJson<Event>({
+                attending: event.attending - 1,
+                price: currentPoolPrice,
+            } as Event)
+        );
 
         return event;
     });

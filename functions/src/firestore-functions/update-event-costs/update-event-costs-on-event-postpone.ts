@@ -6,6 +6,7 @@ import {
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import * as functions from 'firebase-functions';
 import { EventCosts } from '../../models/event-costs';
+import { toJson } from '../../utils/json-utils';
 
 export interface UpdateEventCostsOnEventPostpone {
     eventId: string;
@@ -30,7 +31,7 @@ export async function updateEventCostsOnEventPostpone(
 
         if (!eventCosts) return;
 
-        transaction.update(eventCostsDocRef, getUpdatedEventCosts(eventCosts));
+        transaction.update(eventCostsDocRef, toJson<EventCosts>(getUpdatedEventCosts(eventCosts)));
     });
 }
 

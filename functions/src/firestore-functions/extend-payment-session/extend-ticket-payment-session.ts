@@ -5,6 +5,7 @@ import {
 import { tasksClient } from '../../modules/cloud-tasks-module';
 import { createCancelTicketReservationTask } from '../../cloud-tasks/create-cancel-ticket-reservation-task/create-cancel-ticket-reservation-task';
 import { TicketPaymentSession } from '../../models/ticket-payment-session';
+import { toJson } from '../../utils/json-utils';
 
 export async function extendTicketPaymentSession(paymentIntentId: string) {
     const ticketPaymentSession = await getTicketPaymentSessionDataOrUndefined(paymentIntentId);
@@ -22,8 +23,10 @@ export async function extendTicketPaymentSession(paymentIntentId: string) {
         expirationTimeInSeconds: 900,
     });
 
-    await ticketPaymentDocRef.update({
-        status: 'requires_action',
-        cancelTicketReservationTaskId,
-    } as TicketPaymentSession);
+    await ticketPaymentDocRef.update(
+        toJson<TicketPaymentSession>({
+            status: 'requires_action',
+            cancelTicketReservationTaskId,
+        } as TicketPaymentSession)
+    );
 }

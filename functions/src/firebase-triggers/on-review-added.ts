@@ -5,6 +5,7 @@ import { Club } from '../models/club';
 import { getClubDocRef } from '../firestore-functions/get-data/get-club-data';
 import { clubs, eventReviews } from '../constants/collections';
 import { EventReview } from '../models/event-review';
+import { toJson } from '../utils/json-utils';
 
 export async function onReviewAdded(
     snapshot: functions.firestore.DocumentSnapshot,
@@ -29,10 +30,13 @@ export async function onReviewAdded(
 
         await updateEventReview(review, clubId);
 
-        transaction.update(clubRef, {
-            reviewAvg: roundedAvg,
-            reviewCount: newReviewCount,
-        } as Club);
+        transaction.update(
+            clubRef,
+            toJson<Club>({
+                reviewAvg: roundedAvg,
+                reviewCount: newReviewCount,
+            } as Club)
+        );
     });
 }
 
@@ -56,9 +60,12 @@ async function updateEventReview(review: Review, clubId: string) {
 
         const roundedAvg = parseFloat(newAvg.toFixed(1));
 
-        transaction.update(eventReviewRef, {
-            reviewAvg: roundedAvg,
-            reviewQuantity: newReviewQuantity,
-        } as EventReview);
+        transaction.update(
+            eventReviewRef,
+            toJson<EventReview>({
+                reviewAvg: roundedAvg,
+                reviewQuantity: newReviewQuantity,
+            } as EventReview)
+        );
     });
 }

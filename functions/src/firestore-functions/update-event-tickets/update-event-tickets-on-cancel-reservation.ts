@@ -10,6 +10,7 @@ import * as functions from 'firebase-functions';
 import { reduceTicketSalesBySingleTransaction } from '../update-ticket-sales/reduce-ticket-sales-by-single-transaction';
 import { revertSingleTicketFromPools } from '../update-ticket-pools/revert-single-ticket-from-pools';
 import { getClubIncome } from '../../utils/get-club-income';
+import { toJson } from '../../utils/json-utils';
 
 interface UpdateEventTicketsOnCancelReservationParams {
     event: Event;
@@ -46,7 +47,7 @@ export async function updateEventTicketsOnCancelReservation({
 
         revertSingleTicketFromPools(tickets);
 
-        transaction.update(eventTicketsDocRef, tickets);
+        transaction.update(eventTicketsDocRef, toJson<EventTickets>(tickets));
 
         return tickets;
     });

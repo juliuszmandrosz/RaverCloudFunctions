@@ -11,6 +11,7 @@ import { TicketPaymentSession } from '../../models/ticket-payment-session';
 import { updateEventCostsOnUserPayment } from '../update-event-costs/update-event-costs-on-user-payment';
 import { Ticket } from '../../models/ticket';
 import { sendInvoiceForCustomer } from '../../stripe-functions/send-invoice-for-customer/send-invoice-for-customer';
+import { toJson } from '../../utils/json-utils';
 
 export async function fulfillTicketPayment(
     paymentSessionId: string,
@@ -31,11 +32,13 @@ export async function fulfillTicketPayment(
     await firestoreDatabase()
         .collection(ticketPaymentSessions)
         .doc(ticketPaymentSession.id)
-        .update({
-            status: 'succeeded',
-            paymentDateTime: Timestamp.now(),
-            ticketId: ticketId,
-        } as TicketPaymentSession);
+        .update(
+            toJson<TicketPaymentSession>({
+                status: 'succeeded',
+                paymentDateTime: Timestamp.now(),
+                ticketId: ticketId,
+            } as TicketPaymentSession)
+        );
 
     await firestoreDatabase()
         .collection(users)

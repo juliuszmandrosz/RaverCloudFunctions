@@ -21,6 +21,7 @@ import { VipPaymentSession } from '../../models/vip-payment-session';
 import { Ticket } from '../../models/ticket';
 import { firestore } from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
+import { toJson } from '../../utils/json-utils';
 
 export async function returnTicket(
     data: ReturnTicketRequest,
@@ -66,21 +67,25 @@ export async function returnTicket(
         paymentIntentId: ticketPayment.id,
     });
 
-    await getTicketPaymentSessionDocRef(ticketPayment.id).update({
-        isRefunded: true,
-    } as TicketPaymentSession);
+    await getTicketPaymentSessionDocRef(ticketPayment.id).update(
+        toJson<TicketPaymentSession>({
+            isRefunded: true,
+        } as TicketPaymentSession)
+    );
 
     if (vipPayment) {
         await refundPayment({
             paymentIntentId: vipPayment.id,
         });
 
-        await getVipPaymentSessionDocRef(vipPayment.id).update({
-            isRefunded: true,
-        } as VipPaymentSession);
+        await getVipPaymentSessionDocRef(vipPayment.id).update(
+            toJson<VipPaymentSession>({
+                isRefunded: true,
+            } as VipPaymentSession)
+        );
     }
 
-    await getTicketDocRef(userId, ticketId).update({ isReturned: true } as Ticket);
+    await getTicketDocRef(userId, ticketId).update(toJson<Ticket>({ isReturned: true } as Ticket));
 
     let returnedRevenue = ticketPayment.revenue;
 

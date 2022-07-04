@@ -7,6 +7,7 @@ import {
 import { updateEventOnCancelReservation } from '../update-event/update-event-on-cancel-reservation';
 import { stripe } from '../../modules/stripe-module';
 import { TicketPaymentSession } from '../../models/ticket-payment-session';
+import { toJson } from '../../utils/json-utils';
 
 export async function cancelTicketReservationOnCloudTaskCallback(
     request: functions.https.Request,
@@ -24,7 +25,9 @@ export async function cancelTicketReservationOnCloudTaskCallback(
 
     if (session.status === 'canceled') return;
 
-    await sessionDocRef.update({ status: 'canceled' } as TicketPaymentSession);
+    await sessionDocRef.update(
+        toJson<TicketPaymentSession>({ status: 'canceled' } as TicketPaymentSession)
+    );
 
     await stripe.paymentIntents.cancel(session.id);
 
