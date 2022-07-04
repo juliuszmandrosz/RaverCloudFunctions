@@ -1,6 +1,5 @@
 import * as functions from 'firebase-functions';
 import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
-import { checkPartnerClaim } from '../../auth-functions/check-claim/check-partner-claim';
 import * as moment from 'moment';
 import { FunctionsErrorDetails } from '../../errors/functions-error-details';
 import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
@@ -11,6 +10,7 @@ import Timestamp = firestore.Timestamp;
 import { updateEventOnEventPostpone } from '../../firestore-functions/update-event/update-event-on-event-postpone';
 import { updateTicketsOnEventPostpone } from '../../firestore-functions/update-tickets/update-tickets-on-event-postpone';
 import { extendUpdateClubSalesTaskOnEventPostpone } from '../../cloud-tasks/update-club-sales-on-event-end-task/extend-update-club-sales-task-on-event-postpone';
+import { tryGetPartnerData } from '../../firestore-functions/get-data/get-partner-data';
 
 export async function postponeEvent(
     data: PostponeEventRequest,
@@ -26,9 +26,16 @@ export async function postponeEvent(
     const newEventStartTimestamp = data?.newEventStartTimestamp;
     const newEventEndTimestamp = data?.newEventEndTimestamp;
 
-    await checkPartnerClaim({ email: context.auth?.token.email! });
-
+    const partner = await tryGetPartnerData(context.auth?.uid!);
     const event = await tryGetEventData(eventId);
+
+    if (partner.clubId != event.clubId) {
+        throw new functions.https.HttpsError(
+            'permission-denied',
+            'Partner does not have access to club'
+        );
+    }
+
     const eventStartMoment = moment(event.eventStartDateTime);
     const originalStartMoment = moment(event.originalStartDateTime);
     const newEventMoment = moment(newEventStartTimestamp);

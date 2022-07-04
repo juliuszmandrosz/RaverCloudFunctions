@@ -3,7 +3,6 @@ import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-er
 import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { events } from '../../constants/collections';
 import { CancelEventRequest } from './cancel-event-request';
-import { checkPartnerClaim } from '../../auth-functions/check-claim/check-partner-claim';
 import { Event } from '../../models/event';
 import * as moment from 'moment';
 import { FunctionsErrorDetails } from '../../errors/functions-error-details';
@@ -13,6 +12,7 @@ import { updateEventOnEventCancelation } from '../../firestore-functions/update-
 import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-users-payment-sessions/cancel-users-payment-sessions';
 import { updateTicketsOnEventCancelation } from '../../firestore-functions/update-tickets/update-tickets-on-event-cancelation';
 import { cancelUpdateClubSalesTask } from '../../cloud-tasks/update-club-sales-on-event-end-task/cancel-update-club-sales-task';
+import { tryGetPartnerData } from '../../firestore-functions/get-data/get-partner-data';
 
 export async function cancelEvent(
     data: CancelEventRequest,
@@ -26,9 +26,16 @@ export async function cancelEvent(
 
     const eventId = data?.eventId;
 
-    await checkPartnerClaim({ email: context.auth?.token.email! });
-
+    const partner = await tryGetPartnerData(context.auth?.uid!);
     const event = await tryGetEventData(eventId);
+
+    if (partner.clubId != event.clubId) {
+        throw new functions.https.HttpsError(
+            'permission-denied',
+            'Partner does not have access to club'
+        );
+    }
+
     const eventStartDateTime = moment(event.eventStartDateTime);
 
     if (eventStartDateTime.isBefore(moment().add(3, 'hours'))) {
