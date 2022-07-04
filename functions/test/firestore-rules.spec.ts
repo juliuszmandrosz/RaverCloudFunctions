@@ -10,6 +10,7 @@ import { User } from '../src/models/user';
 import { Selector } from '../src/models/selector';
 import { CurrencyParams } from '../src/models/currency-params';
 import { TicketPool } from '../src/models/ticket-pool';
+import { Event } from '../src/models/event';
 
 let testEnv: firebase.RulesTestEnvironment;
 
@@ -87,6 +88,15 @@ async function setSelectorDocument({ clubId, selectorId }: SetSelectorDocumentPa
             .firestore()
             .doc(`selectors/${selectorId}`)
             .set({ clubId } as Selector);
+    });
+}
+
+async function setCurrencyParams() {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+        await context
+            .firestore()
+            .doc(`currencyParams/pln`)
+            .set({ minTicketPrice: 20, maxTicketPrice: 100 } as CurrencyParams);
     });
 }
 
@@ -381,15 +391,6 @@ describe('event review', () => {
 });
 
 describe('event tickets', () => {
-    async function setCurrencyParams() {
-        await testEnv.withSecurityRulesDisabled(async (context) => {
-            await context
-                .firestore()
-                .doc(`currencyParams/pln`)
-                .set({ minTicketPrice: 20, maxTicketPrice: 100 } as CurrencyParams);
-        });
-    }
-
     function getValidEventTicketsForCreate() {
         return {
             ticketPools: getValidTicketPools(),
@@ -1083,6 +1084,148 @@ describe('currency params', () => {
         const userId = v1();
         const context = testEnv.authenticatedContext(userId);
         await firebase.assertFails(context.firestore().doc(`currencyParams/pln`).delete());
+    });
+});
+
+describe('events', () => {
+    async function setEvent(eventId: string, clubId: string) {
+        await testEnv.withSecurityRulesDisabled(async (context) => {
+            await context.firestore().doc(`events/${eventId}`).set({
+                clubId: clubId,
+            });
+        });
+    }
+
+    function getValidEvent(clubId: string): Event {
+        return {
+            id: '123',
+            clubId,
+            eventName: '123',
+            eventStartDateTime: 1656941416000,
+            isCanceled: false,
+            eventPhotoUrl: '123',
+            price: 20,
+            clubName: '123',
+            currency: 'pln',
+            eventEndDateTime: 1656959416000,
+            originalStartDateTime: 1656941416000,
+            attending: 0,
+            musicalGenres: ['rap'],
+            minAge: 21,
+            cityId: '123',
+            isConcert: false,
+            allowedOutfit: 'casual',
+            isBeingPostponed: false,
+            location: [1, 2],
+            urlLinks: {},
+        };
+    }
+
+    async function loginAsPartnerAndSetEvent(partnerId: string, eventId: string) {
+        const clubId = v1();
+        await setClubForPartner(partnerId, clubId);
+        await setEvent(eventId, clubId);
+        await setCurrencyParams();
+        return testEnv.authenticatedContext(partnerId, { isPartner: true });
+    }
+
+    it('should allow read with authenticated context', async () => {
+        const userId = v1();
+        const eventId = v1();
+        const context = testEnv.authenticatedContext(userId);
+        await firebase.assertSucceeds(context.firestore().doc(`events/${eventId}`).get());
+    });
+
+    it('should deny read with unauthenticated context', async () => {
+        const eventId = v1();
+        const context = testEnv.unauthenticatedContext();
+        await firebase.assertFails(context.firestore().doc(`events/${eventId}`).get());
+    });
+
+    it('should allow create on own club with partner claim and valid event', async () => {
+        const partnerId = v1();
+        const eventId = v1();
+        const clubId = v1();
+        await setClubForPartner(partnerId, clubId);
+        await setCurrencyParams();
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertSucceeds(
+            context.firestore().doc(`events/${eventId}`).set(getValidEvent(clubId))
+        );
+    });
+
+    it('should deny create on other club with partner claim and valid event', async () => {
+        const partnerId = v1();
+        const eventId = v1();
+        const clubId = v1();
+        await setCurrencyParams();
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context.firestore().doc(`events/${eventId}`).set(getValidEvent(clubId))
+        );
+    });
+
+    it('should allow update on own club with partner claim and valid event', async () => {
+        const partnerId = v1();
+        const eventId = v1();
+        const context = await loginAsPartnerAndSetEvent(partnerId, eventId);
+        await firebase.assertSucceeds(
+            context
+                .firestore()
+                .doc(`events/${eventId}`)
+                .update({ eventName: '#'.repeat(3) } as Event)
+        );
+    });
+
+    it('should deny update on other club with partner claim and valid event', async () => {
+        const partnerId = v1();
+        const eventId = v1();
+        const clubId = v1();
+        await setEvent(eventId, clubId);
+        await setCurrencyParams();
+        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`events/${eventId}`)
+                .update({ eventName: '#'.repeat(3) } as Event)
+        );
+    });
+
+    it('should deny update on own club with partner claim and invalid event name', async () => {
+        const partnerId = v1();
+        const eventId = v1();
+        const context = await loginAsPartnerAndSetEvent(partnerId, eventId);
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`events/${eventId}`)
+                .update({ eventName: '#'.repeat(2) } as Event)
+        );
+    });
+
+    it('should deny update on own club with partner claim and invalid description', async () => {
+        const partnerId = v1();
+        const eventId = v1();
+        const context = await loginAsPartnerAndSetEvent(partnerId, eventId);
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`events/${eventId}`)
+                .update({ description: '#'.repeat(1001) } as Event)
+        );
+    });
+
+    it('should deny update on own club with partner claim and artist name changed', async () => {
+        const partnerId = v1();
+        const eventId = v1();
+        const context = await loginAsPartnerAndSetEvent(partnerId, eventId);
+        await firebase.assertFails(
+            context
+                .firestore()
+                .doc(`events/${eventId}`)
+                .update({ artistName: '#'.repeat(3) } as Event)
+        );
     });
 });
 

@@ -70,12 +70,17 @@ service cloud.firestore {
             return request.resource.data[fieldName].size();
         }
 
+        function isNotEmptyList(fieldName) {
+            return request.resource.data[fieldName].size() > 0;
+        }
+
+
         function checkIfOnlyOneFieldHasChanged(fieldName) {
             return request.resource.data.diff(resource.data).affectedKeys().hasOnly([fieldName]);
         }
 
         function checkIfFieldHasNotChanged(fieldName) {
-            return !(fieldName in resource.data) || !request.resource.data.diff(resource.data).affectedKeys().hasAny([fieldName]);
+            return !request.resource.data.diff(resource.data).affectedKeys().hasAny([fieldName]);
         }
 
         function checkIfRequestContainsField(fieldName) {
@@ -85,6 +90,14 @@ service cloud.firestore {
         function verifyFields(item, required, optional) {
             let allAllowedFields = required.concat(optional);
             return item.keys().hasAll(required) && item.keys().hasOnly(allAllowedFields);
+        }
+
+        function getMinTicketPrice(currency) {
+            return get(/databases/$(database)/documents/currencyParams/$(currency)).data.minTicketPrice;
+        }
+
+        function getMaxTicketPrice(currency) {
+            return get(/databases/$(database)/documents/currencyParams/$(currency)).data.maxTicketPrice;
         }
 
         match /availableFilters/{filters} {
@@ -160,24 +173,18 @@ service cloud.firestore {
                            && sales.vipsSold is number && sales.vipsSold == 0;
                 }
 
-                function getMinTicketPrice(pool) {
-                    return get(/databases/$(database)/documents/currencyParams/$(pool.currency)).data.minTicketPrice;
-                }
-
-                function getMaxTicketPrice(pool) {
-                    return get(/databases/$(database)/documents/currencyParams/$(pool.currency)).data.maxTicketPrice;
-                }
-
                 function isTicketQuantityValid(pool) {
                     return pool.ticketQuantity >= 1 && pool.ticketQuantity <= 100000;
                 }
 
                 function isTicketPriceValid(pool) {
-                    return pool.ticketPrice >= getMinTicketPrice(pool) && pool.ticketPrice <= getMaxTicketPrice(pool);
+                    return pool.ticketPrice >= getMinTicketPrice(pool.currency)
+                           && pool.ticketPrice <= getMaxTicketPrice(pool.currency);
                 }
 
                 function isVipPriceValid(pool) {
-                    return !pool.isVipEnabled || pool.vipPrice >= getMinTicketPrice(pool) && pool.vipPrice <= getMaxTicketPrice(pool);
+                    return !pool.isVipEnabled || pool.vipPrice >= getMinTicketPrice(pool.currency)
+                                                 && pool.vipPrice <= getMaxTicketPrice(pool.currency);
                 }
 
                 function isEventFeeValid(sales) {
@@ -242,29 +249,154 @@ service cloud.firestore {
         }
 
         match /events/{eventId} {
-            function isValidEvent() {
-                return isValidConcertInfo();
+            function checkIfEventFieldsAreValid(event) {
+                return event.clubId is string
+                       && event.eventName is string
+                       && event.clubName is string
+                       && event.eventStartDateTime is number
+                       && event.eventEndDateTime is number
+                       && event.originalStartDateTime is number
+                       && event.minAge is int
+                       && event.price is int
+                       && event.currency is string
+                       && event.eventPhotoUrl is string
+                       && event.allowedOutfit is string
+                       && event.musicalGenres is list
+                       && (!checkIfRequestContainsField('artistName') || event.artistName is string)
+                       && (!checkIfRequestContainsField('description') || event.description is string)
+                       && event.location is list
+                       && event.cityId is string
+                       && event.urlLinks is map
+                       && event.isConcert is bool
+                       && event.attending is int && event.attending == 0
+                       && event.isCanceled is bool && event.isCanceled == false
+                       && event.isBeingPostponed is bool && event.isBeingPostponed == false;
             }
 
             function isValidConcertInfo() {
                 return !isConcert() || isConcert() && isValidArtistName();
             }
 
-            function getArtistName() {
-                return request.resource.data.artistName;
-            }
-
             function isConcert() {
                 return request.resource.data.isConcert;
             }
+
+            function getStartDateTime() {
+                return request.resource.data.eventStartDateTime;
+            }
+
+            function getEndDateTime() {
+                return request.resource.data.eventEndDateTime;
+            }
+
+            function getOriginalDateTime() {
+                return request.resource.data.originalStartDateTime;
+            }
+
+            // TODO - validate url links
 
             function isValidArtistName() {
                 return isNotEmptyString('artistName') && getLength('artistName') <= 100;
             }
 
+            function isValidDescription() {
+                return isNullOrEmpty('description') || getLength('description') <= 1000;
+            }
+
+            function isValidDressCode() {
+                return isNotEmptyString('allowedOutfit');
+            }
+
+            function isValidEventName() {
+                return isNotEmptyString('eventName')
+                       && getLength('eventName') >= 3
+                       && getLength('eventName') <= 100;
+            }
+
+            function isValidEventPhotoUrl() {
+                return isNotEmptyString('eventPhotoUrl');
+            }
+
+            function isValidMinAge() {
+                return isNonNegativeNumber('minAge');
+            }
+
+
+            function isMusicalGenresValid() {
+                return isNotEmptyList('musicalGenres') && getLength('musicalGenres') <= 3;
+            }
+
+            function validateOriginalStartDate() {
+                return getOriginalDateTime() == getStartDateTime();
+            }
+
+            function validateStartDate() {
+                // TODO - check max date
+                // getStartDateTime() <= ((request.time.seconds() + duration.value(150, 'd').seconds()) * 1000);
+
+                return getStartDateTime() > request.time.seconds() * 1000;
+            }
+
+            function validateEndDate() {
+                // TODO - validate duration
+                return getEndDateTime() > getStartDateTime();
+
+            }
+
+
+            function validatePrice(event) {
+                return event.price >= getMinTicketPrice(event.currency)
+                       && event.price <= getMaxTicketPrice(event.currency);
+
+            }
+
+            function validateLocation() {
+                return isNotEmptyList('location') && getLength('location') == 2;
+            }
+
+            function isValidEvent(event) {
+                return isValidConcertInfo()
+                       && isValidDescription()
+                       && isValidDressCode()
+                       && isValidEventName()
+                       && isValidEventPhotoUrl()
+                       && isValidMinAge()
+                       && isMusicalGenresValid()
+                       && validateOriginalStartDate()
+                       && validateStartDate()
+                       && validateEndDate()
+                       && validatePrice(event)
+                       && validateLocation();
+            }
 
             allow read: if isAuthenticated();
-            allow create, update: if isPartner() && isPartnerFromClub(request.resource.data.clubId);
+            allow create: if isPartner()
+                             // TODO - check if currency is same as club accepted currency
+                             && isValidEvent(request.resource.data)
+                             && isPartnerFromClub(request.resource.data.clubId)
+                             && checkIfEventFieldsAreValid(request.resource.data);
+            allow update: if isPartner()
+                             && isPartnerFromClub(request.resource.data.clubId)
+                             && checkIfFieldHasNotChanged('clubId')
+                             && checkIfFieldHasNotChanged('eventStartDateTime')
+                             && checkIfFieldHasNotChanged('isCanceled')
+                             && checkIfFieldHasNotChanged('eventPhotoUrl')
+                             && checkIfFieldHasNotChanged('clubName')
+                             && checkIfFieldHasNotChanged('currency')
+                             && checkIfFieldHasNotChanged('eventEndDateTime')
+                             && checkIfFieldHasNotChanged('originalStartDateTime')
+                             && checkIfFieldHasNotChanged('attending')
+                             && checkIfFieldHasNotChanged('musicalGenres')
+                             && checkIfFieldHasNotChanged('minAge')
+                             && checkIfFieldHasNotChanged('cityId')
+                             && checkIfFieldHasNotChanged('allowedOutfit')
+                             && checkIfFieldHasNotChanged('isConcert')
+                             && checkIfFieldHasNotChanged('isBeingPostponed')
+                             && checkIfFieldHasNotChanged('location')
+                             && checkIfFieldHasNotChanged('artistName')
+                             && (!checkIfRequestContainsField('eventName') || isValidEventName())
+                             && (!checkIfRequestContainsField('description') || isValidDescription())
+                             && (!checkIfRequestContainsField('price') || isValidPrice());
         }
 
         match /partners/{partnerId} {
