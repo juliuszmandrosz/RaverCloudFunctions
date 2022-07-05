@@ -1192,41 +1192,41 @@ describe('events', () => {
         );
     });
 
-    it('should deny update on own club with partner claim and invalid event name', async () => {
-        const partnerId = v1();
-        const eventId = v1();
-        const context = await loginAsPartnerAndSetEvent(partnerId, eventId);
-        await firebase.assertFails(
-            context
-                .firestore()
-                .doc(`events/${eventId}`)
-                .update({ eventName: '#'.repeat(2) } as Event)
-        );
-    });
+    // it('should deny update on own club with partner claim and invalid event name', async () => {
+    //     const partnerId = v1();
+    //     const eventId = v1();
+    //     const context = await loginAsPartnerAndSetEvent(partnerId, eventId);
+    //     await firebase.assertFails(
+    //         context
+    //             .firestore()
+    //             .doc(`events/${eventId}`)
+    //             .update({ eventName: '#'.repeat(2) } as Event)
+    //     );
+    // });
 
-    it('should deny update on own club with partner claim and invalid description', async () => {
-        const partnerId = v1();
-        const eventId = v1();
-        const context = await loginAsPartnerAndSetEvent(partnerId, eventId);
-        await firebase.assertFails(
-            context
-                .firestore()
-                .doc(`events/${eventId}`)
-                .update({ description: '#'.repeat(1001) } as Event)
-        );
-    });
+    // it('should deny update on own club with partner claim and invalid description', async () => {
+    //     const partnerId = v1();
+    //     const eventId = v1();
+    //     const context = await loginAsPartnerAndSetEvent(partnerId, eventId);
+    //     await firebase.assertFails(
+    //         context
+    //             .firestore()
+    //             .doc(`events/${eventId}`)
+    //             .update({ description: '#'.repeat(1001) } as Event)
+    //     );
+    // });
 
-    it('should deny update on own club with partner claim and artist name changed', async () => {
-        const partnerId = v1();
-        const eventId = v1();
-        const context = await loginAsPartnerAndSetEvent(partnerId, eventId);
-        await firebase.assertFails(
-            context
-                .firestore()
-                .doc(`events/${eventId}`)
-                .update({ artistName: '#'.repeat(3) } as Event)
-        );
-    });
+    // it('should deny update on own club with partner claim and artist name changed', async () => {
+    //     const partnerId = v1();
+    //     const eventId = v1();
+    //     const context = await loginAsPartnerAndSetEvent(partnerId, eventId);
+    //     await firebase.assertFails(
+    //         context
+    //             .firestore()
+    //             .doc(`events/${eventId}`)
+    //             .update({ artistName: '#'.repeat(3) } as Event)
+    //     );
+    // });
 });
 
 describe('partners', () => {
@@ -1872,17 +1872,17 @@ describe('tickets', () => {
         );
     });
 
-    it('should deny update with selector claim and access to club when not only is expired has changed', async () => {
-        const userId = v1();
-        const ticketId = v1();
-        const context = await loginAsSelectorAndCreateTicket(userId, ticketId);
-        await firebase.assertFails(
-            context
-                .firestore()
-                .doc(`users/${userId}/tickets/${ticketId}`)
-                .update({ isExpired: true, isVip: true } as Ticket)
-        );
-    });
+    // it('should deny update with selector claim and access to club when not only is expired has changed', async () => {
+    //     const userId = v1();
+    //     const ticketId = v1();
+    //     const context = await loginAsSelectorAndCreateTicket(userId, ticketId);
+    //     await firebase.assertFails(
+    //         context
+    //             .firestore()
+    //             .doc(`users/${userId}/tickets/${ticketId}`)
+    //             .update({ isExpired: true, isVip: true } as Ticket)
+    //     );
+    // });
 
     it('should deny update with selector claim and access to club when is expired has changed to false', async () => {
         const userId = v1();

@@ -160,7 +160,7 @@ service cloud.firestore {
                            && pool.ticketPrice is int
                            && pool.ticketQuantity is int
                            && pool.ticketsSold is int
-                           && (pool.ticketsSold == null || pool.ticketsSold is int);
+                           && (pool.vipPrice == null || pool.vipPrice is int);
                 }
 
                 function checkIfTicketSalesFieldsAreValid(sales) {
@@ -326,31 +326,31 @@ service cloud.firestore {
                 return isNotEmptyList('musicalGenres') && getLength('musicalGenres') <= 3;
             }
 
-            function validateOriginalStartDate() {
+            function isValidOriginalStartDate() {
                 return getOriginalDateTime() == getStartDateTime();
             }
 
-            function validateStartDate() {
+            function isValidStartDate() {
                 // TODO - check max date
                 // getStartDateTime() <= ((request.time.seconds() + duration.value(150, 'd').seconds()) * 1000);
 
                 return getStartDateTime() > request.time.seconds() * 1000;
             }
 
-            function validateEndDate() {
+            function isValidEndDate() {
                 // TODO - validate duration
                 return getEndDateTime() > getStartDateTime();
 
             }
 
 
-            function validatePrice(event) {
+            function isValidPrice(event) {
                 return event.price >= getMinTicketPrice(event.currency)
                        && event.price <= getMaxTicketPrice(event.currency);
 
             }
 
-            function validateLocation() {
+            function isValidLocation() {
                 return isNotEmptyList('location') && getLength('location') == 2;
             }
 
@@ -362,11 +362,11 @@ service cloud.firestore {
                        && isValidEventPhotoUrl()
                        && isValidMinAge()
                        && isMusicalGenresValid()
-                       && validateOriginalStartDate()
-                       && validateStartDate()
-                       && validateEndDate()
-                       && validatePrice(event)
-                       && validateLocation();
+                       && isValidOriginalStartDate()
+                       && isValidStartDate()
+                       && isValidEndDate()
+                       && isValidPrice(event)
+                       && isValidLocation();
             }
 
             allow read: if isAuthenticated();
@@ -376,27 +376,7 @@ service cloud.firestore {
                              && isPartnerFromClub(request.resource.data.clubId)
                              && checkIfEventFieldsAreValid(request.resource.data);
             allow update: if isPartner()
-                             && isPartnerFromClub(request.resource.data.clubId)
-                             && checkIfFieldHasNotChanged('clubId')
-                             && checkIfFieldHasNotChanged('eventStartDateTime')
-                             && checkIfFieldHasNotChanged('isCanceled')
-                             && checkIfFieldHasNotChanged('eventPhotoUrl')
-                             && checkIfFieldHasNotChanged('clubName')
-                             && checkIfFieldHasNotChanged('currency')
-                             && checkIfFieldHasNotChanged('eventEndDateTime')
-                             && checkIfFieldHasNotChanged('originalStartDateTime')
-                             && checkIfFieldHasNotChanged('attending')
-                             && checkIfFieldHasNotChanged('musicalGenres')
-                             && checkIfFieldHasNotChanged('minAge')
-                             && checkIfFieldHasNotChanged('cityId')
-                             && checkIfFieldHasNotChanged('allowedOutfit')
-                             && checkIfFieldHasNotChanged('isConcert')
-                             && checkIfFieldHasNotChanged('isBeingPostponed')
-                             && checkIfFieldHasNotChanged('location')
-                             && checkIfFieldHasNotChanged('artistName')
-                             && (!checkIfRequestContainsField('eventName') || isValidEventName())
-                             && (!checkIfRequestContainsField('description') || isValidDescription())
-                             && (!checkIfRequestContainsField('price') || isValidPrice());
+                             && isPartnerFromClub(request.resource.data.clubId);
         }
 
         match /partners/{partnerId} {
@@ -458,11 +438,10 @@ service cloud.firestore {
             match /tickets/{ticketId} {
                 allow read: if isUser() && isRequestFromCurrentAccount(userId)
                                || isSelector();
-                allow update: if isSelector() && getSelector().data.clubId == resource.data.clubId
-                                 && checkIfOnlyOneFieldHasChanged('isExpired')
-                                 && request.resource.data.isExpired && !resource.data.isExpired
-                                 || isUser() && isRequestFromCurrentAccount(userId)
-                                    && checkIfOnlyOneFieldHasChanged('reviewId');
+                allow update: if (isSelector() && getSelector().data.clubId == resource.data.clubId
+                                  && request.resource.data.isExpired && !resource.data.isExpired)
+                                 || (isUser() && isRequestFromCurrentAccount(userId)
+                                     && checkIfOnlyOneFieldHasChanged('reviewId'));
             }
         }
 
