@@ -3,6 +3,6 @@ import { apiVersion } from '../constants/stripe-constants';
 import { getFunctionsConfig } from '../utils/get-functions-config';
 
 const config = getFunctionsConfig().stripe;
-export const stripe = new Stripe(config.test_key, {
+export const stripe = new Stripe(config.api_key, {
     apiVersion: apiVersion,
 });

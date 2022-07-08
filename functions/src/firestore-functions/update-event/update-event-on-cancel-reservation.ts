@@ -47,7 +47,7 @@ export async function updateEventOnCancelReservation({
 
         transaction.update(
             eventDocRef,
-            toJson<Event>({
+            toJson({
                 attending: event.attending - 1,
                 price: currentPoolPrice,
             } as Event)

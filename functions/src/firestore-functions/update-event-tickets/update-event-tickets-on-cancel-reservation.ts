@@ -47,7 +47,7 @@ export async function updateEventTicketsOnCancelReservation({
 
         revertSingleTicketFromPools(tickets);
 
-        transaction.update(eventTicketsDocRef, toJson<EventTickets>(tickets));
+        transaction.update(eventTicketsDocRef, toJson(tickets));
 
         return tickets;
     });

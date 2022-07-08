@@ -35,7 +35,7 @@ export async function updateInvoiceData(
             vatNumber: '',
         } as StripeCustomer;
 
-        await getStripeCustomerDocRef(userId).update(toJson<StripeCustomer>(updatedInvoiceData));
+        await getStripeCustomerDocRef(userId).update(toJson(updatedInvoiceData));
 
         return;
     }
@@ -56,7 +56,7 @@ export async function updateInvoiceData(
     });
 
     await getStripeCustomerDocRef(userId).update(
-        toJson<StripeCustomer>({
+        toJson({
             name,
             vatNumber: vatNumberWithCountryCode,
         } as StripeCustomer)

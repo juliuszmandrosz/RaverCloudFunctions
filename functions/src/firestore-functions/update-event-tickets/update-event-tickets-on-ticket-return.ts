@@ -26,16 +26,16 @@ export async function updateEventTicketsOnTicketReturn({
         const eventFee = tickets.ticketSales.eventFee;
         const clubIncomeToReduce = getClubIncome(returnedRevenue, eventFee);
 
-        await reduceTicketSalesBySingleTransaction({
+        reduceTicketSalesBySingleTransaction({
             tickets,
             totalRevenueToReduce: returnedRevenue,
             isVip,
             clubIncomeToReduce,
         });
 
-        await revertSingleTicketFromPools(tickets);
+        revertSingleTicketFromPools(tickets);
 
-        transaction.update(eventTicketsDocRef, toJson<EventTickets>(tickets));
+        transaction.update(eventTicketsDocRef, toJson(tickets));
 
         return tickets;
     });

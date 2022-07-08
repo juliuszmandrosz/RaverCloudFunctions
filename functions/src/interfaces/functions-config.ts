@@ -18,10 +18,9 @@ interface Algolia {
 }
 
 interface Stripe {
-    live_key: string;
-    test_key: string;
-    pi_requires_action_secret: string;
+    api_key: string;
     pi_succeeded_secret: string;
+    pi_requires_action_secret: string;
 }
 
 interface Typesense {

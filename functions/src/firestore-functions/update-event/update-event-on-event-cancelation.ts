@@ -15,7 +15,7 @@ export async function updateEventOnEventCancelation({
     await updateEventTicketsOnEventCancelation(event);
 
     await eventDocRef.update(
-        toJson<Event>({
+        toJson({
             attending: 0,
         } as Event)
     );

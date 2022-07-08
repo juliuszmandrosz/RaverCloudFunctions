@@ -34,7 +34,7 @@ export async function fulfillVipPayment(
         ticket.price + vipPaymentSession.revenue - vipPaymentSession.promotionCodeAmountOff;
 
     await ticketDocRef.update(
-        toJson<Ticket>({
+        toJson({
             isVip: true,
             price: newTicketPrice,
             vipPaymentId: vipPaymentSession.id,
@@ -45,7 +45,7 @@ export async function fulfillVipPayment(
         .collection(vipPaymentSessions)
         .doc(vipPaymentSession.id)
         .update(
-            toJson<VipPaymentSession>({
+            toJson({
                 paymentDateTime: Timestamp.now(),
                 status: 'succeeded',
             } as VipPaymentSession)

@@ -18,7 +18,7 @@ export async function updateEventOnEventPostpone({
     response,
 }: UpdateEventOnEventPostponeParams): Promise<void> {
     await getEventDocRef(event.id).update(
-        toJson<Event>({
+        toJson({
             eventStartDateTime: newEventStartTimestamp,
             eventEndDateTime: newEventEndTimestamp,
         } as Event)

@@ -24,7 +24,7 @@ export async function extendTicketPaymentSession(paymentIntentId: string) {
     });
 
     await ticketPaymentDocRef.update(
-        toJson<TicketPaymentSession>({
+        toJson({
             status: 'requires_action',
             cancelTicketReservationTaskId,
         } as TicketPaymentSession)

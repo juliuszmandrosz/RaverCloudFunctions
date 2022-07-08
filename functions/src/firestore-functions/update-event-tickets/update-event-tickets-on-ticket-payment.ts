@@ -27,7 +27,7 @@ export async function updateEventTicketsOnTicketPayment(
 
         await updateTicketPoolsOnTicketPayment(tickets);
 
-        transaction.update(eventTicketsDocRef, toJson<EventTickets>(tickets));
+        transaction.update(eventTicketsDocRef, toJson(tickets));
 
         return tickets;
     });

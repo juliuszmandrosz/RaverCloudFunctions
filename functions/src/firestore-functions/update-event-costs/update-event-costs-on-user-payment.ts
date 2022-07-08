@@ -5,7 +5,6 @@ import {
 } from '../get-data/get-event-costs-data';
 import * as functions from 'firebase-functions';
 import { toJson } from '../../utils/json-utils';
-import { EventCosts } from '../../models/event-costs';
 
 export interface UpdateEventCostsOnUserPaymentParams {
     eventId: string;
@@ -30,6 +29,6 @@ export async function updateEventCostsOnUserPayment(
 
         eventCosts.paymentProcessorFeeBalance += params.amount;
 
-        transaction.update(eventCostsDocRef, toJson<EventCosts>(eventCosts));
+        transaction.update(eventCostsDocRef, toJson(eventCosts));
     });
 }

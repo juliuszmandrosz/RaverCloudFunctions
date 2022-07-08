@@ -24,6 +24,6 @@ export async function updateEventOnTicketPayment(eventId: string, isVip: boolean
             price: currentPrice,
         } as Event;
 
-        transaction.update(eventDocRef, toJson<Event>(updatedEvent));
+        transaction.update(eventDocRef, toJson(updatedEvent));
     });
 }

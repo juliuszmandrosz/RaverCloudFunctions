@@ -1,3 +1,3 @@
-export function toJson<T>(item: T) {
-    return JSON.parse(JSON.stringify(item));
+export function toJson(item: any) {
+    return { ...item };
 }

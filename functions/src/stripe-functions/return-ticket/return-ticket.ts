@@ -68,7 +68,7 @@ export async function returnTicket(
     });
 
     await getTicketPaymentSessionDocRef(ticketPayment.id).update(
-        toJson<TicketPaymentSession>({
+        toJson({
             isRefunded: true,
         } as TicketPaymentSession)
     );
@@ -79,13 +79,13 @@ export async function returnTicket(
         });
 
         await getVipPaymentSessionDocRef(vipPayment.id).update(
-            toJson<VipPaymentSession>({
+            toJson({
                 isRefunded: true,
             } as VipPaymentSession)
         );
     }
 
-    await getTicketDocRef(userId, ticketId).update(toJson<Ticket>({ isReturned: true } as Ticket));
+    await getTicketDocRef(userId, ticketId).update(toJson({ isReturned: true } as Ticket));
 
     let returnedRevenue = ticketPayment.revenue;
 

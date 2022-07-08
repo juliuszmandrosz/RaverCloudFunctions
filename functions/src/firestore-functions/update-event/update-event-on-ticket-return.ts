@@ -48,7 +48,7 @@ export async function updateEventOnTicketReturn({
             price: currentPoolPrice,
         } as Event;
 
-        transaction.update(eventDocRef, toJson<Event>(updatedEvent));
+        transaction.update(eventDocRef, toJson(updatedEvent));
 
         return event;
     });

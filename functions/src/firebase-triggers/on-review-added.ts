@@ -32,7 +32,7 @@ export async function onReviewAdded(
 
         transaction.update(
             clubRef,
-            toJson<Club>({
+            toJson({
                 reviewAvg: roundedAvg,
                 reviewCount: newReviewCount,
             } as Club)
@@ -62,7 +62,7 @@ async function updateEventReview(review: Review, clubId: string) {
 
         transaction.update(
             eventReviewRef,
-            toJson<EventReview>({
+            toJson({
                 reviewAvg: roundedAvg,
                 reviewQuantity: newReviewQuantity,
             } as EventReview)

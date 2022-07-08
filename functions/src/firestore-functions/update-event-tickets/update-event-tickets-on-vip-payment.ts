@@ -37,7 +37,7 @@ export async function updateEventTicketsOnVipPayment({
 
         await updateTicketSalesOnVipPayment({ tickets, clubIncome, vipPrice });
 
-        transaction.update(eventTicketsDocRef, toJson<EventTickets>(tickets));
+        transaction.update(eventTicketsDocRef, toJson(tickets));
 
         return tickets;
     });

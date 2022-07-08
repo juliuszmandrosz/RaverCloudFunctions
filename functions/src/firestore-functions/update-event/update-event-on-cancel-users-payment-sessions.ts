@@ -47,7 +47,7 @@ export async function updateEventOnCancelUsersPaymentSessions({
 
         transaction.update(
             eventDocRef,
-            toJson<Event>({
+            toJson({
                 attending: event.attending - canceledTicketSessionsQuantity,
                 price: currentPoolPrice,
             } as Event)

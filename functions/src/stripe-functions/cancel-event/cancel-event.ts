@@ -50,7 +50,7 @@ export async function cancelEvent(
     await firestoreDatabase()
         .collection(events)
         .doc(eventId)
-        .update(toJson<Event>({ isCanceled: true } as Event));
+        .update(toJson({ isCanceled: true } as Event));
 
     const refundedSessions = await refundTicketsForUsers(event.id);
     await updateTicketsOnEventCancelation(refundedSessions.ticketSessions);

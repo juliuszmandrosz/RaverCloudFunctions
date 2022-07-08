@@ -12,7 +12,7 @@ export async function updateEventTicketsOnEventCancelation(event: Event): Promis
     const currentTicketSales = eventTickets.ticketSales;
 
     await eventTicketsDocRef.update(
-        toJson<EventTickets>({
+        toJson({
             ticketSales: resetTicketSales(currentTicketSales),
         } as EventTickets)
     );

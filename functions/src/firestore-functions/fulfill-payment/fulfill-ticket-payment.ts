@@ -33,7 +33,7 @@ export async function fulfillTicketPayment(
         .collection(ticketPaymentSessions)
         .doc(ticketPaymentSession.id)
         .update(
-            toJson<TicketPaymentSession>({
+            toJson({
                 status: 'succeeded',
                 paymentDateTime: Timestamp.now(),
                 ticketId: ticketId,

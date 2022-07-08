@@ -50,7 +50,7 @@ export async function updateEventTicketsOnCancelUsersPaymentSessions({
 
         await revertTicketQuantityFromPools(tickets, canceledTicketSessionsQuantity);
 
-        transaction.update(eventTicketsDocRef, toJson<EventTickets>(tickets));
+        transaction.update(eventTicketsDocRef, toJson(tickets));
 
         return tickets;
     });

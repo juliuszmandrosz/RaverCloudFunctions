@@ -31,7 +31,7 @@ export async function updateEventCostsOnEventPostpone(
 
         if (!eventCosts) return;
 
-        transaction.update(eventCostsDocRef, toJson<EventCosts>(getUpdatedEventCosts(eventCosts)));
+        transaction.update(eventCostsDocRef, toJson(getUpdatedEventCosts(eventCosts)));
     });
 }
 
