@@ -8,8 +8,10 @@ import {
     rewards,
     selectors,
     stripeCustomers,
+    ticketPaymentSessions,
     tickets,
     users,
+    vipPaymentSessions,
 } from '../constants/collections';
 import { Selector } from '../models/selector';
 import { deleteQueryBatch } from '../utils/delete-query-batch';
@@ -39,9 +41,21 @@ async function removeUser(userId: string) {
 
     const rewardsQuery = userRef.collection(rewards).limit(500);
 
+    const ticketPaymentSessionsQuery = firestoreDatabase()
+        .collection(ticketPaymentSessions)
+        .where('userId', '==', userId)
+        .limit(500);
+
+    const vipPaymentSessionsQuery = firestoreDatabase()
+        .collection(vipPaymentSessions)
+        .where('userId', '==', userId)
+        .limit(500);
+
     await deleteQueryBatch(ticketsQuery);
     await deleteQueryBatch(promotionCodesQuery);
     await deleteQueryBatch(rewardsQuery);
+    await deleteQueryBatch(ticketPaymentSessionsQuery);
+    await deleteQueryBatch(vipPaymentSessionsQuery);
 
     await userRef.delete();
 }
