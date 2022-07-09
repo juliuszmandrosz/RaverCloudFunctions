@@ -2,6 +2,7 @@ import { firestoreDatabase } from '../../modules/firebase-admin-module';
 import { ticketPaymentSessions } from '../../constants/collections';
 import { TicketPaymentSession } from '../../models/ticket-payment-session';
 import { cancelUsersPaymentSessionsQueryBatch } from './cancel-users-payment-sessions-query-batch';
+import { tasksClient } from '../../modules/cloud-tasks-module';
 
 interface CancelUsersTicketPaymentSessionsResponse {
     canceledTicketSessionsQuantity: number;
@@ -32,6 +33,8 @@ export async function cancelUsersTicketPaymentSessions(
         }
 
         canceledFunds += session.revenue;
+
+        await tasksClient.deleteTask({ name: session.cancelTicketReservationTaskId });
     }
 
     await cancelUsersPaymentSessionsQueryBatch(query.limit(500), {
