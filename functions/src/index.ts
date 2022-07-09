@@ -1,5 +1,12 @@
 import * as functions from 'firebase-functions';
-import { newClub, newEvent, newEventTickets, newReview, newReward } from './constants/collections';
+import {
+    newClub,
+    newEvent,
+    newEventTickets,
+    newReview,
+    newReward,
+    newUser,
+} from './constants/collections';
 import { CallableContext } from 'firebase-functions/lib/common/providers/https';
 
 export const env = functions.config();
@@ -188,6 +195,15 @@ exports.onRewardAdded = functions
         await (
             await import('./firebase-triggers/on-reward-added')
         ).onRewardAdded(snapshot, context);
+    });
+
+exports.osUserUpdated = functions
+    .region('europe-central2')
+    .firestore.document(newUser)
+    .onUpdate(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/on-user-updated')
+        ).onUserUpdated(snapshot, context);
     });
 
 function verifyApp(context: CallableContext) {
