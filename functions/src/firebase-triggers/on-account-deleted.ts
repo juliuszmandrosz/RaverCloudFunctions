@@ -44,11 +44,13 @@ async function removeUser(userId: string) {
     const ticketPaymentSessionsQuery = firestoreDatabase()
         .collection(ticketPaymentSessions)
         .where('userId', '==', userId)
+        .where('status', '==', 'succeeded')
         .limit(500);
 
     const vipPaymentSessionsQuery = firestoreDatabase()
         .collection(vipPaymentSessions)
         .where('userId', '==', userId)
+        .where('status', '==', 'succeeded')
         .limit(500);
 
     await deleteQueryBatch(ticketsQuery);
