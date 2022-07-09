@@ -23,3 +23,4 @@ export const newEventTickets = 'clubs/{clubId}/eventTickets/{eventId}';
 export const newReward = 'clubs/{clubId}/rewards/{rewardId}';
 export const newUser = 'users/{userId}';
 export const reviews = 'reviews';
+export const reviewReports = 'reviewReports';

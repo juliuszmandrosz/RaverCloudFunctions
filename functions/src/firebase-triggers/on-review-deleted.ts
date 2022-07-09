@@ -4,8 +4,9 @@ import { getClubDocRef } from '../firestore-functions/get-data/get-club-data';
 import { firestoreDatabase } from '../modules/firebase-admin-module';
 import { Club } from '../models/club';
 import { toJson } from '../utils/json-utils';
-import { clubs, eventReviews } from '../constants/collections';
+import { clubs, eventReviews, reviewReports } from '../constants/collections';
 import { EventReview } from '../models/event-review';
+import { deleteQueryBatch } from '../utils/delete-query-batch';
 
 export async function onReviewDeleted(
     snapshot: functions.firestore.DocumentSnapshot,
@@ -40,6 +41,8 @@ export async function onReviewDeleted(
             } as Club)
         );
     });
+
+    await deleteReviewReport(deletedReview);
 }
 
 async function updateEventReview(deletedReview: Review, clubId: string) {
@@ -70,4 +73,13 @@ async function updateEventReview(deletedReview: Review, clubId: string) {
             } as EventReview)
         );
     });
+}
+
+async function deleteReviewReport(deletedReview: Review) {
+    const reviewReportsQuery = firestoreDatabase()
+        .collection(reviewReports)
+        .where('reviewId', '==', deletedReview.id)
+        .limit(500);
+
+    await deleteQueryBatch(reviewReportsQuery);
 }
