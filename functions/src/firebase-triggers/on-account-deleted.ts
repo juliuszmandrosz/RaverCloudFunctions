@@ -5,7 +5,6 @@ import { StripeCustomer } from '../models/stripe-customer';
 import {
     clubs,
     promotionCodes,
-    rewards,
     selectors,
     stripeCustomers,
     ticketPaymentSessions,
@@ -39,8 +38,6 @@ async function removeUser(userId: string) {
 
     const promotionCodesQuery = userRef.collection(promotionCodes).limit(500);
 
-    const rewardsQuery = userRef.collection(rewards).limit(500);
-
     const ticketPaymentSessionsQuery = firestoreDatabase()
         .collection(ticketPaymentSessions)
         .where('userId', '==', userId)
@@ -55,7 +52,6 @@ async function removeUser(userId: string) {
 
     await deleteQueryBatch(ticketsQuery);
     await deleteQueryBatch(promotionCodesQuery);
-    await deleteQueryBatch(rewardsQuery);
     await deleteQueryBatch(ticketPaymentSessionsQuery);
     await deleteQueryBatch(vipPaymentSessionsQuery);
 
