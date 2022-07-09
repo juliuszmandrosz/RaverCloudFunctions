@@ -82,10 +82,10 @@ async function sendCloudMessageWithPostponedEventInfoToTicketHolders(event: Even
 }
 
 async function getTicketHolders(eventId: string) {
-    // TODO - add case when user already returned the ticket
     const userTickets = await firestoreDatabase()
         .collectionGroup(tickets)
         .where('eventId', '==', eventId)
+        .where('isReturned', '==', false)
         .get();
 
     return Promise.all(
