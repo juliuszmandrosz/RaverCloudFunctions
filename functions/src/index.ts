@@ -206,6 +206,15 @@ exports.osUserUpdated = functions
         ).onUserUpdated(snapshot, context);
     });
 
+exports.onReviewDeleted = functions
+    .region('europe-central2')
+    .firestore.document(newReview)
+    .onDelete(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/on-review-deleted')
+        ).onReviewDeleted(snapshot, context);
+    });
+
 function verifyApp(context: CallableContext) {
     if (!context.app) {
         throw new functions.https.HttpsError(
