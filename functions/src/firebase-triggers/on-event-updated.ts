@@ -6,6 +6,8 @@ import { tryGetUserData } from '../firestore-functions/get-data/get-user-data';
 import { firestore } from 'firebase-admin';
 import DocumentSnapshot = firestore.DocumentSnapshot;
 import { eventCollection } from '../modules/typesense-module';
+import { updateDocRefsBatch } from '../utils/update-doc-refs-batch';
+import { Ticket } from '../models/ticket';
 
 export async function onEventUpdated(
     change: functions.Change<DocumentSnapshot>,
@@ -24,6 +26,10 @@ export async function onEventUpdated(
 
     if (beforeUpdate.eventStartDateTime !== afterUpdate.eventStartDateTime) {
         await sendCloudMessageWithPostponedEventInfoToTicketHolders(afterUpdate);
+    }
+
+    if (beforeUpdate.eventName !== afterUpdate.eventName) {
+        await updateEventNameOnTickets(afterUpdate);
     }
 }
 
@@ -79,6 +85,17 @@ async function sendCloudMessageWithPostponedEventInfoToTicketHolders(event: Even
             }
         );
     }
+}
+
+async function updateEventNameOnTickets(event: Event) {
+    const ticketsFromEvent = await firestoreDatabase()
+        .collectionGroup(tickets)
+        .where('eventId', '==', event.id)
+        .get();
+
+    const ticketDocRefs = ticketsFromEvent.docs.map((doc) => doc.ref);
+
+    await updateDocRefsBatch(ticketDocRefs, { eventName: event.eventName } as Ticket);
 }
 
 async function getTicketHolders(eventId: string) {
