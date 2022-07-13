@@ -38,7 +38,7 @@ async function updateEventInTypesense(event: Event) {
 }
 
 async function sendCloudMessageWithCanceledEventInfoToTicketHolders(event: Event) {
-    const ticketHolders = await getTicketHolders(event.id);
+    const ticketHolders = await getTicketHoldersToSendCancelEventInfo(event.id);
     for (const user of ticketHolders) {
         const userTokens = user.pushNotificationTokens;
         if (!userTokens || userTokens?.length === 0) continue;
@@ -63,7 +63,7 @@ async function sendCloudMessageWithCanceledEventInfoToTicketHolders(event: Event
 }
 
 async function sendCloudMessageWithPostponedEventInfoToTicketHolders(event: Event) {
-    const ticketHolders = await getTicketHolders(event.id);
+    const ticketHolders = await getTicketHoldersToSendPostponeEventInfo(event.id);
     for (const user of ticketHolders) {
         const userTokens = user.pushNotificationTokens;
         if (!userTokens || userTokens?.length === 0) continue;
@@ -98,11 +98,23 @@ async function updateEventNameOnTickets(event: Event) {
     await updateDocRefsBatch(ticketDocRefs, { eventName: event.eventName } as Ticket);
 }
 
-async function getTicketHolders(eventId: string) {
+async function getTicketHoldersToSendPostponeEventInfo(eventId: string) {
     const userTickets = await firestoreDatabase()
         .collectionGroup(tickets)
         .where('eventId', '==', eventId)
         .where('isReturned', '==', false)
+        .get();
+
+    return Promise.all(
+        userTickets.docs.map(async (ticket) => tryGetUserData(ticket.ref.parent.parent!.id))
+    );
+}
+
+async function getTicketHoldersToSendCancelEventInfo(eventId: string) {
+    const userTickets = await firestoreDatabase()
+        .collectionGroup(tickets)
+        .where('eventId', '==', eventId)
+        .where('isEventCanceled', '==', true)
         .get();
 
     return Promise.all(
