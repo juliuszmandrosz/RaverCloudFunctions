@@ -1,4 +1,4 @@
 export function getPaymentIntentAmount(amount: number) {
     // TODO - add currency support
-    return amount * 100;
+    return Math.round(amount * 100);
 }

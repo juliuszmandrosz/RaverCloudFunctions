@@ -12,6 +12,8 @@ import { updateEventCostsOnUserPayment } from '../update-event-costs/update-even
 import { Ticket } from '../../models/ticket';
 import { sendInvoiceForCustomer } from '../../stripe-functions/send-invoice-for-customer/send-invoice-for-customer';
 import { toJson } from '../../utils/json-utils';
+import { getUserDataOrReturnNotFound } from '../get-data/get-user-data';
+import { sendQrCodeToEmail } from './send-qr-code-to-email';
 
 export async function fulfillTicketPayment(
     paymentSessionId: string,
@@ -69,6 +71,16 @@ export async function fulfillTicketPayment(
         response,
     });
 
+    const user = await getUserDataOrReturnNotFound(ticketPaymentSession.userId, response);
+
+    if (!user) return;
+
+    await sendQrCodeToEmail({
+        ticketId,
+        eventName: event.eventName,
+        user,
+    });
+
     if (ticketPaymentSession.sendInvoice) {
         const eventStartDate = Timestamp.fromMillis(event.eventStartDateTime);
 
@@ -77,10 +89,9 @@ export async function fulfillTicketPayment(
         await sendInvoiceForCustomer({
             customerId: ticketPaymentSession.stripeCustomerId,
             description,
-            amount:
-                ticketPaymentSession.revenue +
-                ticketPaymentSession.serviceFeeAmount -
-                ticketPaymentSession.promotionCodeAmountOff,
+            revenue: ticketPaymentSession.revenue,
+            serviceFee: ticketPaymentSession.serviceFeeAmount,
+            locale: user.locale,
             currency: event.currency,
         });
     }

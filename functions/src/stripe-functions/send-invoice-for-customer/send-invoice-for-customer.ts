@@ -1,29 +1,52 @@
 import { stripe } from '../../modules/stripe-module';
+import { getPaymentIntentAmount } from '../../utils/stripe-utils/get-payment-intent-amount';
 
 interface SendInvoiceForCustomerParams {
     customerId: string;
-    amount: number;
+    revenue: number;
+    serviceFee: number;
     currency: string;
     description: string;
+    locale: string;
 }
 
 export async function sendInvoiceForCustomer({
     customerId,
     currency,
-    amount,
+    revenue,
+    serviceFee,
     description,
+    locale,
 }: SendInvoiceForCustomerParams) {
+    const ticketPrice = await stripe.prices.create({
+        unit_amount: getPaymentIntentAmount(revenue),
+        currency: currency,
+        tax_behavior: 'inclusive',
+        product_data: { name: description },
+    });
+
+    const feePrice = await stripe.prices.create({
+        unit_amount: getPaymentIntentAmount(serviceFee),
+        currency: currency,
+        tax_behavior: 'inclusive',
+        product_data: { name: getServiceFeeDescription(locale) },
+    });
+
     await stripe.invoiceItems.create({
         customer: customerId,
-        description,
-        // TODO - add support for different currencies
-        amount: amount * 100,
-        currency,
+        price: ticketPrice.id,
+        tax_rates: ['txr_1LLQJIGLkhdqSWYOBbQ4JKOD'],
+    });
+
+    await stripe.invoiceItems.create({
+        customer: customerId,
+        price: feePrice.id,
+        tax_rates: ['txr_1LLQK2GLkhdqSWYONXlyqykh'],
     });
 
     const invoice = await stripe.invoices.create({
         customer: customerId,
-        description,
+        description: description,
         collection_method: 'send_invoice',
         days_until_due: 0,
     });
@@ -31,4 +54,12 @@ export async function sendInvoiceForCustomer({
     await stripe.invoices.pay(invoice.id, { paid_out_of_band: true });
 
     await stripe.invoices.sendInvoice(invoice.id);
+}
+
+function getServiceFeeDescription(locale: string) {
+    if (locale === 'pl') {
+        return 'Opłata serwisowa';
+    }
+
+    return 'Service fee';
 }

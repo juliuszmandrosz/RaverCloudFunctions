@@ -3,6 +3,7 @@ export interface FunctionsConfig {
     algolia: Algolia;
     stripe: Stripe;
     typesense: Typesense;
+    email_labs: EmailLabs;
 }
 
 interface Project {
@@ -26,4 +27,9 @@ interface Stripe {
 interface Typesense {
     cluster_id: string;
     api_key: string;
+}
+
+interface EmailLabs {
+    smtp_user: string;
+    smtp_password: string;
 }

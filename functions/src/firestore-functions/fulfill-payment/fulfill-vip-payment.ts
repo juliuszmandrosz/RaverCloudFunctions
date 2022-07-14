@@ -11,6 +11,8 @@ import { updateEventCostsOnUserPayment } from '../update-event-costs/update-even
 import { updateEventTicketsOnVipPayment } from '../update-event-tickets/update-event-tickets-on-vip-payment';
 import { sendInvoiceForCustomer } from '../../stripe-functions/send-invoice-for-customer/send-invoice-for-customer';
 import { toJson } from '../../utils/json-utils';
+import { getUserDataOrReturnNotFound } from '../get-data/get-user-data';
+import { sendQrCodeToEmail } from './send-qr-code-to-email';
 
 export async function fulfillVipPayment(
     paymentSessionId: string,
@@ -64,6 +66,16 @@ export async function fulfillVipPayment(
         response,
     });
 
+    const user = await getUserDataOrReturnNotFound(vipPaymentSession.userId, response);
+
+    if (!user) return;
+
+    await sendQrCodeToEmail({
+        ticketId: ticket.id,
+        eventName: ticket.eventName,
+        user,
+    });
+
     if (vipPaymentSession.sendInvoice) {
         const eventStartDate = ticket.eventStartDateTime;
 
@@ -74,11 +86,10 @@ export async function fulfillVipPayment(
         await sendInvoiceForCustomer({
             customerId: vipPaymentSession.stripeCustomerId,
             description,
-            amount:
-                vipPaymentSession.revenue +
-                vipPaymentSession.serviceFeeAmount -
-                vipPaymentSession.promotionCodeAmountOff,
+            revenue: vipPaymentSession.revenue,
+            serviceFee: vipPaymentSession.serviceFeeAmount,
             currency: ticket.currency,
+            locale: user.locale,
         });
     }
 }

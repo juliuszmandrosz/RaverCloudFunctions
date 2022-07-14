@@ -18,6 +18,21 @@ export async function tryGetUserData(userId: string, transaction?: Transaction) 
     return getUserData(userDoc, userId);
 }
 
+export async function getUserDataOrReturnNotFound(
+    userId: string,
+    response: functions.Response,
+    transaction?: Transaction
+) {
+    const userDoc = await getUserDoc(userId, transaction);
+
+    if (!userDoc.exists) {
+        response.status(404).send(errorMessage);
+        return;
+    }
+
+    return getUserData(userDoc, userId);
+}
+
 export function getUserDocRef(userId: string) {
     return firestoreDatabase().collection(users).doc(userId);
 }
