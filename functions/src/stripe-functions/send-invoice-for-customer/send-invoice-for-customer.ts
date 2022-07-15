@@ -1,5 +1,6 @@
 import { stripe } from '../../modules/stripe-module';
 import { getPaymentIntentAmount } from '../../utils/stripe-utils/get-payment-intent-amount';
+import { getFunctionsConfig } from '../../utils/get-functions-config';
 
 interface SendInvoiceForCustomerParams {
     customerId: string;
@@ -18,6 +19,8 @@ export async function sendInvoiceForCustomer({
     description,
     locale,
 }: SendInvoiceForCustomerParams) {
+    const config = getFunctionsConfig().stripe;
+
     const ticketPrice = await stripe.prices.create({
         unit_amount: getPaymentIntentAmount(revenue),
         currency: currency,
@@ -35,13 +38,13 @@ export async function sendInvoiceForCustomer({
     await stripe.invoiceItems.create({
         customer: customerId,
         price: ticketPrice.id,
-        tax_rates: ['txr_1LLQJIGLkhdqSWYOBbQ4JKOD'],
+        tax_rates: [config.ticket_tax_rate],
     });
 
     await stripe.invoiceItems.create({
         customer: customerId,
         price: feePrice.id,
-        tax_rates: ['txr_1LLQK2GLkhdqSWYONXlyqykh'],
+        tax_rates: [config.service_fee_tax_rate],
     });
 
     const invoice = await stripe.invoices.create({

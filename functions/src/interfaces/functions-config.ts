@@ -22,6 +22,8 @@ interface Stripe {
     api_key: string;
     pi_succeeded_secret: string;
     pi_requires_action_secret: string;
+    ticket_tax_rate: string;
+    service_fee_tax_rate: string;
 }
 
 interface Typesense {
