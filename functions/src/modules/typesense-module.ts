@@ -12,7 +12,8 @@ const client = new Typesense.Client({
         },
     ],
     apiKey: config.api_key,
-    connectionTimeoutSeconds: 2,
+    connectionTimeoutSeconds: 10,
+    numRetries: 3,
 });
 
 export const eventCollection = client.collections(events);
