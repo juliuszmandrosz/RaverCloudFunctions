@@ -4,10 +4,12 @@ import { tickets, users } from '../constants/collections';
 import { User } from '../models/user';
 import { EventTickets } from '../models/event-tickets';
 import { Event } from '../models/event';
-import { tryGetEventData } from '../firestore-functions/get-data/get-event-data';
+import { getEventDocRef, tryGetEventData } from '../firestore-functions/get-data/get-event-data';
 import { firestore } from 'firebase-admin';
 import DocumentSnapshot = firestore.DocumentSnapshot;
 import { getEventFollowers } from '../cloud-messages/get-event-followers';
+import { getCurrentOrLastPool } from '../utils/get-current-or-last-pool';
+import { toJson } from '../utils/json-utils';
 
 export async function onEventTicketsUpdated(
     change: functions.Change<DocumentSnapshot>,
@@ -20,6 +22,16 @@ export async function onEventTicketsUpdated(
         const eventId = context.params.eventId;
         const event = await tryGetEventData(eventId);
         await sendCloudMessageToEventFollowers(event);
+    }
+
+    if (
+        getCurrentOrLastPool(beforeUpdate.ticketPools).ticketPrice !==
+        getCurrentOrLastPool(afterUpdate.ticketPools).ticketPrice
+    ) {
+        const eventId = context.params.eventId;
+        await getEventDocRef(eventId).update(
+            toJson({ price: getCurrentOrLastPool(afterUpdate.ticketPools).ticketPrice } as Event)
+        );
     }
 }
 
