@@ -114,7 +114,6 @@ async function getTicketHoldersToSendCancelEventInfo(eventId: string) {
     const userTickets = await firestoreDatabase()
         .collectionGroup(tickets)
         .where('eventId', '==', eventId)
-        .where('isEventCanceled', '==', true)
         .get();
 
     return Promise.all(
