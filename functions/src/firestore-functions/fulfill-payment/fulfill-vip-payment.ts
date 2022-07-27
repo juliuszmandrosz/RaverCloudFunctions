@@ -13,6 +13,7 @@ import { sendInvoiceForCustomer } from '../../stripe-functions/send-invoice-for-
 import { toJson } from '../../utils/json-utils';
 import { getUserDataOrReturnNotFound } from '../get-data/get-user-data';
 import { sendQrCodeToEmail } from './send-qr-code-to-email';
+import { applyPromotionCode } from '../apply-promotion-code/apply-promotion-code';
 
 export async function fulfillVipPayment(
     paymentSessionId: string,
@@ -90,6 +91,13 @@ export async function fulfillVipPayment(
             serviceFee: vipPaymentSession.serviceFeeAmount,
             currency: ticket.currency,
             locale: user.locale,
+        });
+    }
+
+    if (vipPaymentSession.promotionCode) {
+        await applyPromotionCode({
+            promotionCode: vipPaymentSession.promotionCode,
+            userId: vipPaymentSession.userId,
         });
     }
 }

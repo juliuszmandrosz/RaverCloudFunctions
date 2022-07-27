@@ -14,6 +14,7 @@ import { sendInvoiceForCustomer } from '../../stripe-functions/send-invoice-for-
 import { toJson } from '../../utils/json-utils';
 import { getUserDataOrReturnNotFound } from '../get-data/get-user-data';
 import { sendQrCodeToEmail } from './send-qr-code-to-email';
+import { applyPromotionCode } from '../apply-promotion-code/apply-promotion-code';
 
 export async function fulfillTicketPayment(
     paymentSessionId: string,
@@ -93,6 +94,13 @@ export async function fulfillTicketPayment(
             serviceFee: ticketPaymentSession.serviceFeeAmount,
             locale: user.locale,
             currency: event.currency,
+        });
+    }
+
+    if (ticketPaymentSession.promotionCode) {
+        await applyPromotionCode({
+            promotionCode: ticketPaymentSession.promotionCode,
+            userId: ticketPaymentSession.userId,
         });
     }
 }
