@@ -1,2 +1,2 @@
-export const cancelTicketReservationCallback = 'cancelEventCancelationOnCloudTaskCallback';
+export const cancelTicketReservationCallback = 'cancelTicketReservationOnCloudTaskCallback';
 export const updateClubSalesOnEventEndCallback = 'updateClubSalesOnEventEndCallback';
