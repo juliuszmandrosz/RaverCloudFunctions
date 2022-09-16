@@ -8,8 +8,8 @@ import { getEventDocRef, tryGetEventData } from '../firestore-functions/get-data
 import { firestore } from 'firebase-admin';
 import DocumentSnapshot = firestore.DocumentSnapshot;
 import { getEventFollowers } from '../cloud-messages/get-event-followers';
-import { getCurrentOrLastPool } from '../utils/get-current-or-last-pool';
 import { toJson } from '../utils/json-utils';
+import { getCurrentTicketPrice } from '../utils/get-current-ticket-price';
 
 export async function onEventTicketsUpdated(
     change: functions.Change<DocumentSnapshot>,
@@ -24,13 +24,10 @@ export async function onEventTicketsUpdated(
         await sendCloudMessageToEventFollowers(event);
     }
 
-    if (
-        getCurrentOrLastPool(beforeUpdate.ticketPools).ticketPrice !==
-        getCurrentOrLastPool(afterUpdate.ticketPools).ticketPrice
-    ) {
+    if (getCurrentTicketPrice(beforeUpdate) !== getCurrentTicketPrice(afterUpdate)) {
         const eventId = context.params.eventId;
         await getEventDocRef(eventId).update(
-            toJson({ price: getCurrentOrLastPool(afterUpdate.ticketPools).ticketPrice } as Event)
+            toJson({ price: getCurrentTicketPrice(afterUpdate) } as Event)
         );
     }
 }

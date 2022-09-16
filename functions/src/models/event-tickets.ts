@@ -6,4 +6,6 @@ export interface EventTickets {
     ticketPools: TicketPool[];
     ticketSales: TicketSales;
     ticketQuantity: number;
+    isSaleOnlyAtGate: boolean;
+    priceAtGate?: number;
 }
