@@ -1,5 +1,6 @@
 export const stripeCustomers = 'stripeCustomers';
 export const clubs = 'clubs';
+export const wallPhotos = 'wallPhotos';
 export const events = 'events';
 export const tickets = 'tickets';
 export const eventTickets = 'eventTickets';
@@ -8,6 +9,7 @@ export const promotionCodes = 'promotionCodes';
 export const rewards = 'rewards';
 export const newEvent = 'events/{eventId}';
 export const newClub = 'clubs/{clubId}';
+export const newWallPhoto = 'wallPhotos/{wallPhotoId}';
 export const users = 'users';
 export const partners = 'partners';
 export const selectors = 'selectors';

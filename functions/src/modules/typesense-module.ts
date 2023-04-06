@@ -1,6 +1,6 @@
 import Typesense from 'typesense';
-import { getFunctionsConfig } from '../utils/get-functions-config';
-import { clubs, events } from '../constants/collections';
+import {getFunctionsConfig} from '../utils/get-functions-config';
+import {clubs, events, wallPhotos} from '../constants/collections';
 
 const config = getFunctionsConfig().typesense;
 const client = new Typesense.Client({
@@ -18,3 +18,4 @@ const client = new Typesense.Client({
 
 export const eventCollection = client.collections(events);
 export const clubCollection = client.collections(clubs);
+export const wallPhotoCollection = client.collections(wallPhotos);
