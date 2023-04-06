@@ -6,8 +6,9 @@ import {
     newReview,
     newReward,
     newUser,
+    newWallPhoto,
 } from './constants/collections';
-import { CallableContext } from 'firebase-functions/lib/common/providers/https';
+import {CallableContext} from 'firebase-functions/lib/common/providers/https';
 
 export const env = functions.config();
 
@@ -70,6 +71,31 @@ exports.onClubUpdated = functions
         ).onClubUpdated(snapshot, context);
     });
 
+exports.onWallPhotoAdded = functions
+    .region('europe-central2')
+    .firestore.document(newWallPhoto)
+    .onCreate(async (snapshot, context) => {
+        await (await import('./firebase-triggers/on-wall-photo-added')).onWallPhotoAdded(snapshot, context);
+    });
+
+exports.onWallPhotoDeleted = functions
+    .region('europe-central2')
+    .firestore.document(newWallPhoto)
+    .onDelete(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/on-wall-photo-deleted')
+        ).onWallPhotoDeleted(snapshot, context);
+    });
+
+exports.onWallPhotoUpdated = functions
+    .region('europe-central2')
+    .firestore.document(newWallPhoto)
+    .onUpdate(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/on-wall-photo-updated')
+        ).onWallPhotoUpdated(snapshot, context);
+    });
+
 exports.cancelEvent = functions.region('europe-central2').https.onCall(async (data, context) => {
     verifyApp(context);
     return (await import('./stripe-functions/cancel-event/cancel-event')).cancelEvent(
@@ -125,7 +151,7 @@ exports.cancelTicketReservationOnCloudTaskCallback = functions
         await (
             await import(
                 './firestore-functions/cancel-ticket-reservation/cancel-ticket-reservation-on-cloud-task-callback'
-            )
+                )
         ).cancelTicketReservationOnCloudTaskCallback(request, response);
     });
 
@@ -136,7 +162,7 @@ exports.checkSelectorAccessCode = functions
         return (
             await import(
                 './firestore-functions/check-selector-access-code/check-selector-access-code'
-            )
+                )
         ).checkSelectorAccessCode(data, context);
     });
 
@@ -147,7 +173,7 @@ exports.generateAccessCodeForSelector = functions
         return (
             await import(
                 './firestore-functions/generate-access-code-for-selector/generate-access-code-for-selector'
-            )
+                )
         ).generateAccessCodeForSelector(data, context);
     });
 
@@ -175,7 +201,7 @@ exports.updateClubSalesOnEventEndCallback = functions
         await (
             await import(
                 './firestore-functions/update-club-sales/update-club-sales-on-event-end-callback'
-            )
+                )
         ).updateClubSalesOnEventEndCallback(request, response);
     });
 
@@ -215,11 +241,26 @@ exports.onReviewDeleted = functions
         ).onReviewDeleted(snapshot, context);
     });
 
+exports.scheduledFirestoreExport = functions
+    .region('europe-central2')
+    .pubsub.schedule('every 24 hours')
+    .onRun(async (context) => {
+        await (
+            await import('./cloud-schedulers/scheduled-firestore-export')
+        ).scheduledFirestoreExport(context);
+    });
+
+// exports.addEventsFromJson = functions
+//     .region('europe-central2')
+//     .https.onRequest(async (request, response) => {
+//         await (await import('./scripts/add-events-from-json')).addEventsFromJson(request, response);
+//     });
+
 function verifyApp(context: CallableContext) {
-    if (!context.app) {
-        throw new functions.https.HttpsError(
-            'failed-precondition',
-            'The function must be called from an App Check verified app.'
-        );
-    }
+    // if (!context.app) {
+    //     throw new functions.https.HttpsError(
+    //         'failed-precondition',
+    //         'The function must be called from an App Check verified app.'
+    //     );
+    // }
 }
