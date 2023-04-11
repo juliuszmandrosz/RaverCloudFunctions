@@ -1,4 +1,4 @@
-import { firestore } from 'firebase-admin';
+import {firestore} from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 
 export interface Ticket {
@@ -17,6 +17,5 @@ export interface Ticket {
     isEventCanceled: boolean;
     isReturnable: boolean;
     isReturned: boolean;
-    reviewId?: string;
     vipPaymentId?: string;
 }
