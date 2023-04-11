@@ -1,16 +1,15 @@
 import * as fs from 'fs';
-import { v1 } from 'uuid';
+import {v1} from 'uuid';
 import * as firebase from '@firebase/rules-unit-testing';
-import { Review } from '../src/models/review';
-import { Ticket } from '../src/models/ticket';
-import { EventTickets } from '../src/models/event-tickets';
-import { serverTimestamp } from 'firebase/firestore';
-import { Reward } from '../src/models/reward';
-import { User } from '../src/models/user';
-import { Selector } from '../src/models/selector';
-import { CurrencyParams } from '../src/models/currency-params';
-import { TicketPool } from '../src/models/ticket-pool';
-import { Event } from '../src/models/event';
+import {Review} from '../src/models/review';
+import {Ticket} from '../src/models/ticket';
+import {EventTickets} from '../src/models/event-tickets';
+import {Reward} from '../src/models/reward';
+import {User} from '../src/models/user';
+import {Selector} from '../src/models/selector';
+import {CurrencyParams} from '../src/models/currency-params';
+import {TicketPool} from '../src/models/ticket-pool';
+import {Event} from '../src/models/event';
 
 let testEnv: firebase.RulesTestEnvironment;
 
@@ -45,7 +44,7 @@ interface SetEventTicketsParams {
     eventTickets: EventTickets;
 }
 
-async function setEventTickets({ clubId, eventId, eventTickets }: SetEventTicketsParams) {
+async function setEventTickets({clubId, eventId, eventTickets}: SetEventTicketsParams) {
     await testEnv.withSecurityRulesDisabled(async (context) => {
         await context.firestore().doc(`clubs/${clubId}/eventTickets/${eventId}`).set(eventTickets);
     });
@@ -56,12 +55,12 @@ interface SetUserDocumentParams {
     attendance: { [key: string]: number };
 }
 
-async function setUserDocument({ userId, attendance }: SetUserDocumentParams) {
+async function setUserDocument({userId, attendance}: SetUserDocumentParams) {
     await testEnv.withSecurityRulesDisabled(async (context) => {
         await context
             .firestore()
             .doc(`users/${userId}`)
-            .set({ attendance } as User);
+            .set({attendance} as User);
     });
 }
 
@@ -71,7 +70,7 @@ interface SetTicketForUserParams {
     ticket: Ticket;
 }
 
-async function setTicketForUser({ userId, ticketId, ticket }: SetTicketForUserParams) {
+async function setTicketForUser({userId, ticketId, ticket}: SetTicketForUserParams) {
     await testEnv.withSecurityRulesDisabled(async (context) => {
         await context.firestore().doc(`users/${userId}/tickets/${ticketId}`).set(ticket);
     });
@@ -82,12 +81,12 @@ interface SetSelectorDocumentParams {
     selectorId: string;
 }
 
-async function setSelectorDocument({ clubId, selectorId }: SetSelectorDocumentParams) {
+async function setSelectorDocument({clubId, selectorId}: SetSelectorDocumentParams) {
     await testEnv.withSecurityRulesDisabled(async (context) => {
         await context
             .firestore()
             .doc(`selectors/${selectorId}`)
-            .set({ clubId } as Selector);
+            .set({clubId} as Selector);
     });
 }
 
@@ -96,7 +95,7 @@ async function setCurrencyParams() {
         await context
             .firestore()
             .doc(`currencyParams/pln`)
-            .set({ minTicketPrice: 20, maxTicketPrice: 100 } as CurrencyParams);
+            .set({minTicketPrice: 20, maxTicketPrice: 100} as CurrencyParams);
     });
 }
 
@@ -139,7 +138,7 @@ describe('clubs', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(context.firestore().doc(`clubs/${clubId}`).set({}));
     });
 
@@ -157,7 +156,7 @@ describe('clubs', () => {
         const clubId = v1();
         const partnerId = v1();
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(context.firestore().doc(`clubs/${clubId}`).set({}));
     });
 });
@@ -170,7 +169,7 @@ describe('applied discounts', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`clubs/${clubId}/appliedDiscounts/${discountId}`).get()
         );
@@ -183,7 +182,7 @@ describe('applied discounts', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`clubs/${clubId}/appliedDiscounts/${discountId}`).set({})
         );
@@ -194,7 +193,7 @@ describe('applied discounts', () => {
         const discountId = v1();
         const partnerId = v1();
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/appliedDiscounts/${discountId}`).get()
         );
@@ -205,7 +204,7 @@ describe('applied discounts', () => {
         const discountId = v1();
         const partnerId = v1();
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/appliedDiscounts/${discountId}`).set({})
         );
@@ -218,7 +217,7 @@ describe('applied discounts', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/appliedDiscounts/${discountId}`).delete()
         );
@@ -231,7 +230,7 @@ describe('applied discounts', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/appliedDiscounts/${discountId}`).delete()
         );
@@ -246,7 +245,7 @@ describe('event costs', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`clubs/${clubId}/eventCosts/${eventId}`).get()
         );
@@ -257,7 +256,7 @@ describe('event costs', () => {
         const eventId = v1();
         const partnerId = v1();
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/eventCosts/${eventId}`).get()
         );
@@ -270,7 +269,7 @@ describe('event costs', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`clubs/${clubId}/eventCosts/${eventId}`).set({})
         );
@@ -281,7 +280,7 @@ describe('event costs', () => {
         const eventId = v1();
         const partnerId = v1();
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/eventCosts/${eventId}`).set({})
         );
@@ -294,7 +293,7 @@ describe('event costs', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/eventCosts/${eventId}`).update({})
         );
@@ -307,7 +306,7 @@ describe('event costs', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/eventCosts/${eventId}`).update({})
         );
@@ -322,7 +321,7 @@ describe('event review', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`clubs/${clubId}/eventReview/${eventId}`).get()
         );
@@ -333,7 +332,7 @@ describe('event review', () => {
         const eventId = v1();
         const partnerId = v1();
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/eventReview/${eventId}`).get()
         );
@@ -346,7 +345,7 @@ describe('event review', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`clubs/${clubId}/eventReview/${eventId}`).set({})
         );
@@ -357,7 +356,7 @@ describe('event review', () => {
         const eventId = v1();
         const partnerId = v1();
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/eventReview/${eventId}`).set({})
         );
@@ -370,7 +369,7 @@ describe('event review', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/eventReview/${eventId}`).update({})
         );
@@ -383,7 +382,7 @@ describe('event review', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/eventReview/${eventId}`).delete()
         );
@@ -430,12 +429,12 @@ describe('event tickets', () => {
 
     async function loginAsPartnerAndSetEventTickets(clubId: string, eventId: string) {
         const partnerId = v1();
-        const eventTickets = { ticketSales: { clubIncome: 50 } } as EventTickets;
+        const eventTickets = {ticketSales: {clubIncome: 50}} as EventTickets;
 
         await setClubForPartner(partnerId, clubId);
-        await setEventTickets({ clubId, eventId, eventTickets });
+        await setEventTickets({clubId, eventId, eventTickets});
         await setCurrencyParams();
-        return testEnv.authenticatedContext(partnerId, { isPartner: true });
+        return testEnv.authenticatedContext(partnerId, {isPartner: true});
     }
 
     it('should allow read with authenticated context', async () => {
@@ -549,11 +548,11 @@ describe('event tickets', () => {
         const clubId = v1();
         const eventId = v1();
         const partnerId = v1();
-        const eventTickets = { ticketSales: { clubIncome: 50 } } as EventTickets;
+        const eventTickets = {ticketSales: {clubIncome: 50}} as EventTickets;
 
-        await setEventTickets({ clubId, eventId, eventTickets });
+        await setEventTickets({clubId, eventId, eventTickets});
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/eventTickets/${eventId}`).update({})
         );
@@ -565,7 +564,7 @@ describe('event tickets', () => {
         const partnerId = v1();
         await setClubForPartner(partnerId, clubId);
         await setCurrencyParams();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context
                 .firestore()
@@ -578,11 +577,11 @@ describe('event tickets', () => {
         const clubId = v1();
         const eventId = v1();
         const partnerId = v1();
-        const eventTickets = { ticketSales: { clubIncome: 50 } } as EventTickets;
+        const eventTickets = {ticketSales: {clubIncome: 50}} as EventTickets;
 
-        await setEventTickets({ clubId, eventId, eventTickets });
+        await setEventTickets({clubId, eventId, eventTickets});
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/eventTickets/${eventId}`).set({})
         );
@@ -592,12 +591,12 @@ describe('event tickets', () => {
         const clubId = v1();
         const eventId = v1();
         const partnerId = v1();
-        const eventTickets = { ticketSales: { clubIncome: 50 } } as EventTickets;
+        const eventTickets = {ticketSales: {clubIncome: 50}} as EventTickets;
 
         await setClubForPartner(partnerId, clubId);
-        await setEventTickets({ clubId, eventId, eventTickets });
+        await setEventTickets({clubId, eventId, eventTickets});
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context
                 .firestore()
@@ -617,7 +616,7 @@ describe('event tickets', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/eventTickets/${eventId}`).delete()
         );
@@ -650,21 +649,13 @@ describe('reviews', () => {
         const userId = v1();
         const clubId = v1();
         const reviewId = v1();
-        const ticketId = v1();
 
-        const ticket = {
-            isExpired: true,
-            eventEndDateTime: serverTimestamp(),
-        } as Ticket;
-
-        await setTicketForUser({ userId, ticketId, ticket });
-
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertSucceeds(
             context
                 .firestore()
                 .doc(`clubs/${clubId}/reviews/${reviewId}`)
-                .set({ userRate: 5, userOpinion: '', ticketId } as Review)
+                .set({userRate: 5, userOpinion: ''} as Review)
         );
     });
 
@@ -672,39 +663,13 @@ describe('reviews', () => {
         const userId = v1();
         const clubId = v1();
         const reviewId = v1();
-        const ticketId = v1();
 
-        const ticket = {
-            isExpired: true,
-            eventEndDateTime: serverTimestamp(),
-        } as Ticket;
-
-        await setTicketForUser({ userId, ticketId, ticket });
-
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertSucceeds(
             context
                 .firestore()
                 .doc(`clubs/${clubId}/reviews/${reviewId}`)
-                .set({ userRate: 5, userOpinion: '#'.repeat(1000), ticketId: ticketId } as Review)
-        );
-    });
-
-    it('should deny create with user claim, without expired ticket, user rate in range 1 and 5 and user opinion with less or equal 1000 characters', async () => {
-        const userId = v1();
-        const clubId = v1();
-        const reviewId = v1();
-        const ticketId = v1();
-        const ticket = { isExpired: false } as Ticket;
-
-        await setTicketForUser({ userId, ticketId, ticket });
-
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
-        await firebase.assertFails(
-            context
-                .firestore()
-                .doc(`clubs/${clubId}/reviews/${reviewId}`)
-                .set({ userRate: 5, userOpinion: '#'.repeat(1000), ticketId: ticketId } as Review)
+                .set({userRate: 5, userOpinion: '#'.repeat(1000)} as Review)
         );
     });
 
@@ -713,11 +678,11 @@ describe('reviews', () => {
         const clubId = v1();
         const reviewId = v1();
         const ticketId = v1();
-        const ticket = { isExpired: true } as Ticket;
+        const ticket = {isExpired: true} as Ticket;
 
-        await setTicketForUser({ userId, ticketId, ticket });
+        await setTicketForUser({userId, ticketId, ticket});
 
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context
                 .firestore()
@@ -725,7 +690,6 @@ describe('reviews', () => {
                 .set({
                     userRate: 5,
                     userOpinion: '#'.repeat(1001),
-                    ticketId,
                 } as Review)
         );
     });
@@ -735,16 +699,16 @@ describe('reviews', () => {
         const clubId = v1();
         const reviewId = v1();
         const ticketId = v1();
-        const ticket = { isExpired: true } as Ticket;
+        const ticket = {isExpired: true} as Ticket;
 
-        await setTicketForUser({ userId, ticketId, ticket });
+        await setTicketForUser({userId, ticketId, ticket});
 
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context
                 .firestore()
                 .doc(`clubs/${clubId}/reviews/${reviewId}`)
-                .set({ userRate: 0, ticketId } as Review)
+                .set({userRate: 0} as Review)
         );
     });
 
@@ -764,7 +728,7 @@ describe('reviews', () => {
         const clubId = v1();
         const reviewId = v1();
 
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/reviews/${reviewId}`).update({})
         );
@@ -775,7 +739,7 @@ describe('reviews', () => {
         const clubId = v1();
         const reviewId = v1();
 
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/reviews/${reviewId}`).delete()
         );
@@ -809,12 +773,12 @@ describe('rewards', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context
                 .firestore()
                 .doc(`clubs/${clubId}/rewards/${rewardId}`)
-                .set({ requiredEntries: 1, description: '#'.repeat(1000) } as Reward)
+                .set({requiredEntries: 1, description: '#'.repeat(1000)} as Reward)
         );
     });
 
@@ -825,12 +789,12 @@ describe('rewards', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context
                 .firestore()
                 .doc(`clubs/${clubId}/rewards/${rewardId}`)
-                .set({ requiredEntries: 1, description: '#'.repeat(1001) } as Reward)
+                .set({requiredEntries: 1, description: '#'.repeat(1001)} as Reward)
         );
     });
 
@@ -841,12 +805,12 @@ describe('rewards', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context
                 .firestore()
                 .doc(`clubs/${clubId}/rewards/${rewardId}`)
-                .set({ requiredEntries: -1, description: '#' } as Reward)
+                .set({requiredEntries: -1, description: '#'} as Reward)
         );
     });
 
@@ -857,12 +821,12 @@ describe('rewards', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context
                 .firestore()
                 .doc(`clubs/${clubId}/rewards/${rewardId}`)
-                .set({ requiredEntries: 1, description: '' } as Reward)
+                .set({requiredEntries: 1, description: ''} as Reward)
         );
     });
 
@@ -878,7 +842,7 @@ describe('rewards', () => {
             context
                 .firestore()
                 .doc(`clubs/${clubId}/rewards/${rewardId}`)
-                .set({ requiredEntries: 1, description: '#' } as Reward)
+                .set({requiredEntries: 1, description: '#'} as Reward)
         );
     });
 
@@ -887,12 +851,12 @@ describe('rewards', () => {
         const clubId = v1();
         const rewardId = v1();
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context
                 .firestore()
                 .doc(`clubs/${clubId}/rewards/${rewardId}`)
-                .set({ requiredEntries: 1, description: '#' } as Reward)
+                .set({requiredEntries: 1, description: '#'} as Reward)
         );
     });
 
@@ -903,7 +867,7 @@ describe('rewards', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`clubs/${clubId}/rewards/${rewardId}`).delete()
         );
@@ -927,7 +891,7 @@ describe('rewards', () => {
         const clubId = v1();
         const rewardId = v1();
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/rewards/${rewardId}`).delete()
         );
@@ -940,7 +904,7 @@ describe('rewards', () => {
 
         await setClubForPartner(partnerId, clubId);
 
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/rewards/${rewardId}`).update({})
         );
@@ -953,7 +917,7 @@ describe('club selectors', () => {
         const clubId = v1();
         const selectorId = v1();
         await setClubForPartner(partnerId, clubId);
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).get()
         );
@@ -963,7 +927,7 @@ describe('club selectors', () => {
         const partnerId = v1();
         const clubId = v1();
         const selectorId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).get()
         );
@@ -972,7 +936,7 @@ describe('club selectors', () => {
     it('should allow read on own document as selector with selector claim', async () => {
         const clubId = v1();
         const selectorId = v1();
-        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const context = testEnv.authenticatedContext(selectorId, {isSelector: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).get()
         );
@@ -981,7 +945,7 @@ describe('club selectors', () => {
     it('should deny read on other document as selector with selector claim', async () => {
         const clubId = v1();
         const selectorId = v1();
-        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const context = testEnv.authenticatedContext(selectorId, {isSelector: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/selectors/${v1()}`).get()
         );
@@ -992,7 +956,7 @@ describe('club selectors', () => {
         const clubId = v1();
         const selectorId = v1();
         await setClubForPartner(partnerId, clubId);
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).delete()
         );
@@ -1002,7 +966,7 @@ describe('club selectors', () => {
         const partnerId = v1();
         const clubId = v1();
         const selectorId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).delete()
         );
@@ -1013,7 +977,7 @@ describe('club selectors', () => {
         const clubId = v1();
         const selectorId = v1();
         await setClubForPartner(partnerId, clubId);
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).set({})
         );
@@ -1024,7 +988,7 @@ describe('club selectors', () => {
         const clubId = v1();
         const selectorId = v1();
         await setClubForPartner(partnerId, clubId);
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`clubs/${clubId}/selectors/${selectorId}`).update({})
         );
@@ -1036,14 +1000,14 @@ describe('clubs sales', () => {
         const partnerId = v1();
         const clubId = v1();
         await setClubForPartner(partnerId, clubId);
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(context.firestore().doc(`clubsSales/${clubId}`).get());
     });
 
     it('should deny read on other club with partner claim', async () => {
         const partnerId = v1();
         const clubId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(context.firestore().doc(`clubsSales/${clubId}`).get());
     });
 
@@ -1051,7 +1015,7 @@ describe('clubs sales', () => {
         const partnerId = v1();
         const clubId = v1();
         await setClubForPartner(partnerId, clubId);
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(context.firestore().doc(`clubsSales/${clubId}`).set({}));
     });
 });
@@ -1126,7 +1090,7 @@ describe('events', () => {
         await setClubForPartner(partnerId, clubId);
         await setEvent(eventId, clubId);
         await setCurrencyParams();
-        return testEnv.authenticatedContext(partnerId, { isPartner: true });
+        return testEnv.authenticatedContext(partnerId, {isPartner: true});
     }
 
     it('should allow read with authenticated context', async () => {
@@ -1148,7 +1112,7 @@ describe('events', () => {
         const clubId = v1();
         await setClubForPartner(partnerId, clubId);
         await setCurrencyParams();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`events/${eventId}`).set(getValidEvent(clubId))
         );
@@ -1159,7 +1123,7 @@ describe('events', () => {
         const eventId = v1();
         const clubId = v1();
         await setCurrencyParams();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`events/${eventId}`).set(getValidEvent(clubId))
         );
@@ -1173,7 +1137,7 @@ describe('events', () => {
             context
                 .firestore()
                 .doc(`events/${eventId}`)
-                .update({ eventName: '#'.repeat(3) } as Event)
+                .update({eventName: '#'.repeat(3)} as Event)
         );
     });
 
@@ -1183,12 +1147,12 @@ describe('events', () => {
         const clubId = v1();
         await setEvent(eventId, clubId);
         await setCurrencyParams();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context
                 .firestore()
                 .doc(`events/${eventId}`)
-                .update({ eventName: '#'.repeat(3) } as Event)
+                .update({eventName: '#'.repeat(3)} as Event)
         );
     });
 
@@ -1232,31 +1196,31 @@ describe('events', () => {
 describe('partners', () => {
     it('should allow read on own document with partner claim', async () => {
         const partnerId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(context.firestore().doc(`partners/${partnerId}`).get());
     });
 
     it('should deny read on other document with partner claim', async () => {
         const partnerId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(context.firestore().doc(`partners/${v1()}`).get());
     });
 
     it('should deny create', async () => {
         const partnerId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(context.firestore().doc(`partners/${v1()}`).set({}));
     });
 
     it('should deny update', async () => {
         const partnerId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(context.firestore().doc(`partners/${v1()}`).update({}));
     });
 
     it('should deny delete', async () => {
         const partnerId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(context.firestore().doc(`partners/${v1()}`).delete());
     });
 });
@@ -1302,7 +1266,7 @@ describe('partners discounts', () => {
     it('should allow read with partner claim', async () => {
         const partnerId = v1();
         const discountId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`partnersDiscounts/${discountId}`).get()
         );
@@ -1320,7 +1284,7 @@ describe('partners discounts', () => {
     it('should deny create', async () => {
         const partnerId = v1();
         const discountId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`partnersDiscounts/${discountId}`).set({})
         );
@@ -1329,7 +1293,7 @@ describe('partners discounts', () => {
     it('should deny update', async () => {
         const partnerId = v1();
         const discountId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`partnersDiscounts/${discountId}`).update({})
         );
@@ -1338,7 +1302,7 @@ describe('partners discounts', () => {
     it('should deny delete', async () => {
         const partnerId = v1();
         const discountId = v1();
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`partnersDiscounts/${discountId}`).delete()
         );
@@ -1391,31 +1355,31 @@ describe('review reports', () => {
 describe('selectors', () => {
     it('should allow read on own document with selector claim', async () => {
         const selectorId = v1();
-        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const context = testEnv.authenticatedContext(selectorId, {isSelector: true});
         await firebase.assertSucceeds(context.firestore().doc(`selectors/${selectorId}`).get());
     });
 
     it('should deny read on other document with selector claim', async () => {
         const selectorId = v1();
-        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const context = testEnv.authenticatedContext(selectorId, {isSelector: true});
         await firebase.assertFails(context.firestore().doc(`selectors/${v1()}`).get());
     });
 
     it('should deny create', async () => {
         const selectorId = v1();
-        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const context = testEnv.authenticatedContext(selectorId, {isSelector: true});
         await firebase.assertFails(context.firestore().doc(`selectors/${selectorId}`).set({}));
     });
 
     it('should deny update', async () => {
         const selectorId = v1();
-        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const context = testEnv.authenticatedContext(selectorId, {isSelector: true});
         await firebase.assertFails(context.firestore().doc(`selectors/${selectorId}`).update({}));
     });
 
     it('should deny delete', async () => {
         const selectorId = v1();
-        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const context = testEnv.authenticatedContext(selectorId, {isSelector: true});
         await firebase.assertFails(context.firestore().doc(`selectors/${selectorId}`).delete());
     });
 });
@@ -1434,9 +1398,9 @@ describe('selectors access codes', () => {
         const clubId = v1();
         const accessCode = v1();
         await setClubForPartner(partnerId, clubId);
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
-            context.firestore().doc(`selectorsAccessCodes/${accessCode}`).set({ clubId: clubId })
+            context.firestore().doc(`selectorsAccessCodes/${accessCode}`).set({clubId: clubId})
         );
     });
 
@@ -1445,7 +1409,7 @@ describe('selectors access codes', () => {
         const clubId = v1();
         const accessCode = v1();
         await setClubForPartner(partnerId, clubId);
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`selectorsAccessCodes/${accessCode}`).update({})
         );
@@ -1456,7 +1420,7 @@ describe('selectors access codes', () => {
         const clubId = v1();
         const accessCode = v1();
         await setClubForPartner(partnerId, clubId);
-        const context = testEnv.authenticatedContext(partnerId, { isPartner: true });
+        const context = testEnv.authenticatedContext(partnerId, {isPartner: true});
         await firebase.assertFails(
             context.firestore().doc(`selectorsAccessCodes/${accessCode}`).delete()
         );
@@ -1595,25 +1559,25 @@ describe('update clubs sales task', () => {
 describe('users', () => {
     it('should allow get on own document with user claim', async () => {
         const userId = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).get());
     });
 
     it('should allow get on own document with user claim', async () => {
         const userId = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).get());
     });
 
     it('should deny get on other document with user claim', async () => {
         const userId = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(context.firestore().doc(`users/${v1()}`).get());
     });
 
     it('should allow query with user claim', async () => {
         const userId = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertSucceeds(
             context.firestore().collection('users').where('username', '==', '123').get()
         );
@@ -1630,128 +1594,128 @@ describe('users', () => {
     it('should allow read with selector claim', async () => {
         const userId = v1();
         const selectorId = v1();
-        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const context = testEnv.authenticatedContext(selectorId, {isSelector: true});
         await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).get());
     });
 
     it('should allow update on own document with user claim', async () => {
         const userId = v1();
-        const attendance = { '123': 1 };
-        await setUserDocument({ userId, attendance });
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const attendance = {'123': 1};
+        await setUserDocument({userId, attendance});
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertSucceeds(context.firestore().doc(`users/${userId}`).update({}));
     });
 
     it('should allow update on own document with user claim and username between 3 and 20 characters', async () => {
         const userId = v1();
-        const attendance = { '123': 1 };
-        await setUserDocument({ userId, attendance });
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const attendance = {'123': 1};
+        await setUserDocument({userId, attendance});
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertSucceeds(
             context
                 .firestore()
                 .doc(`users/${userId}`)
-                .update({ username: '#'.repeat(10) } as User)
+                .update({username: '#'.repeat(10)} as User)
         );
     });
 
     it('should deny update on own document with user claim when attendance has changed', async () => {
         const userId = v1();
-        const attendance = { '123': 1 };
-        await setUserDocument({ userId, attendance });
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const attendance = {'123': 1};
+        await setUserDocument({userId, attendance});
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context
                 .firestore()
                 .doc(`users/${userId}`)
-                .update({ username: '#', attendance: { '123': 2 } })
+                .update({username: '#', attendance: {'123': 2}})
         );
     });
 
     it('should deny update on own document with user claim when username is lower than 3 characters', async () => {
         const userId = v1();
-        const attendance = { '123': 1 };
-        await setUserDocument({ userId, attendance });
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const attendance = {'123': 1};
+        await setUserDocument({userId, attendance});
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context
                 .firestore()
                 .doc(`users/${userId}`)
-                .update({ username: '#' } as User)
+                .update({username: '#'} as User)
         );
     });
 
     it('should deny update on own document with user claim when username is greater than 20 characters', async () => {
         const userId = v1();
-        const attendance = { '123': 1 };
-        await setUserDocument({ userId, attendance });
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const attendance = {'123': 1};
+        await setUserDocument({userId, attendance});
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context
                 .firestore()
                 .doc(`users/${userId}`)
-                .update({ username: '#'.repeat(21) } as User)
+                .update({username: '#'.repeat(21)} as User)
         );
     });
 
     it('should deny update on other document with user claim', async () => {
         const userId = v1();
-        const attendance = { '123': 1 };
-        await setUserDocument({ userId, attendance });
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const attendance = {'123': 1};
+        await setUserDocument({userId, attendance});
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(context.firestore().doc(`users/${v1()}`).update({}));
     });
 
     it('should deny update on own document with user claim when attendance has changed', async () => {
         const userId = v1();
-        const attendance = { '123': 1 };
-        await setUserDocument({ userId, attendance });
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const attendance = {'123': 1};
+        await setUserDocument({userId, attendance});
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context
                 .firestore()
                 .doc(`users/${userId}`)
-                .update({ attendance: { '123': 5 } })
+                .update({attendance: {'123': 5}})
         );
     });
 
     it('should allow update with selector claim when only attendance has changed', async () => {
         const userId = v1();
         const selectorId = v1();
-        const attendance = { '123': 1 };
-        await setUserDocument({ userId, attendance });
-        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const attendance = {'123': 1};
+        await setUserDocument({userId, attendance});
+        const context = testEnv.authenticatedContext(selectorId, {isSelector: true});
         await firebase.assertSucceeds(
             context
                 .firestore()
                 .doc(`users/${userId}`)
-                .update({ attendance: { '123': 2 } })
+                .update({attendance: {'123': 2}})
         );
     });
 
     it('should allow update with selector claim when not only attendance has changed', async () => {
         const userId = v1();
         const selectorId = v1();
-        const attendance = { '123': 1 };
-        await setUserDocument({ userId, attendance });
-        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const attendance = {'123': 1};
+        await setUserDocument({userId, attendance});
+        const context = testEnv.authenticatedContext(selectorId, {isSelector: true});
         await firebase.assertFails(
             context
                 .firestore()
                 .doc(`users/${userId}`)
-                .update({ username: '#' } as User)
+                .update({username: '#'} as User)
         );
     });
 
     it('should deny create', async () => {
         const userId = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(context.firestore().doc(`users/${userId}`).set({}));
     });
 
     it('should deny delete', async () => {
         const userId = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(context.firestore().doc(`users/${userId}`).delete());
     });
 });
@@ -1760,7 +1724,7 @@ describe('promotion codes', () => {
     it('should allow read on own document with user claim', async () => {
         const userId = v1();
         const code = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`users/${userId}/promotionCodes/${code}`).get()
         );
@@ -1769,7 +1733,7 @@ describe('promotion codes', () => {
     it('should deny read on other document with user claim', async () => {
         const userId = v1();
         const code = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context.firestore().doc(`users/${v1()}/promotionCodes/${code}`).get()
         );
@@ -1778,7 +1742,7 @@ describe('promotion codes', () => {
     it('should deny update', async () => {
         const userId = v1();
         const code = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context.firestore().doc(`users/${userId}/promotionCodes/${code}`).update({})
         );
@@ -1787,7 +1751,7 @@ describe('promotion codes', () => {
     it('should deny delete', async () => {
         const userId = v1();
         const code = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context.firestore().doc(`users/${userId}/promotionCodes/${code}`).delete()
         );
@@ -1798,16 +1762,16 @@ describe('tickets', () => {
     async function loginAsSelectorAndCreateTicket(userId: string, ticketId: string) {
         const selectorId = v1();
         const clubId = v1();
-        const ticket = { clubId, isExpired: false } as Ticket;
-        await setTicketForUser({ userId, ticketId, ticket });
-        await setSelectorDocument({ clubId, selectorId });
-        return testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const ticket = {clubId, isExpired: false} as Ticket;
+        await setTicketForUser({userId, ticketId, ticket});
+        await setSelectorDocument({clubId, selectorId});
+        return testEnv.authenticatedContext(selectorId, {isSelector: true});
     }
 
     it('should allow read on own document with user claim', async () => {
         const userId = v1();
         const ticketId = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`users/${userId}/tickets/${ticketId}`).get()
         );
@@ -1816,23 +1780,9 @@ describe('tickets', () => {
     it('should deny read on other document with user claim', async () => {
         const userId = v1();
         const ticketId = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context.firestore().doc(`users/${v1()}/tickets/${ticketId}`).get()
-        );
-    });
-
-    it('should allow update on own document with user claim when only review id has changed', async () => {
-        const userId = v1();
-        const ticketId = v1();
-        const ticket = {} as Ticket;
-        await setTicketForUser({ userId, ticketId, ticket });
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
-        await firebase.assertSucceeds(
-            context
-                .firestore()
-                .doc(`users/${userId}/tickets/${ticketId}`)
-                .update({ reviewId: '123' } as Ticket)
         );
     });
 
@@ -1840,13 +1790,13 @@ describe('tickets', () => {
         const userId = v1();
         const ticketId = v1();
         const ticket = {} as Ticket;
-        await setTicketForUser({ userId, ticketId, ticket });
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        await setTicketForUser({userId, ticketId, ticket});
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context
                 .firestore()
                 .doc(`users/${userId}/tickets/${ticketId}`)
-                .update({ isExpired: false } as Ticket)
+                .update({isExpired: false} as Ticket)
         );
     });
 
@@ -1854,7 +1804,7 @@ describe('tickets', () => {
         const userId = v1();
         const selectorId = v1();
         const ticketId = v1();
-        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const context = testEnv.authenticatedContext(selectorId, {isSelector: true});
         await firebase.assertSucceeds(
             context.firestore().doc(`users/${userId}/tickets/${ticketId}`).get()
         );
@@ -1868,7 +1818,7 @@ describe('tickets', () => {
             context
                 .firestore()
                 .doc(`users/${userId}/tickets/${ticketId}`)
-                .update({ isExpired: true } as Ticket)
+                .update({isExpired: true} as Ticket)
         );
     });
 
@@ -1892,7 +1842,7 @@ describe('tickets', () => {
             context
                 .firestore()
                 .doc(`users/${userId}/tickets/${ticketId}`)
-                .update({ isExpired: false } as Ticket)
+                .update({isExpired: false} as Ticket)
         );
     });
 
@@ -1901,10 +1851,10 @@ describe('tickets', () => {
         const selectorId = v1();
         const clubId = v1();
         const ticketId = v1();
-        const ticket = { clubId: v1() } as Ticket;
-        await setTicketForUser({ userId, ticketId, ticket });
-        await setSelectorDocument({ clubId, selectorId });
-        const context = testEnv.authenticatedContext(selectorId, { isSelector: true });
+        const ticket = {clubId: v1()} as Ticket;
+        await setTicketForUser({userId, ticketId, ticket});
+        await setSelectorDocument({clubId, selectorId});
+        const context = testEnv.authenticatedContext(selectorId, {isSelector: true});
         await firebase.assertFails(
             context.firestore().doc(`users/${userId}/tickets/${ticketId}`).update({})
         );
@@ -1915,9 +1865,9 @@ describe('tickets', () => {
         const selectorId = v1();
         const clubId = v1();
         const ticketId = v1();
-        const ticket = { clubId } as Ticket;
-        await setTicketForUser({ userId, ticketId, ticket });
-        await setSelectorDocument({ clubId, selectorId });
+        const ticket = {clubId} as Ticket;
+        await setTicketForUser({userId, ticketId, ticket});
+        await setSelectorDocument({clubId, selectorId});
         const context = testEnv.authenticatedContext(selectorId);
         await firebase.assertFails(
             context.firestore().doc(`users/${userId}/tickets/${ticketId}`).update({})
@@ -1927,7 +1877,7 @@ describe('tickets', () => {
     it('should deny delete', async () => {
         const userId = v1();
         const code = v1();
-        const context = testEnv.authenticatedContext(userId, { isUser: true });
+        const context = testEnv.authenticatedContext(userId, {isUser: true});
         await firebase.assertFails(
             context.firestore().doc(`users/${userId}/tickets/${code}`).delete()
         );
