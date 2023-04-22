@@ -8,4 +8,5 @@ export interface User {
     attendance: { [key: string]: number };
     pushNotificationTokens: string[];
     locale: string;
+    ticketsCount: number;
 }

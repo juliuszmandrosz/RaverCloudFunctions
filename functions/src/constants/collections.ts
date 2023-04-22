@@ -10,6 +10,7 @@ export const rewards = 'rewards';
 export const newEvent = 'events/{eventId}';
 export const newClub = 'clubs/{clubId}';
 export const newWallPhoto = 'wallPhotos/{wallPhotoId}';
+export const newTicket = 'users/{userId}/tickets/{ticketId}';
 export const users = 'users';
 export const partners = 'partners';
 export const selectors = 'selectors';

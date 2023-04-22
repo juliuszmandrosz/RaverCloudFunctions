@@ -5,6 +5,7 @@ import {
     newEventTickets,
     newReview,
     newReward,
+    newTicket,
     newUser,
     newWallPhoto,
 } from './constants/collections';
@@ -69,6 +70,30 @@ exports.onClubUpdated = functions
         await (
             await import('./firebase-triggers/on-club-updated')
         ).onClubUpdated(snapshot, context);
+    });
+
+exports.onTicketAdded = functions
+    .region('europe-central2')
+    .firestore.document(newTicket)
+    .onCreate(async (snapshot, context) => {
+        await (await import('./firebase-triggers/on-ticket-added')).onTicketAdded(snapshot, context);
+    });
+
+
+exports.onTicketDeleted = functions
+    .region('europe-central2')
+    .firestore.document(newTicket)
+    .onDelete(async (snapshot, context) => {
+        await (await import('./firebase-triggers/on-ticket-deleted')).onTicketDeleted(snapshot, context);
+    });
+
+exports.onWallPhotoDeleted = functions
+    .region('europe-central2')
+    .firestore.document(newWallPhoto)
+    .onDelete(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/on-wall-photo-deleted')
+        ).onWallPhotoDeleted(snapshot, context);
     });
 
 exports.onWallPhotoAdded = functions
