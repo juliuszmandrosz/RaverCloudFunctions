@@ -248,7 +248,7 @@ exports.onRewardAdded = functions
         ).onRewardAdded(snapshot, context);
     });
 
-exports.osUserUpdated = functions
+exports.onUserUpdated = functions
     .region('europe-central2')
     .firestore.document(newUser)
     .onUpdate(async (snapshot, context) => {

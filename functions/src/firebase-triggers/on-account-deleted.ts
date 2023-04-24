@@ -1,20 +1,24 @@
 import * as functions from 'firebase-functions';
-import { firestoreDatabase } from '../modules/firebase-admin-module';
-import { stripe } from '../modules/stripe-module';
-import { StripeCustomer } from '../models/stripe-customer';
+import {firestoreDatabase} from '../modules/firebase-admin-module';
+import {stripe} from '../modules/stripe-module';
+import {StripeCustomer} from '../models/stripe-customer';
 import {
     clubs,
     promotionCodes,
+    reviews,
     selectors,
     stripeCustomers,
     ticketPaymentSessions,
     tickets,
     users,
     vipPaymentSessions,
+    wallPhotos,
 } from '../constants/collections';
-import { Selector } from '../models/selector';
-import { deleteQueryBatch } from '../utils/delete-query-batch';
-import { getPartnerDocRef } from '../firestore-functions/get-data/get-partner-data';
+import {Selector} from '../models/selector';
+import {deleteQueryBatch} from '../utils/delete-query-batch';
+import {getPartnerDocRef} from '../firestore-functions/get-data/get-partner-data';
+import {Review} from "../models/review";
+import {updateQueryBatch} from "../utils/update-query-batch";
 
 export async function onAccountDeleted(
     event: functions.auth.UserRecord,
@@ -50,10 +54,22 @@ async function removeUser(userId: string) {
         .where('status', '==', 'succeeded')
         .limit(500);
 
+    const wallPhotosQuery = firestoreDatabase()
+        .collection(wallPhotos)
+        .where('userId', '==', userId)
+        .limit(500);
+
+    const userReviewsDocRefs = firestoreDatabase()
+        .collectionGroup(reviews)
+        .where('userId', '==', userId)
+        .limit(500);
+
     await deleteQueryBatch(ticketsQuery);
     await deleteQueryBatch(promotionCodesQuery);
     await deleteQueryBatch(ticketPaymentSessionsQuery);
     await deleteQueryBatch(vipPaymentSessionsQuery);
+    await deleteQueryBatch(wallPhotosQuery);
+    await updateQueryBatch(userReviewsDocRefs, {isUserDeleted: true} as Review);
 
     await userRef.delete();
 }
