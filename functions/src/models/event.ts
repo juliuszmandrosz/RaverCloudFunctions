@@ -21,4 +21,7 @@ export interface Event {
     isBeingPostponed: boolean;
     artistName?: string;
     description?: string;
+    locationString?: string;
+    clubPhotoUrl?: string;
+
 }
