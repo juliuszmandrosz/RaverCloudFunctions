@@ -23,5 +23,4 @@ export interface Event {
     description?: string;
     locationString?: string;
     clubPhotoUrl?: string;
-
 }
