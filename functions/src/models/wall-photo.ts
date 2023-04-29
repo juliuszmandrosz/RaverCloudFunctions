@@ -3,6 +3,7 @@ interface WallPhoto {
     photoUrl: string;
     clubId: string;
     clubName: string;
+    clubLocation: number[];
     eventId: string;
     eventName: string;
     userId: string;
@@ -10,4 +11,6 @@ interface WallPhoto {
     eventEndDateTime: number;
     createdAt: number;
     userProfilePhotoUrl?: string;
+    photoLocation?: number[];
+    isVerified: boolean;
 }
