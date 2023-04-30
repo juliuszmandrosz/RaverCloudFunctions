@@ -3,6 +3,7 @@ import {
     newClub,
     newEvent,
     newEventTickets,
+    newParticipant,
     newReview,
     newReward,
     newTicket,
@@ -85,6 +86,22 @@ exports.onTicketDeleted = functions
     .firestore.document(newTicket)
     .onDelete(async (snapshot, context) => {
         await (await import('./firebase-triggers/on-ticket-deleted')).onTicketDeleted(snapshot, context);
+    });
+
+
+exports.onParticipantAdded = functions
+    .region('europe-central2')
+    .firestore.document(newParticipant)
+    .onCreate(async (snapshot, context) => {
+        await (await import('./firebase-triggers/participant/on-participant-added')).onParticipantAdded(snapshot, context);
+    });
+
+
+exports.onParticipantDeleted = functions
+    .region('europe-central2')
+    .firestore.document(newParticipant)
+    .onDelete(async (snapshot, context) => {
+        await (await import('./firebase-triggers/participant/on-participant-deleted')).onParticipantDeleted(snapshot, context);
     });
 
 exports.onWallPhotoDeleted = functions

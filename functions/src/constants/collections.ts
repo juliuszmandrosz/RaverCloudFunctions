@@ -27,3 +27,7 @@ export const newReward = 'clubs/{clubId}/rewards/{rewardId}';
 export const newUser = 'users/{userId}';
 export const reviews = 'reviews';
 export const reviewReports = 'reviewReports';
+
+export const rooms = 'rooms';
+export const participants = 'participants';
+export const newParticipant = 'rooms/{roomId}/participants/{participantId}';
