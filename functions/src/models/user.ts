@@ -9,5 +9,6 @@ export interface User {
     pushNotificationTokens: string[];
     locale: string;
     ticketsCount: number;
+    photosCount: number;
     profilePictureUrl?: string;
 }
