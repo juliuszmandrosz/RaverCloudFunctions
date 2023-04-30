@@ -79,6 +79,6 @@ async function sendCloudMessageAfterPhotoVerification(photo: WallPhoto, user: Us
 
 function getPhotoVerifiedTitle(locale: string) {
     return locale === 'pl' ?
-        'Twoje zdjęcie zostało zweryfikowane pomyślnie! Prosimy o ocenę wydarzenia.'
-        : 'Your photo has been verified successfully! Please rate the event.';
+        'Twoje zdjęcie zostało zweryfikowane pomyślnie, otrzymujesz nagrodę! Prosimy o ocenę wydarzenia.'
+        : 'Your photo has been verified successfully, you get a reward! Please rate the event.';
 }
