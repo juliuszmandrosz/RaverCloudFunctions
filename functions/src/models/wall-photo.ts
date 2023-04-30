@@ -1,13 +1,13 @@
 interface WallPhoto {
     id: string;
     photoUrl: string;
-    clubId: string;
-    clubName: string;
-    clubLocation: number[];
-    eventId: string;
-    eventName: string;
+    venueId: string;
+    venueName: string;
+    venueLocation: number[];
     userId: string;
     username: string;
+    eventId: string;
+    eventName: string;
     eventEndDateTime: number;
     createdAt: number;
     userProfilePhotoUrl?: string;
