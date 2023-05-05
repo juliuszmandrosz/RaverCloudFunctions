@@ -4,6 +4,8 @@ import {stripe} from '../modules/stripe-module';
 import {StripeCustomer} from '../models/stripe-customer';
 import {
     clubs,
+    messages,
+    participants,
     promotionCodes,
     reviews,
     selectors,
@@ -18,7 +20,8 @@ import {Selector} from '../models/selector';
 import {deleteQueryBatch} from '../utils/delete-query-batch';
 import {getPartnerDocRef} from '../firestore-functions/get-data/get-partner-data';
 import {Review} from "../models/review";
-import {updateQueryBatch} from "../utils/update-query-batch";
+import {Message} from "../models/message";
+import {updateDocRefsBatch} from "../utils/update-doc-refs-batch";
 
 export async function onAccountDeleted(
     event: functions.auth.UserRecord,
@@ -59,17 +62,29 @@ async function removeUser(userId: string) {
         .where('userId', '==', userId)
         .limit(500);
 
-    const userReviewsDocRefs = firestoreDatabase()
-        .collectionGroup(reviews)
+    const participantsQuery = firestoreDatabase()
+        .collectionGroup(participants)
         .where('userId', '==', userId)
         .limit(500);
+
+    const userReviewsDocRefs = await firestoreDatabase()
+        .collectionGroup(reviews)
+        .where('userId', '==', userId)
+        .get();
+
+    const messagesDocRefs = await firestoreDatabase()
+        .collectionGroup(messages)
+        .where('userId', '==', userId)
+        .get();
 
     await deleteQueryBatch(ticketsQuery);
     await deleteQueryBatch(promotionCodesQuery);
     await deleteQueryBatch(ticketPaymentSessionsQuery);
     await deleteQueryBatch(vipPaymentSessionsQuery);
     await deleteQueryBatch(wallPhotosQuery);
-    await updateQueryBatch(userReviewsDocRefs, {isUserDeleted: true} as Review);
+    await deleteQueryBatch(participantsQuery);
+    await updateDocRefsBatch(userReviewsDocRefs.docs.map(d => d.ref), {isUserDeleted: true} as Review);
+    await updateDocRefsBatch(messagesDocRefs.docs.map(d => d.ref), {isUserDeleted: true} as Message);
 
     await userRef.delete();
 }

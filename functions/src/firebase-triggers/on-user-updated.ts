@@ -1,10 +1,12 @@
 import * as functions from 'firebase-functions';
 import {firestoreDatabase} from '../modules/firebase-admin-module';
-import {reviews, wallPhotos} from '../constants/collections';
+import {messages, participants, reviews, wallPhotos} from '../constants/collections';
 import {firestore} from 'firebase-admin';
-import {updateDocRefsBatch} from '../utils/update-doc-refs-batch';
 import {User} from '../models/user';
 import {Review} from '../models/review';
+import {Participant} from "../models/participant";
+import {Message} from "../models/message";
+import {updateDocRefsBatch} from "../utils/update-doc-refs-batch";
 import DocumentSnapshot = firestore.DocumentSnapshot;
 
 export async function onUserUpdated(
@@ -15,61 +17,56 @@ export async function onUserUpdated(
     const afterUpdate = change.after.data() as User;
     afterUpdate.id = change.after.id;
 
-    if (beforeUpdate.username !== afterUpdate.username) {
-        await updateUsernameInReviews(afterUpdate);
-        await updateUsernameInWallPhotos(afterUpdate);
-    }
-
-
-    if (beforeUpdate.profilePictureUrl !== afterUpdate.profilePictureUrl && afterUpdate.profilePictureUrl) {
-        await updateUserPictureUrlInReviews(afterUpdate);
-        await updateUserProfilePhotoUrlInWallPhotos(afterUpdate);
+    if (beforeUpdate.username !== afterUpdate.username || beforeUpdate.profilePictureUrl !== afterUpdate.profilePictureUrl) {
+        await updateReviews(afterUpdate);
+        await updateWallPhotos(afterUpdate);
+        await updateParticipants(afterUpdate);
+        await updateMessages(afterUpdate);
     }
 }
 
-async function updateUsernameInReviews(user: User) {
-    const userReviews = await firestoreDatabase()
+async function updateReviews(user: User) {
+    const reviewsDocRefs = await firestoreDatabase()
         .collectionGroup(reviews)
-        .where('userId', '==', user.id)
-        .get();
+        .where('userId', '==', user.id).get();
 
-    const reviewDocRefs = userReviews.docs.map((doc) => doc.ref);
-
-    await updateDocRefsBatch(reviewDocRefs, {username: user.username} as Review);
+    await updateDocRefsBatch(reviewsDocRefs.docs.map(d => d.ref), {
+        username: user.username,
+        userPictureUrl: user.profilePictureUrl
+    } as Review);
 }
 
 
-async function updateUserPictureUrlInReviews(user: User) {
-    const userReviews = await firestoreDatabase()
-        .collectionGroup(reviews)
-        .where('userId', '==', user.id)
-        .get();
-
-    const reviewDocRefs = userReviews.docs.map((doc) => doc.ref);
-
-    await updateDocRefsBatch(reviewDocRefs, {userPictureUrl: user.profilePictureUrl} as Review);
-}
-
-async function updateUsernameInWallPhotos(user: User) {
-    const photos = await firestoreDatabase()
+async function updateWallPhotos(user: User) {
+    const photosDocRefs = await firestoreDatabase()
         .collection(wallPhotos)
-        .where('userId', '==', user.id)
-        .get();
+        .where('userId', '==', user.id).get();
 
-    const photosDocRefs = photos.docs.map((doc) => doc.ref);
-
-    await updateDocRefsBatch(photosDocRefs, {username: user.username} as WallPhoto);
+    await updateDocRefsBatch(photosDocRefs.docs.map(d => d.ref), {
+        username: user.username,
+        userProfilePhotoUrl: user.profilePictureUrl
+    } as WallPhoto);
 }
 
+async function updateParticipants(user: User) {
+    const participantsDocRefs = await firestoreDatabase()
+        .collectionGroup(participants)
+        .where('userId', '==', user.id).get()
 
-async function updateUserProfilePhotoUrlInWallPhotos(user: User) {
-    const photos = await firestoreDatabase()
-        .collection(wallPhotos)
-        .where('userId', '==', user.id)
-        .get();
+    await updateDocRefsBatch(participantsDocRefs.docs.map(d => d.ref), {
+        username: user.username,
+        profilePictureUrl: user.profilePictureUrl
+    } as Participant);
+}
 
-    const photosDocRefs = photos.docs.map((doc) => doc.ref);
+async function updateMessages(user: User) {
+    const messagesDocRefs = await firestoreDatabase()
+        .collectionGroup(messages)
+        .where('userId', '==', user.id).get()
 
-    await updateDocRefsBatch(photosDocRefs, {userProfilePhotoUrl: user.profilePictureUrl} as WallPhoto);
+    await updateDocRefsBatch(messagesDocRefs.docs.map(d => d.ref), {
+        username: user.username,
+        userPictureUrl: user.profilePictureUrl
+    } as Message);
 }
 
