@@ -6,6 +6,7 @@ import {
     newParticipant,
     newReview,
     newReward,
+    newTask,
     newTicket,
     newUser,
     newWallPhoto,
@@ -263,6 +264,15 @@ exports.onRewardAdded = functions
         await (
             await import('./firebase-triggers/on-reward-added')
         ).onRewardAdded(snapshot, context);
+    });
+
+exports.onTaskAdded = functions
+    .region('europe-central2')
+    .firestore.document(newTask)
+    .onCreate(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/tasks/on-task-added')
+        ).onTaskAdded(snapshot, context);
     });
 
 exports.onUserUpdated = functions
