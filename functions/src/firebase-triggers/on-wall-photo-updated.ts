@@ -16,11 +16,13 @@ export async function onWallPhotoUpdated(
 
     await updateWallPhotoInTypesense(afterUpdate);
 
-    const alreadyAttended = await checkIfUserAlreadyAttended(afterUpdate);
 
-    if (!alreadyAttended && !beforeUpdate.isVerified && afterUpdate.isVerified) {
-        const user = await tryGetUserData(afterUpdate.userId);
+    if (!beforeUpdate.isVerified && afterUpdate.isVerified) {
         await incrementUserRaverCoins(afterUpdate);
+    }
+
+    if (!beforeUpdate.isVerified && afterUpdate.isVerified && !await checkIfUserAlreadyAttended(afterUpdate)) {
+        const user = await tryGetUserData(afterUpdate.userId);
         await incrementUserAttendance(afterUpdate, user);
         await sendCloudMessageAfterPhotoVerification(afterUpdate, user);
     }
@@ -79,6 +81,6 @@ async function sendCloudMessageAfterPhotoVerification(photo: WallPhoto, user: Us
 
 function getPhotoVerifiedTitle(locale: string) {
     return locale === 'pl' ?
-        'Twoje zdjęcie zostało zweryfikowane pomyślnie, otrzymujesz nagrodę! Prosimy o ocenę wydarzenia.'
-        : 'Your photo has been verified successfully, you get a reward! Please rate the event.';
+        'Twoje zdjęcie zostało zweryfikowane pomyślnie, otrzymujesz raver coina! Prosimy o ocenę wydarzenia i naszej aplikacji na sklepie play / app store :)'
+        : 'Your photo has been verified successfully, you get a raver coin! Please rate the event and our app on the google play / app store :)';
 }
