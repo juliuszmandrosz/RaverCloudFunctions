@@ -1,27 +1,18 @@
 import * as functions from 'firebase-functions';
-import { ReturnTicketRequest } from './return-ticket-request';
-import { FunctionsErrorDetails } from '../../errors/functions-error-details';
-import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
-import {
-    getTicketDocRef,
-    tryGetTicketData,
-} from '../../firestore-functions/get-data/get-ticket-data';
+import {ReturnTicketRequest} from './return-ticket-request';
+import {FunctionsErrorDetails} from '../../errors/functions-error-details';
+import {throwUnauthenticatedError} from '../../errors/throw-unauthenticated-error';
+import {getTicketDocRef, tryGetTicketData,} from '../../firestore-functions/get-data/get-ticket-data';
 import {
     getTicketPaymentSessionDocRef,
     tryGetTicketPaymentSessionData,
 } from '../../firestore-functions/get-data/get-ticket-payment-session-data';
-import {
-    getVipPaymentSessionDocRef,
-    tryGetVipPaymentSession,
-} from '../../firestore-functions/get-data/get-vip-payment-session.data';
-import { updateEventOnTicketReturn } from '../../firestore-functions/update-event/update-event-on-ticket-return';
-import { refundPayment } from '../refund-payment/refund-payment';
-import { TicketPaymentSession } from '../../models/ticket-payment-session';
-import { VipPaymentSession } from '../../models/vip-payment-session';
-import { Ticket } from '../../models/ticket';
-import { firestore } from 'firebase-admin';
+import {refundPayment} from '../refund-payment/refund-payment';
+import {TicketPaymentSession} from '../../models/ticket-payment-session';
+import {Ticket} from '../../models/ticket';
+import {firestore} from 'firebase-admin';
+import {toJson} from '../../utils/json-utils';
 import Timestamp = firestore.Timestamp;
-import { toJson } from '../../utils/json-utils';
 
 export async function returnTicket(
     data: ReturnTicketRequest,
@@ -59,10 +50,6 @@ export async function returnTicket(
 
     const ticketPayment = await tryGetTicketPaymentSessionData(ticket.ticketPaymentId);
 
-    const vipPayment = ticket.vipPaymentId
-        ? await tryGetVipPaymentSession(ticket.vipPaymentId)
-        : null;
-
     await refundPayment({
         paymentIntentId: ticketPayment.id,
     });
@@ -73,31 +60,15 @@ export async function returnTicket(
         } as TicketPaymentSession)
     );
 
-    if (vipPayment) {
-        await refundPayment({
-            paymentIntentId: vipPayment.id,
-        });
+    await getTicketDocRef(userId, ticketId).update(toJson({isReturned: true} as Ticket));
 
-        await getVipPaymentSessionDocRef(vipPayment.id).update(
-            toJson({
-                isRefunded: true,
-            } as VipPaymentSession)
-        );
-    }
+    // let returnedRevenue = ticketPayment.revenue;
 
-    await getTicketDocRef(userId, ticketId).update(toJson({ isReturned: true } as Ticket));
-
-    let returnedRevenue = ticketPayment.revenue;
-
-    if (vipPayment) {
-        returnedRevenue += vipPayment.revenue;
-    }
-
-    await updateEventOnTicketReturn({
-        eventId: ticket.eventId,
-        isVip: ticket.isVip,
-        vipPaymentSessionId: vipPayment?.id,
-        ticketPaymentSessionId: ticketPayment.id,
-        returnedRevenue,
-    });
+    // await updateEventOnTicketReturn({
+    //     eventId: ticket.eventId,
+    //     isVip: ticket.isVip,
+    //     vipPaymentSessionId: vipPayment?.id,
+    //     ticketPaymentSessionId: ticketPayment.id,
+    //     returnedRevenue,
+    // });
 }

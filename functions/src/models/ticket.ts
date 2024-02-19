@@ -12,10 +12,10 @@ export interface Ticket {
     eventEndDateTime: Timestamp;
     price: number;
     currency: string;
-    isVip: boolean;
     isExpired: boolean;
     isEventCanceled: boolean;
     isReturnable: boolean;
     isReturned: boolean;
-    vipPaymentId?: string;
+    quantity: number;
+    createdAt: Timestamp;
 }

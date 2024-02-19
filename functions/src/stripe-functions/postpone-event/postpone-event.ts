@@ -1,16 +1,17 @@
 import * as functions from 'firebase-functions';
-import { throwUnauthenticatedError } from '../../errors/throw-unauthenticated-error';
+import {throwUnauthenticatedError} from '../../errors/throw-unauthenticated-error';
 import * as moment from 'moment';
-import { FunctionsErrorDetails } from '../../errors/functions-error-details';
-import { tryGetEventData } from '../../firestore-functions/get-data/get-event-data';
-import { PostponeEventRequest } from './postpone-event-request';
-import { cancelUsersPaymentSessions } from '../../firestore-functions/cancel-users-payment-sessions/cancel-users-payment-sessions';
-import { firestore } from 'firebase-admin';
+import {FunctionsErrorDetails} from '../../errors/functions-error-details';
+import {tryGetEventData} from '../../firestore-functions/get-data/get-event-data';
+import {PostponeEventRequest} from './postpone-event-request';
+import {firestore} from 'firebase-admin';
+import {updateEventOnEventPostpone} from '../../firestore-functions/update-event/update-event-on-event-postpone';
+import {updateTicketsOnEventPostpone} from '../../firestore-functions/update-tickets/update-tickets-on-event-postpone';
+import {
+    extendUpdateClubSalesTaskOnEventPostpone
+} from '../../cloud-tasks/update-club-sales-on-event-end-task/extend-update-club-sales-task-on-event-postpone';
+import {tryGetPartnerData} from '../../firestore-functions/get-data/get-partner-data';
 import Timestamp = firestore.Timestamp;
-import { updateEventOnEventPostpone } from '../../firestore-functions/update-event/update-event-on-event-postpone';
-import { updateTicketsOnEventPostpone } from '../../firestore-functions/update-tickets/update-tickets-on-event-postpone';
-import { extendUpdateClubSalesTaskOnEventPostpone } from '../../cloud-tasks/update-club-sales-on-event-end-task/extend-update-club-sales-task-on-event-postpone';
-import { tryGetPartnerData } from '../../firestore-functions/get-data/get-partner-data';
 
 export async function postponeEvent(
     data: PostponeEventRequest,
@@ -58,7 +59,7 @@ export async function postponeEvent(
         throw new functions.https.HttpsError('invalid-argument', message, details);
     }
 
-    await cancelUsersPaymentSessions({ eventId });
+    // await cancelUsersPaymentSessions({ eventId });
 
     await updateEventOnEventPostpone({
         event,

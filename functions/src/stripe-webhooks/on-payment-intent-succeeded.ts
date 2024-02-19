@@ -1,10 +1,9 @@
 import * as functions from 'firebase-functions';
-import { Stripe } from 'stripe';
-import { getFunctionsConfig } from '../utils/get-functions-config';
+import {Stripe} from 'stripe';
+import {getFunctionsConfig} from '../utils/get-functions-config';
 
-import { tryConstructStripeEvent } from '../utils/stripe-utils/try-construct-stripe-event';
-import { fulfillTicketPayment } from '../firestore-functions/fulfill-payment/fulfill-ticket-payment';
-import { fulfillVipPayment } from '../firestore-functions/fulfill-payment/fulfill-vip-payment';
+import {tryConstructStripeEvent} from '../utils/stripe-utils/try-construct-stripe-event';
+import {fulfillTicketPayment} from '../firestore-functions/fulfill-payment/fulfill-ticket-payment';
 
 export async function onPaymentIntentSucceeded(
     request: functions.https.Request,
@@ -18,8 +17,6 @@ export async function onPaymentIntentSucceeded(
     const paymentIntent = stripeEvent.data.object as Stripe.PaymentIntent;
 
     await fulfillTicketPayment(paymentIntent.id, response);
-
-    await fulfillVipPayment(paymentIntent.id, response);
-
+    
     response.send();
 }
