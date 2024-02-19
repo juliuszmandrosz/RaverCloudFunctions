@@ -30,7 +30,9 @@ export const newTask = 'tasks/{taskId}';
 export const reviews = 'reviews';
 export const messages = 'messages';
 export const reviewReports = 'reviewReports';
-
 export const rooms = 'rooms';
 export const participants = 'participants';
 export const newParticipant = 'rooms/{roomId}/participants/{participantId}';
+export const mailingLists = 'mailingLists';
+export const collectives = 'collectives';
+export const artists = 'artists';
