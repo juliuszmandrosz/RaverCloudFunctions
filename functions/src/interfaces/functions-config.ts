@@ -4,6 +4,7 @@ export interface FunctionsConfig {
     stripe: Stripe;
     typesense: Typesense;
     email_labs: EmailLabs;
+    mailer_lite: MailerLite;
 }
 
 interface Project {
@@ -11,6 +12,7 @@ interface Project {
     location: string;
     functions_endpoint: string;
     functions_location: string;
+    backup_bucket_name: string;
 }
 
 interface Algolia {
@@ -34,4 +36,9 @@ interface Typesense {
 interface EmailLabs {
     smtp_user: string;
     smtp_password: string;
+}
+
+
+interface MailerLite {
+    api_key: string;
 }
