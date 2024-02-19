@@ -1,20 +1,14 @@
 import * as functions from 'firebase-functions';
-import { firestore } from 'firebase-admin';
+import {firestore} from 'firebase-admin';
+import {v1} from 'uuid';
+import {getTicketPaymentSessionDataOrUndefined} from '../get-data/get-ticket-payment-session-data';
+import {getEventDataOrReturnNotFound} from '../get-data/get-event-data';
+import {firestoreDatabase} from '../../modules/firebase-admin-module';
+import {ticketPaymentSessions, tickets, users} from '../../constants/collections';
+import {TicketPaymentSession} from '../../models/ticket-payment-session';
+import {Ticket} from '../../models/ticket';
+import {toJson} from '../../utils/json-utils';
 import Timestamp = firestore.Timestamp;
-import { v1 } from 'uuid';
-import { getTicketPaymentSessionDataOrUndefined } from '../get-data/get-ticket-payment-session-data';
-import { tasksClient } from '../../modules/cloud-tasks-module';
-import { getEventDataOrReturnNotFound } from '../get-data/get-event-data';
-import { firestoreDatabase } from '../../modules/firebase-admin-module';
-import { ticketPaymentSessions, tickets, users } from '../../constants/collections';
-import { TicketPaymentSession } from '../../models/ticket-payment-session';
-import { updateEventCostsOnUserPayment } from '../update-event-costs/update-event-costs-on-user-payment';
-import { Ticket } from '../../models/ticket';
-import { sendInvoiceForCustomer } from '../../stripe-functions/send-invoice-for-customer/send-invoice-for-customer';
-import { toJson } from '../../utils/json-utils';
-import { getUserDataOrReturnNotFound } from '../get-data/get-user-data';
-import { sendQrCodeToEmail } from './send-qr-code-to-email';
-import { applyPromotionCode } from '../apply-promotion-code/apply-promotion-code';
 
 export async function fulfillTicketPayment(
     paymentSessionId: string,
@@ -24,7 +18,7 @@ export async function fulfillTicketPayment(
 
     if (!ticketPaymentSession) return;
 
-    await tasksClient.deleteTask({ name: ticketPaymentSession.cancelTicketReservationTaskId });
+    // await tasksClient.deleteTask({ name: ticketPaymentSession.cancelTicketReservationTaskId });
 
     const event = await getEventDataOrReturnNotFound(ticketPaymentSession.eventId, response);
 
@@ -51,7 +45,6 @@ export async function fulfillTicketPayment(
         .set({
             eventId: event.id,
             ticketPaymentId: ticketPaymentSession.id,
-            isVip: ticketPaymentSession.isVip,
             currency: event.currency,
             price: ticketPaymentSession.revenue - ticketPaymentSession.promotionCodeAmountOff,
             eventStartDateTime: Timestamp.fromMillis(event.eventStartDateTime),
@@ -63,44 +56,46 @@ export async function fulfillTicketPayment(
             isEventCanceled: false,
             isReturnable: false,
             isReturned: false,
+            quantity: ticketPaymentSession.ticketQuantity,
+            createdAt: Timestamp.now(),
         } as Ticket);
 
-    await updateEventCostsOnUserPayment({
-        eventId: event.id,
-        clubId: event.clubId,
-        amount: ticketPaymentSession.serviceFeeAmount,
-        response,
-    });
+    // await updateEventCostsOnUserPayment({
+    //     eventId: event.id,
+    //     clubId: event.clubId,
+    //     amount: ticketPaymentSession.serviceFeeAmount,
+    //     response,
+    // });
 
-    const user = await getUserDataOrReturnNotFound(ticketPaymentSession.userId, response);
+    // const user = await getUserDataOrReturnNotFound(ticketPaymentSession.userId, response);
+    //
+    // if (!user) return;
 
-    if (!user) return;
+    // await sendQrCodeToEmail({
+    //     ticketId,
+    //     eventName: event.eventName,
+    //     user,
+    // });
 
-    await sendQrCodeToEmail({
-        ticketId,
-        eventName: event.eventName,
-        user,
-    });
+    // if (ticketPaymentSession.sendInvoice) {
+    //     const eventStartDate = Timestamp.fromMillis(event.eventStartDateTime);
+    //
+    //     const description = `${event.eventName}\n${eventStartDate.toDate().toLocaleDateString()}`;
+    //
+    //     await sendInvoiceForCustomer({
+    //         customerId: ticketPaymentSession.stripeCustomerId,
+    //         description,
+    //         revenue: ticketPaymentSession.revenue,
+    //         serviceFee: ticketPaymentSession.serviceFeeAmount,
+    //         locale: user.locale,
+    //         currency: event.currency,
+    //     });
+    // }
 
-    if (ticketPaymentSession.sendInvoice) {
-        const eventStartDate = Timestamp.fromMillis(event.eventStartDateTime);
-
-        const description = `${event.eventName}\n${eventStartDate.toDate().toLocaleDateString()}`;
-
-        await sendInvoiceForCustomer({
-            customerId: ticketPaymentSession.stripeCustomerId,
-            description,
-            revenue: ticketPaymentSession.revenue,
-            serviceFee: ticketPaymentSession.serviceFeeAmount,
-            locale: user.locale,
-            currency: event.currency,
-        });
-    }
-
-    if (ticketPaymentSession.promotionCode) {
-        await applyPromotionCode({
-            promotionCode: ticketPaymentSession.promotionCode,
-            userId: ticketPaymentSession.userId,
-        });
-    }
+    // if (ticketPaymentSession.promotionCode) {
+    //     await applyPromotionCode({
+    //         promotionCode: ticketPaymentSession.promotionCode,
+    //         userId: ticketPaymentSession.userId,
+    //     });
+    // }
 }

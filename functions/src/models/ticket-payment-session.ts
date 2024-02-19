@@ -1,5 +1,5 @@
-import { Stripe } from 'stripe';
-import { firestore } from 'firebase-admin';
+import {Stripe} from 'stripe';
+import {firestore} from 'firebase-admin';
 import Timestamp = firestore.Timestamp;
 
 export interface TicketPaymentSession {
@@ -7,11 +7,11 @@ export interface TicketPaymentSession {
     id: string;
     userId: string;
     stripeCustomerId: string;
+    connectedStripeAccountId: string;
     eventId: string;
     ticketId: string;
     status: Stripe.PaymentIntent.Status;
-    isVip: boolean;
-    cancelTicketReservationTaskId: string;
+    ticketQuantity: number;
     isRefunded: boolean;
     revenue: number;
     serviceFeeAmount: number;
