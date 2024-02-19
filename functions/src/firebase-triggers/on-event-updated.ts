@@ -1,13 +1,16 @@
 import * as functions from 'firebase-functions';
-import { firebaseMessaging, firestoreDatabase } from '../modules/firebase-admin-module';
-import { tickets } from '../constants/collections';
-import { Event } from '../models/event';
-import { tryGetUserData } from '../firestore-functions/get-data/get-user-data';
-import { firestore } from 'firebase-admin';
+import {firebaseMessaging, firestoreDatabase} from '../modules/firebase-admin-module';
+import {tickets} from '../constants/collections';
+import {Event} from '../models/event';
+import {tryGetUserData} from '../firestore-functions/get-data/get-user-data';
+import {firestore} from 'firebase-admin';
+import {eventCollection} from '../modules/typesense-module';
+import {updateDocRefsBatch} from '../utils/update-doc-refs-batch';
+import {Ticket} from '../models/ticket';
+import {eventsIndex} from "../modules/algolia-module";
+import {mapDataToAlgolia} from "../utils/map-data-to-algolia";
 import DocumentSnapshot = firestore.DocumentSnapshot;
-import { eventCollection } from '../modules/typesense-module';
-import { updateDocRefsBatch } from '../utils/update-doc-refs-batch';
-import { Ticket } from '../models/ticket';
+import DocumentData = firestore.DocumentData;
 
 export async function onEventUpdated(
     change: functions.Change<DocumentSnapshot>,
@@ -18,6 +21,7 @@ export async function onEventUpdated(
     afterUpdate.id = change.after.id;
 
     await updateEventInTypesense(afterUpdate);
+    await updateEventInAlgolia(change.after.data()!, change.after.id);
 
     if (!beforeUpdate.isCanceled && afterUpdate.isCanceled) {
         await sendCloudMessageWithCanceledEventInfoToTicketHolders(afterUpdate);
@@ -35,6 +39,11 @@ export async function onEventUpdated(
 
 async function updateEventInTypesense(event: Event) {
     await eventCollection.documents(event.id).update(event);
+}
+
+async function updateEventInAlgolia(data: DocumentData, id: string) {
+    const object = mapDataToAlgolia(data, id);
+    await eventsIndex.saveObject(object);
 }
 
 async function sendCloudMessageWithCanceledEventInfoToTicketHolders(event: Event) {
@@ -95,7 +104,7 @@ async function updateEventNameOnTickets(event: Event) {
 
     const ticketDocRefs = ticketsFromEvent.docs.map((doc) => doc.ref);
 
-    await updateDocRefsBatch(ticketDocRefs, { eventName: event.eventName } as Ticket);
+    await updateDocRefsBatch(ticketDocRefs, {eventName: event.eventName} as Ticket);
 }
 
 async function getTicketHoldersToSendPostponeEventInfo(eventId: string) {

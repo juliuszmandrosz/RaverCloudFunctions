@@ -1,6 +1,8 @@
 import * as functions from 'firebase-functions';
 import {
+    newArtist,
     newClub,
+    newCollective,
     newEvent,
     newEventTickets,
     newParticipant,
@@ -188,15 +190,15 @@ exports.onPaymentIntentRequiresAction = functions
         ).onPaymentIntentRequiresAction(request, response);
     });
 
-exports.cancelTicketReservationOnCloudTaskCallback = functions
-    .region('europe-central2')
-    .https.onRequest(async (request, response) => {
-        await (
-            await import(
-                './firestore-functions/cancel-ticket-reservation/cancel-ticket-reservation-on-cloud-task-callback'
-                )
-        ).cancelTicketReservationOnCloudTaskCallback(request, response);
-    });
+// exports.cancelTicketReservationOnCloudTaskCallback = functions
+// .region('europe-central2')
+// .https.onRequest(async (request, response) => {
+//     await (
+//         await import(
+//             './firestore-functions/cancel-ticket-reservation/cancel-ticket-reservation-on-cloud-task-callback'
+//             )
+//     ).cancelTicketReservationOnCloudTaskCallback(request, response);
+// });
 
 exports.checkSelectorAccessCode = functions
     .region('europe-central2')
@@ -238,15 +240,15 @@ exports.updateInvoiceData = functions
         ).updateInvoiceData(data, context);
     });
 
-exports.updateClubSalesOnEventEndCallback = functions
-    .region('europe-central2')
-    .https.onRequest(async (request, response) => {
-        await (
-            await import(
-                './firestore-functions/update-club-sales/update-club-sales-on-event-end-callback'
-                )
-        ).updateClubSalesOnEventEndCallback(request, response);
-    });
+// exports.updateClubSalesOnEventEndCallback = functions
+//     .region('europe-central2')
+//     .https.onRequest(async (request, response) => {
+//         await (
+//             await import(
+//                 './firestore-functions/update-club-sales/update-club-sales-on-event-end-callback'
+//                 )
+//         ).updateClubSalesOnEventEndCallback(request, response);
+//     });
 
 exports.onEventTicketsUpdated = functions
     .region('europe-central2')
@@ -275,6 +277,15 @@ exports.onTaskAdded = functions
         ).onTaskAdded(snapshot, context);
     });
 
+// exports.onUserAdded = functions
+//     .region('europe-central2')
+//     .firestore.document(newUser)
+//     .onCreate(async (snapshot, context) => {
+//         await (
+//             await import('./firebase-triggers/on-user-added')
+//         ).onUserAdded(snapshot, context);
+//     });
+
 exports.onUserUpdated = functions
     .region('europe-central2')
     .firestore.document(newUser)
@@ -301,6 +312,59 @@ exports.scheduledFirestoreExport = functions
             await import('./cloud-schedulers/scheduled-firestore-export')
         ).scheduledFirestoreExport(context);
     });
+
+exports.onArtistAdded = functions
+    .region('europe-central2')
+    .firestore.document(newArtist)
+    .onCreate(async (snapshot, context) => {
+        await (await import('./firebase-triggers/artist/on-artist-added')).onArtistAdded(snapshot, context);
+    });
+
+exports.onArtistUpdated = functions
+    .region('europe-central2')
+    .firestore.document(newArtist)
+    .onUpdate(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/artist/on-artist-updated')
+        ).onArtistUpdated(snapshot, context);
+    });
+
+exports.onArtistDeleted = functions
+    .region('europe-central2')
+    .firestore.document(newArtist)
+    .onDelete(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/artist/on-artist-deleted')
+        ).onArtistDeleted(snapshot, context);
+    });
+
+
+exports.onCollectiveAdded = functions
+    .region('europe-central2')
+    .firestore.document(newCollective)
+    .onCreate(async (snapshot, context) => {
+        await (await import('./firebase-triggers/collective/on-collective-added')).onCollectiveAdded(snapshot, context);
+    });
+
+
+exports.onCollectiveUpdated = functions
+    .region('europe-central2')
+    .firestore.document(newCollective)
+    .onUpdate(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/collective/on-collective-updated')
+        ).onCollectiveUpdated(snapshot, context);
+    });
+
+exports.onCollectiveDeleted = functions
+    .region('europe-central2')
+    .firestore.document(newCollective)
+    .onDelete(async (snapshot, context) => {
+        await (
+            await import('./firebase-triggers/collective/on-collective-deleted')
+        ).onCollectiveDeleted(snapshot, context);
+    });
+
 
 // exports.addEventsFromJson = functions
 //     .region('europe-central2')

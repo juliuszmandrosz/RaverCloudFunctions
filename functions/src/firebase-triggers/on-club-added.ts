@@ -4,6 +4,10 @@ import {clubCollection} from '../modules/typesense-module';
 import {firestoreDatabase} from "../modules/firebase-admin-module";
 import {clubsSales} from "../constants/collections";
 import {ClubSales} from "../models/club-sales";
+import {mapDataToAlgolia} from "../utils/map-data-to-algolia";
+import {clubsIndex} from "../modules/algolia-module";
+import {firestore} from "firebase-admin";
+import DocumentData = firestore.DocumentData;
 
 export async function onClubAdded(
     snapshot: functions.firestore.DocumentSnapshot,
@@ -13,11 +17,17 @@ export async function onClubAdded(
     club.id = snapshot.id;
 
     await addClubToTypesense(club);
+    await addClubToAlgolia(snapshot.data()!, snapshot.id);
     await addClubSales(club);
 }
 
 async function addClubToTypesense(club: Club) {
     await clubCollection.documents().create(club);
+}
+
+async function addClubToAlgolia(data: DocumentData, id: string) {
+    const object = mapDataToAlgolia(data, id);
+    await clubsIndex.saveObject(object);
 }
 
 

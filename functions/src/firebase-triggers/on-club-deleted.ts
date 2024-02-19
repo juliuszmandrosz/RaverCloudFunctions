@@ -1,13 +1,12 @@
 import * as functions from 'firebase-functions';
-import { clubCollection } from '../modules/typesense-module';
+import {clubCollection} from '../modules/typesense-module';
+import {clubsIndex} from "../modules/algolia-module";
 
 export async function onClubDeleted(
     snapshot: functions.firestore.DocumentSnapshot,
     _: functions.EventContext
 ) {
-    await deleteClubFromTypesense(snapshot.id);
+    await clubCollection.documents(snapshot.id).delete();
+    await clubsIndex.deleteObject(snapshot.id);
 }
 
-async function deleteClubFromTypesense(clubId: string) {
-    await clubCollection.documents(clubId).delete();
-}

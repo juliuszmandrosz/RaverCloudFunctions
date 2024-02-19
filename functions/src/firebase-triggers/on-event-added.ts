@@ -1,22 +1,29 @@
 import * as functions from 'firebase-functions';
-import { createUpdateClubSalesOnEventEndTask } from '../cloud-tasks/update-club-sales-on-event-end-task/create-update-club-sales-on-event-end-task';
-import { Event } from '../models/event';
-import { firestore } from 'firebase-admin';
-import Timestamp = firestore.Timestamp;
-import { firebaseMessaging } from '../modules/firebase-admin-module';
-import { User } from '../models/user';
-import { getClubFollowers } from '../cloud-messages/get-club-followers';
-import { eventCollection } from '../modules/typesense-module';
+// import { createUpdateClubSalesOnEventEndTask } from '../cloud-tasks/update-club-sales-on-event-end-task/create-update-club-sales-on-event-end-task';
+import {Event} from '../models/event';
+// import { firestore } from 'firebase-admin';
+// import Timestamp = firestore.Timestamp;
+import {firebaseMessaging, firestoreDatabase} from '../modules/firebase-admin-module';
+import {User} from '../models/user';
+import {getClubFollowers} from '../cloud-messages/get-club-followers';
+import {eventCollection} from '../modules/typesense-module';
+import {rooms} from "../constants/collections";
+import {eventsIndex} from "../modules/algolia-module";
+import {firestore} from "firebase-admin";
+import {mapDataToAlgolia} from "../utils/map-data-to-algolia";
+import DocumentData = firestore.DocumentData;
 
 export async function onEventAdded(
     snapshot: functions.firestore.DocumentSnapshot,
     _: functions.EventContext
 ) {
-    const event = snapshot.data() as Event;
+    const data = snapshot.data()!;
+    const event = data as Event;
     event.id = snapshot.id;
-
     await addEventToTypesense(event);
-    await createUpdateClubSalesTask(event);
+    await addEventToAlgolia(data, snapshot.id);
+    await createEventRoom(event);
+    // await createUpdateClubSalesTask(event);
     await sendCloudMessageToClubFollowers(event);
 }
 
@@ -24,13 +31,18 @@ async function addEventToTypesense(event: Event) {
     await eventCollection.documents().create(event);
 }
 
-async function createUpdateClubSalesTask(event: Event) {
-    await createUpdateClubSalesOnEventEndTask({
-        eventId: event.id,
-        clubId: event.clubId,
-        executesAt: Timestamp.fromMillis(event.eventEndDateTime),
-    });
+async function addEventToAlgolia(data: DocumentData, id: string) {
+    const object = mapDataToAlgolia(data, id);
+    await eventsIndex.saveObject(object);
 }
+
+// async function createUpdateClubSalesTask(event: Event) {
+//     await createUpdateClubSalesOnEventEndTask({
+//         eventId: event.id,
+//         clubId: event.clubId,
+//         executesAt: Timestamp.fromMillis(event.eventEndDateTime),
+//     });
+// }
 
 async function sendCloudMessageToClubFollowers(event: Event) {
     const clubFollowers = await getClubFollowers(event.clubId);
@@ -58,6 +70,13 @@ async function sendCloudMessageToClubFollowers(event: Event) {
             }
         );
     }
+}
+
+async function createEventRoom(event: Event) {
+    await firestoreDatabase().collection(rooms).doc(event.id).set({
+        roomName: event.eventName,
+        roomPhotoUrl: event.eventPhotoUrl,
+    } as Room);
 }
 
 function getCloudMessageTitle(locale: string, clubName: string) {
