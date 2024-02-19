@@ -11,4 +11,5 @@ export interface User {
     ticketsCount: number;
     photosCount: number;
     profilePictureUrl?: string;
+    isNewsletterSubscribed: boolean;
 }
