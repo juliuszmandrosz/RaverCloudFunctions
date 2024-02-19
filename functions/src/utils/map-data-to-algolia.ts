@@ -21,7 +21,7 @@ export function mapDataToAlgolia(data: DocumentData, id: string) {
     }
 
     if (location && location.length === 2) {
-        object._geoLoc = {
+        object._geoloc = {
             lat: location[0],
             lng: location[1],
         }
