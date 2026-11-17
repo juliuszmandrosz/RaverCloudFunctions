@@ -46,3 +46,7 @@ Secrets are not stored in the code. They are read from the Firebase functions co
 (`firebase functions:config:set`), with the shape defined in
 `functions/src/interfaces/functions-config.ts`: `project`, `algolia`, `stripe`, `typesense`,
 `email_labs`, `mailer_lite`.
+
+## License
+
+Released under the [MIT License](LICENSE).
